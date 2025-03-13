@@ -1,0 +1,189 @@
+﻿
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - Medinet</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+    <style>
+        .header {
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 10px 20px;
+        }
+
+        .header-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 100%;
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        .logo-container img {
+            height: 40px;
+        }
+
+        .search-container {
+            flex-grow: 1;
+            margin: 0 20px;
+            max-width: 100%;
+            width: 100%;
+        }
+
+        .search-form {
+            display: flex;
+            position: relative;
+            max-width: 100%;
+            width: 100%;
+        }
+
+        .search-input {
+            max-width: 100%;
+            width: 100%;
+            padding: 10px 40px 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+        }
+
+        .search-button {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #888;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .icon-button {
+            color: #333;
+            font-size: 20px;
+        }
+
+        .user-avatar-image {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <!--</nav>-->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo-container">
+                @{
+                    var vaitro = Session["VaiTro"];
+                    switch (vaitro)
+                    {
+                        case "Buyer":
+                            <a href="@Url.Action("Index", "Home")" class="logo">
+                                <img src="~/Content/images/medinet-logo.png" alt="Logo" />
+                            </a>
+                            break;
+                        default:
+                            <a href="#" class="logo">
+                                <img src="~/Content/images/medinet-logo.png" alt="Logo" />
+                            </a>
+                            break;
+                    }
+                }
+            </div>
+
+            <div class="search-container">
+                <form asp-action="Search" asp-controller="Home" method="get" class="search-form">
+                    <input type="text"
+                           name="query"
+                           placeholder="Hôm nay bạn đang tìm gì?"
+                           class="search-input" />
+                    <button type="submit" class="search-button">
+                        <i class="fa fa-search"></i>
+                    </button>
+                </form>
+            </div>
+
+            <div class="header-icons">
+                <a href="" class="icon-button">
+                    <img src="~/Content/images/notification.png" alt="Logo" />
+                </a>
+
+                <div class="logo-container">
+                    @{
+                        var vaitrobuyer = Session["VaiTro"];
+                        switch (vaitrobuyer)
+                        {
+                            case "Buyer":
+                                <a href="" class="icon-button">
+                                    <img src="~/Content/images/cart.png" alt="Logo" />
+                                </a>
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                </div>
+
+
+                @if (User.Identity.IsAuthenticated)
+                {
+                    var avatarPath = Session["AnhDaiDien"] as string;
+                    var userRole = Session["VaiTro"] as string;
+                    string profileUrl = "";
+
+                    // Sử dụng switch-case để xử lý các trường hợp vai trò khác nhau
+                    switch (userRole)
+                    {
+                        case "Seller":
+                            profileUrl = Url.Action("EditSellerProfile", "NguoiDungs");
+                            break;
+                        case "Buyer":
+                            profileUrl = Url.Action("Profile", "NguoiDungs");
+                            break;
+                        default:
+                            profileUrl = Url.Action("DangNhap", "DangNhap");
+                            break;
+                    }
+                    <a href="@profileUrl" class="icon-button">
+                        @if (!string.IsNullOrEmpty(avatarPath))
+                        {
+                            <img src="@Url.Content(avatarPath.ToString())" alt="Avatar của @User.Identity.Name" class="user-avatar-image" />
+                        }
+                        else
+                        {
+                            <img src="~/Content/Images/default-avatar.png" alt="Avatar của @User.Identity.Name" class="user-avatar-image" />
+                        }
+                    </a>
+                }
+                else
+                {
+                    // Người dùng chưa đăng nhập
+                    <a href="@Url.Action("DangNhap", "DangNhap")" class="icon-button">
+                        <img src="~/Content/Images/default-avatar.png" alt="Đăng nhập" class="user-avatar-image" />
+                    </a>
+                }
+            </div>
+        </div>
+    </header>
+    <div class="container body-content">
+        @RenderBody()
+        <hr />
+        <footer>
+            <p>&copy; @DateTime.Now.Year - Medinet</p>
+        </footer>
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+</body>
+</html>

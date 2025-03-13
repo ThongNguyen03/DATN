@@ -1,0 +1,489 @@
+﻿@model WebApplication1.Controllers.SellerProfileViewModel
+
+@{
+    ViewBag.Title = "Chỉnh sửa thông tin người bán";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Custom styles for tabs and sidebar */
+    .nav-tabs .nav-link {
+        color: #6c757d; /* Gray for inactive tabs */
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+        .nav-tabs .nav-link.active {
+            color: #007bff; /* Blue for active tab */
+            font-weight: 500;
+            background-color: #fff;
+            border-bottom: 1px solid transparent;
+        }
+
+    .seller-sidebar {
+        background-color: #ffffff; /* White background for seller sidebar */
+        border: 1px solid #e9ecef;
+    }
+
+        .seller-sidebar .card-header {
+            background-color: #f8f9fa; /* Light gray header */
+            color: #212529; /* Dark text */
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .seller-sidebar .list-group-item {
+            background-color: transparent;
+            color: #212529; /* Dark text */
+            border-color: #e9ecef;
+        }
+
+            .seller-sidebar .list-group-item:hover {
+                background-color: #f8f9fa;
+            }
+
+            .seller-sidebar .list-group-item.active {
+                background-color: #007bff;
+                border-color: #007bff;
+                color: #ffffff; /* White text for active item */
+            }
+
+    /* Form styling */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-control {
+        height: calc(2.5rem);
+        padding: 0.75rem 1rem;
+    }
+
+    textarea.form-control {
+        height: auto;
+    }
+
+    .col-form-label {
+        font-weight: 500;
+        color: #495057;
+    }
+
+    .form-group h6 {
+        color: #495057;
+        font-weight: 600;
+    }
+
+    .form-section {
+        margin-top: 2.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid #eee;
+    }
+
+    .card-body {
+        padding: 2rem;
+    }
+
+
+    .user-avatar-image-profile {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card seller-sidebar">
+                <div class="card-header text-black">
+                    <h5 class="mb-0">Trang người bán</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="@Url.Action("SellerProfile", "NguoiDungs")" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-store mr-2"></i> Thông tin cửa hàng
+                    </a>
+                    <a href="@Url.Action("QuanLySanPham", "NguoiBans", new { id = Model.MaNguoiBan })" class="list-group-item list-group-item-action">
+                        <i class="fas fa-box mr-2"></i> Sản phẩm
+                    </a>
+                    <a href="@Url.Action("SellerOrders", "NguoiDungs")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shopping-cart mr-2"></i> Đơn hàng
+                    </a>
+                    <a href="@Url.Action("SellerStatistics", "NguoiDungs")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-line mr-2"></i> Thống kê
+                    </a>
+                    <a href="@Url.Action("DangXuat", "DangNhap")" class="list-group-item list-group-item-action text-danger">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Đăng xuất
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <!-- Tabs navigation similar to user profile page -->
+                    <ul class="nav nav-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="@Url.Action("EditSellerProfile", "NguoiDungs")">Hồ sơ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("SellerChangePassword", "NguoiDungs")">Đổi mật khẩu</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("SellerDeleteAccount", "NguoiDungs")">Xóa tài khoản</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Hồ sơ người bán</h5>
+
+                    @if (ViewBag.SuccessMessage != null)
+                    {
+                        <div class="alert alert-success">
+                            @ViewBag.SuccessMessage
+                        </div>
+                    }
+
+                    @using (Html.BeginForm("EditSellerProfile", "NguoiDungs", FormMethod.Post, new { @class = "form", enctype = "multipart/form-data" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                        @Html.HiddenFor(model => model.MaNguoiDung)
+                        @Html.HiddenFor(model => model.MaNguoiBan)
+
+                        <div class="row">
+                            <!-- Left column for user avatar -->
+                            <div class="col-md-3 text-center mb-4">
+                                <div class="mb-3">
+                                    <div class="avatar-container border rounded-circle mx-auto mb-2" style="width: 150px; height: 150px; overflow: hidden; display: flex; align-items: center; justify-content: center; background-color: #f8f9fa;">
+                                        <img id="avatar-preview" src="@(string.IsNullOrEmpty(Model.AnhDaiDien) ? "~/Content/Images/default-avatar.png" : Url.Content(Model.AnhDaiDien))" alt="User Avatar" class="user-avatar-image-profile" />
+                                    </div>
+                                    <div class="mt-3">
+                                        <label for="userAvatar" class="btn btn-sm btn-outline-primary">Chọn ảnh</label>
+                                        <input type="file" id="userAvatar" name="anhDaiDien" class="d-none" accept="image/jpeg, image/png" />
+                                        <div class="small text-muted mt-2">
+                                            <ul class="pl-3 mb-0 text-left">
+                                                <li>Dung lượng tối đa: 1MB</li>
+                                                <li>Định dạng: JPEG, PNG</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right column for store information -->
+                            <div class="col-md-9">
+                                <!-- Thông tin cá nhân -->
+                                <h6 class="text-muted mb-4 border-bottom pb-2">Thông tin cá nhân</h6>
+
+                                <div class="form-group row mb-4">
+                                    <label class="col-sm-3 col-form-label">Tên</label>
+                                    <div class="col-sm-9">
+                                        @Html.TextBoxFor(model => model.TenNguoiDung, new { @class = "form-control" })
+                                        @Html.ValidationMessageFor(model => model.TenNguoiDung, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+                                <div class="form-group row mb-4">
+                                    <label class="col-sm-3 col-form-label">Email</label>
+                                    <div class="col-sm-9">
+                                        <input type="email" class="form-control" value="@Model.Email" readonly />
+                                    </div>
+                                </div>
+
+                                <div class="form-group row mb-4">
+                                    <label class="col-sm-3 col-form-label">Số điện thoại</label>
+                                    <div class="col-sm-9">
+                                        @Html.TextBoxFor(model => model.SoDienThoai, new { @class = "form-control" })
+                                        @Html.ValidationMessageFor(model => model.SoDienThoai, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+                                <div class="form-group row mb-4">
+                                    <label class="col-sm-3 col-form-label">Giới tính</label>
+                                    <div class="col-sm-9">
+                                        <select class="custom-select" name="GioiTinh">
+                                            <option value="Nam" @(Model.GioiTinh == "Nam" ? "selected" : "")>Nam</option>
+                                            <option value="Nữ" @(Model.GioiTinh == "Nữ" ? "selected" : "")>Nữ</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row mb-4">
+                                    <label class="col-sm-3 col-form-label">Ngày sinh</label>
+                                    <div class="col-sm-9">
+                                        @Html.TextBoxFor(model => model.NgaySinh, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+                                    </div>
+                                </div>
+
+                                <!-- Thông tin cửa hàng -->
+                                <h6 class="text-muted mb-4 mt-5 border-bottom pb-2">Thông tin cửa hàng</h6>
+
+                                <div class="form-group row mb-4">
+                                    <label class="col-sm-3 col-form-label">Tên cửa hàng</label>
+                                    <div class="col-sm-9">
+                                        @Html.TextBoxFor(model => model.TenCuaHang, new { @class = "form-control" })
+                                        @Html.ValidationMessageFor(model => model.TenCuaHang, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+                                <div class="form-group row mb-4">
+                                    <label class="col-sm-3 col-form-label">Mô tả cửa hàng</label>
+                                    <div class="col-sm-9">
+                                        @Html.TextAreaFor(model => model.MoTaCuaHang, new { @class = "form-control", rows = 3 })
+                                        @Html.ValidationMessageFor(model => model.MoTaCuaHang, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+                                <div class="form-group row mb-4">
+                                    <label class="col-sm-3 col-form-label">Địa chỉ cửa hàng</label>
+                                    <div class="col-sm-9">
+                                        @Html.TextBoxFor(model => model.DiaChiCuaHang, new { @class = "form-control" })
+                                        @Html.ValidationMessageFor(model => model.DiaChiCuaHang, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+                                <div class="form-group row mb-4">
+                                    <label class="col-sm-3 col-form-label">Số điện thoại cửa hàng</label>
+                                    <div class="col-sm-9">
+                                        @Html.TextBoxFor(model => model.SoDienThoaiCuaHang, new { @class = "form-control" })
+                                        @Html.ValidationMessageFor(model => model.SoDienThoaiCuaHang, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- Đặt form upload chứng chỉ riêng -->
+                        <div class="mt-5 p-4 bg-light rounded">
+                            <h5 class="mb-4 border-bottom pb-3">Chứng chỉ <span class="text-muted small">(tối đa 5 chứng chỉ)</span></h5>
+
+                            <div class="row mb-4">
+                                <!-- Certificate Upload -->
+                                <div class="col-md-12">
+                                    <div class="custom-file">
+                                        <input type="file" class="custom-file-input" id="certificateFiles" name="AnhChungChi" multiple accept="image/*">
+                                        <label class="custom-file-label" for="certificateFiles">Chọn ảnh chứng chỉ...</label>
+                                    </div>
+                                    <small class="form-text text-muted mt-2">
+                                        <ul class="ps-3 mb-0">
+                                            <li>Dung lượng tối đa: 2MB mỗi ảnh</li>
+                                            <li>Định dạng hỗ trợ: JPG, PNG</li>
+                                            <li>Vui lòng đặt tên file là tên chứng chỉ</li>
+                                            <li>File sẽ tự động được tải lên sau khi chọn</li>
+                                        </ul>
+                                    </small>
+                                </div>
+           
+                            </div>
+
+                            <!-- Certificates Preview -->
+                            <div class="row" id="certificates-container">
+                                @if (Model.DanhSachChungChi != null && Model.DanhSachChungChi.Any())
+                                {
+                                    foreach (var chungChi in Model.DanhSachChungChi)
+                                    {
+                                        <div class="col-md-3 mb-4 certificate-item" data-id="@chungChi.MaAnhChungChi">
+                                            <div class="card shadow-sm">
+                                                <img src="@Url.Content(chungChi.DuongDanAnh)" class="card-img-top" alt="@chungChi.TenChungChi" style="height: 160px; object-fit: cover;">
+                                                <div class="card-body p-3">
+                                                    <p class="card-text small mb-1 font-weight-bold">@chungChi.TenChungChi</p>
+                                                    <p class="card-text small text-muted mb-2">Ngày cập nhật: @chungChi.NgayCapNhat.ToString("dd/MM/yyyy")</p>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger btn-block delete-certificate" data-id="@chungChi.MaAnhChungChi">
+                                                        <i class="fas fa-times mr-1"></i> Xóa
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="col-12 text-center py-4 no-certificates">
+                                        <p class="text-muted">Chưa có chứng chỉ nào. Hãy thêm chứng chỉ để tạo niềm tin với khách hàng!</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-save mr-1"></i> Lưu thông tin
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+$(document).ready(function () {
+    // Tự động tải lên khi chọn file
+    $('#certificateFiles').on('change', function () {
+        var fileInput = $(this)[0];
+        var files = fileInput.files;
+        var fileCount = files.length;
+
+        if (fileCount === 0) {
+            return;
+        }
+
+        // Kiểm tra số lượng file
+        if (fileCount > 5) {
+            alert('Bạn chỉ có thể tải lên tối đa 5 chứng chỉ cùng một lúc.');
+            $(this).val('');
+            return;
+        }
+
+        // Kiểm tra tổng số chứng chỉ (hiện có + mới)
+        var currentCount = $('.certificate-item').length;
+        if (currentCount + fileCount > 5) {
+            alert('Tổng số chứng chỉ không thể vượt quá 5. Bạn có thể tải lên thêm ' + (5 - currentCount) + ' chứng chỉ.');
+            $(this).val('');
+            return;
+        }
+
+        // Hiển thị tên file đã chọn
+        var label = fileCount > 1 ? fileCount + ' file đã chọn' : $(this).val().split('\\').pop();
+        $(this).next('.custom-file-label').html(label);
+
+        // Tạo FormData object
+        var formData = new FormData();
+
+        // Thêm token chống giả mạo
+        formData.append("__RequestVerificationToken", $('input[name="__RequestVerificationToken"]').val());
+
+        // Thêm các tham số cần thiết
+        formData.append("MaNguoiDung", $('#MaNguoiDung').val());
+        formData.append("MaNguoiBan", $('#MaNguoiBan').val());
+
+        // Thêm các file đã chọn
+        for (var i = 0; i < fileCount; i++) {
+            formData.append("AnhChungChi", files[i]);
+        }
+
+        // Hiển thị thông báo đang tải
+        var $loadingMsg = $('<div class="mt-2 text-primary uploading-message"><i class="fas fa-spinner fa-spin"></i> Đang tải lên chứng chỉ...</div>');
+        $('.custom-file').after($loadingMsg);
+
+        // Gửi AJAX request
+        $.ajax({
+            url: '@Url.Action("UploadCertificates", "NguoiDungs")',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            timeout: 30000, // Timeout sau 30 giây
+            success: function(response) {
+                if (response.success) {
+                    // Xóa thông báo "không có chứng chỉ" nếu có
+                    $('.no-certificates').remove();
+
+                    // Thêm chứng chỉ mới vào UI
+                    $.each(response.certificates, function(index, cert) {
+                        var certificateHtml = `
+                            <div class="col-md-3 mb-4 certificate-item" data-id="${cert.Id}">
+                                <div class="card shadow-sm">
+                                    <img src="${cert.Anh}" class="card-img-top" alt="${cert.Ten}" style="height: 160px; object-fit: cover;">
+                                    <div class="card-body p-3">
+                                        <p class="card-text small mb-1 font-weight-bold">${cert.Ten}</p>
+                                        <p class="card-text small text-muted mb-2">Ngày cập nhật: ${cert.Ngay}</p>
+                                        <button type="button" class="btn btn-sm btn-outline-danger btn-block delete-certificate" data-id="${cert.Id}">
+                                            <i class="fas fa-times mr-1"></i> Xóa
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        $('#certificates-container').append(certificateHtml);
+                    });
+
+                    // Reset form
+                    fileInput.value = '';
+                    $('.custom-file-label').html('Chọn ảnh chứng chỉ...');
+
+                    // Hiển thị thông báo thành công
+                    var $successMsg = $('<div class="alert alert-success mt-2">Tải lên chứng chỉ thành công!</div>');
+                    $('.custom-file').after($successMsg);
+                    setTimeout(function() {
+                        $successMsg.fadeOut(function() {
+                            $(this).remove();
+                        });
+                    }, 3000);
+                } else {
+                    alert('Lỗi: ' + response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                // Xử lý lỗi kết nối
+                var errorMessage = "Không thể kết nối đến máy chủ. Vui lòng thử lại sau.";
+                if (status === "timeout") {
+                    errorMessage = "Quá thời gian chờ kết nối. Vui lòng thử lại sau.";
+                }
+
+                alert(errorMessage);
+            },
+            complete: function() {
+                // Xóa thông báo đang tải
+                $loadingMsg.remove();
+            }
+        });
+    });
+
+    // Xử lý nút xóa chứng chỉ (giữ nguyên phần này)
+    $(document).on('click', '.delete-certificate', function(e) {
+        e.preventDefault();
+
+        var $btn = $(this);
+        var certificateId = $btn.data('id');
+
+        if (confirm('Bạn có chắc chắn muốn xóa chứng chỉ này?')) {
+            $.ajax({
+                url: '@Url.Action("DeleteCertificate", "NguoiDungs")',
+                type: 'POST',
+                data: { id: certificateId },
+                success: function (result) {
+                    if (result.success) {
+                        // Xóa phần tử UI
+                        $btn.closest('.certificate-item').fadeOut(function() {
+                            $(this).remove();
+
+                            // Kiểm tra nếu không còn chứng chỉ nào
+                            if ($('.certificate-item').length === 0) {
+                                $('#certificates-container').html(
+                                    '<div class="col-12 text-center py-4">' +
+                                    '<p class="text-muted">Chưa có chứng chỉ nào. Hãy thêm chứng chỉ để tạo niềm tin với khách hàng!</p>' +
+                                    '</div>'
+                                );
+                            }
+                        });
+                    } else {
+                        alert(result.message || 'Có lỗi xảy ra khi xóa chứng chỉ.');
+                    }
+                },
+                error: function () {
+                    alert('Không thể kết nối đến máy chủ. Vui lòng thử lại sau.');
+                }
+            });
+        }
+    });
+
+    // Xử lý form submit (giữ nguyên phần này)
+    $('form').on('submit', function() {
+        // Hiển thị thông báo đang xử lý
+        if ($('#certificateFiles')[0].files.length > 0) {
+            var submitBtn = $(this).find('button[type="submit"]');
+            submitBtn.prop('disabled', true);
+            submitBtn.html('<i class="fas fa-spinner fa-spin mr-1"></i> Đang xử lý...');
+        }
+    });
+});
+    </script>
+}

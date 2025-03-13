@@ -1,0 +1,143 @@
+﻿
+@{
+    ViewBag.Title = "DangKy";
+}
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tạo tài khoản mới - Medinet</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 100%; /* Độ rộng tối đa của container */
+            width: 80%; /* Chiếm toàn bộ chiều rộng trong phạm vi max-width */
+            margin: 0 auto; /* Căn giữa theo chiều ngang */
+        }
+
+        .left-section {
+            flex: 1;
+            padding: 40px;
+        }
+
+        .logo img {
+            height: 40px;
+        }
+
+        .form-container {
+            margin-top: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .password-note {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .register-button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .login-link {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .right-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .product-image img {
+            max-width: 100%;
+        }
+
+        .register-button {
+            width: 100%
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-section">
+            <div class="logo">
+                <img src="~/Content/images/medinet-logo.png" alt="MEDINET Logo">
+            </div>
+            <div class="form-container">
+                <h2>Tạo một tài khoản mới</h2>
+                <p>Hãy tham gia cùng chúng tôi và tận hưởng quyền truy cập liên mạch vào các dịch vụ của chúng tôi.</p>
+
+                @if (!string.IsNullOrEmpty(ViewBag.MessageRegister))
+                {
+                    <div class="alert alert-danger">
+                        @ViewBag.MessageRegister
+                    </div>
+                }
+
+                <form action="@Url.Action("DangKy", "DangKy")" method="post">
+                    <div class="form-group">
+                        <label for="hoTen">Họ và tên</label>
+                        <input type="text" id="hoTen" name="HoTen" class="form-control" placeholder="Nhập họ và tên" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="Email" class="form-control" placeholder="Nhập email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="matKhau">Mật khẩu</label>
+                        <input type="password" id="matKhau" name="MatKhau" class="form-control" placeholder="Nhập mật khẩu" required>
+                        <p class="password-note text-muted">
+                            Mật khẩu phải dài ít nhất 8 ký tự và bao gồm 1 chữ hoa, 1 chữ thường và 1 số.
+                        </p>
+                    </div>
+                    <button type="submit" class="register-button btn btn-primary">Tiếp tục</button>
+                    <p class="login-link text-center mt-3">
+                        Bạn có tài khoản không? <a href="@Url.Action("DangNhap", "DangNhap")">Đăng nhập</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+        <div class="right-section">
+            <div class="product-image">
+                <img src="~/Content/images/product-image.png" alt="Product Image" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</body>
+</html>

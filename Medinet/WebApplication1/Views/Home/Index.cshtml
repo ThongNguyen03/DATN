@@ -1,0 +1,72 @@
+﻿@model WebApplication1.Controllers.HomeViewModel
+@{
+    ViewBag.Title = "Trang chủ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+}
+
+<div class="container mt-4">
+    <!-- Phần hiển thị danh mục sản phẩm -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-uppercase font-weight-bold">DANH MỤC SẢN PHẨM</h2>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        @foreach (var danhMuc in Model.DanhMucSanPhams)
+        {
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                <div class="card h-100 text-center">
+                    <a href="@Url.Action("Index", "SanPham", new { maDanhMuc = danhMuc.MaDanhMuc })">
+                        @if (!string.IsNullOrEmpty(danhMuc.AnhDanhMucSanPham))
+                        {
+                            <img class="card-img-top" src="@Url.Content(danhMuc.AnhDanhMucSanPham)" alt="@danhMuc.TenDanhMuc" style="height: 150px; object-fit: cover;">
+                        }
+                        else
+                        {
+                            <img class="card-img-top" src="~/Content/Images/no-image.jpeg" alt="@danhMuc.TenDanhMuc" style="height: 150px; object-fit: cover;">
+                        }
+                        <div class="card-body">
+                            <h5 class="card-title">@danhMuc.TenDanhMuc</h5>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Phần hiển thị sản phẩm được đề xuất -->
+    <div class="row mb-4">
+        <div class="col-10">
+            <h2 class="text-uppercase font-weight-bold">SẢN PHẨM ĐƯỢC ĐỀ XUẤT</h2>
+        </div>
+        <div class="col-2 text-right">
+            <a href="@Url.Action("Index", "SanPham")" class="btn btn-link">Xem thêm</a>
+        </div>
+    </div>
+
+    <div class="row">
+        @foreach (var sanPham in Model.SanPhamDeXuats)
+        {
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                <div class="card h-100">
+                    <a href="@Url.Action("ChiTiet", "SanPham", new { id = sanPham.MaSanPham })">
+                        @if (sanPham.DanhSachAnhSanPham != null && sanPham.DanhSachAnhSanPham.Any())
+                        {
+                            <img class="card-img-top" src="@Url.Content(sanPham.DanhSachAnhSanPham.FirstOrDefault().DuongDanAnh)" alt="@sanPham.TenSanPham" style="height: 200px; object-fit: contain;">
+                        }
+                        else
+                        {
+                            <img class="card-img-top" src="~/Content/Images/no-image.jpeg" alt="@sanPham.TenSanPham" style="height: 200px; object-fit: contain;">
+                        }
+                        <div class="card-body">
+                            <h5 class="card-title">@sanPham.TenSanPham</h5>
+                            <p class="card-text font-weight-bold text-danger">@String.Format("{0:N0}", sanPham.GiaSanPham) đ</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+</div>

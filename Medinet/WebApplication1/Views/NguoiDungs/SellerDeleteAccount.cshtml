@@ -1,0 +1,247 @@
+﻿@model WebApplication1.Controllers.DeleteAccountViewModel
+
+@{
+    ViewBag.Title = "Xóa tài khoản người bán";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Custom styles for tabs and sidebar */
+    .nav-tabs .nav-link {
+        color: #6c757d; /* Gray for inactive tabs */
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+        .nav-tabs .nav-link.active {
+            color: #007bff; /* Blue for active tab */
+            font-weight: 500;
+            background-color: #fff;
+            border-bottom: 1px solid transparent;
+        }
+
+    .seller-sidebar {
+        background-color: #ffffff; /* White background for seller sidebar */
+        border: 1px solid #e9ecef;
+    }
+
+        .seller-sidebar .card-header {
+            background-color: #f8f9fa; /* Light gray header */
+            color: #212529; /* Dark text */
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .seller-sidebar .list-group-item {
+            background-color: transparent;
+            color: #212529; /* Dark text */
+            border-color: #e9ecef;
+        }
+
+            .seller-sidebar .list-group-item:hover {
+                background-color: #f8f9fa;
+            }
+
+            .seller-sidebar .list-group-item.active {
+                background-color: #007bff;
+                border-color: #007bff;
+                color: #ffffff; /* White text for active item */
+            }
+
+    /* Form styling */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-control {
+        height: calc(2.5rem);
+        padding: 0.75rem 1rem;
+    }
+
+    textarea.form-control {
+        height: auto;
+    }
+
+    .col-form-label {
+        font-weight: 500;
+        color: #495057;
+    }
+
+    .form-group h6 {
+        color: #495057;
+        font-weight: 600;
+    }
+
+    .card-body {
+        padding: 2rem;
+    }
+
+    .alert-warning {
+        background-color: #fff3cd;
+        border-color: #ffeeba;
+    }
+
+    .delete-warning-icon {
+        font-size: 3rem;
+        color: #f44336;
+    }
+
+    .custom-radio .custom-control-input:checked ~ .custom-control-label::before {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card seller-sidebar">
+                <div class="card-header text-black">
+                    <h5 class="mb-0">Trang người bán</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="@Url.Action("SellerProfile", "NguoiDungs")" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-store mr-2"></i> Thông tin cửa hàng
+                    </a>
+                    <a href="@Url.Action("QuanLySanPham", "NguoiBans", new { id = Model.MaNguoiBan })" class="list-group-item list-group-item-action">
+                        <i class="fas fa-box mr-2"></i> Sản phẩm
+                    </a>
+                    <a href="@Url.Action("SellerOrders", "NguoiDungs")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shopping-cart mr-2"></i> Đơn hàng
+                    </a>
+                    <a href="@Url.Action("SellerStatistics", "NguoiDungs")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-line mr-2"></i> Thống kê
+                    </a>
+                    <a href="@Url.Action("DangXuat", "DangNhap")" class="list-group-item list-group-item-action text-danger">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Đăng xuất
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <!-- Tabs navigation -->
+                    <ul class="nav nav-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("EditSellerProfile", "NguoiDungs")">Hồ sơ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("SellerChangePassword", "NguoiDungs")">Đổi mật khẩu</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="@Url.Action("SellerDeleteAccount", "NguoiDungs")">Xóa tài khoản</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Xóa tài khoản</h5>
+
+                    <div class="alert alert-warning mb-4">
+                        <div class="row align-items-center">
+                            <div class="col-auto text-center">
+                                <i class="fas fa-exclamation-triangle delete-warning-icon"></i>
+                            </div>
+                            <div class="col">
+                                <h6 class="alert-heading font-weight-bold">Cảnh báo!</h6>
+                                <p class="mb-0">Xóa tài khoản là hành động <strong>không thể hoàn tác</strong>. Khi bạn xóa tài khoản:</p>
+                                <ul class="mt-2 mb-0">
+                                    <li>Tất cả thông tin cửa hàng của bạn sẽ bị xóa</li>
+                                    <li>Bạn sẽ không thể truy cập vào trang quản lý người bán</li>
+                                    <li>Các sản phẩm của bạn sẽ không còn hiển thị trên cửa hàng</li>
+                                    <li>Các đơn hàng đang xử lý sẽ được chuyển cho quản trị viên</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    @using (Html.BeginForm("SellerDeleteAccount", "NguoiDungs", FormMethod.Post, new { @class = "form", id = "deleteAccountForm" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                        <div class="row justify-content-center">
+                            <div class="col-md-10">
+                                <div class="form-group">
+                                    <label class="font-weight-medium">Lý do xóa tài khoản</label>
+                                    <div class="mt-2">
+                                        <div class="custom-control custom-radio mb-2">
+                                            @Html.RadioButtonFor(model => model.LyDo, "Không hài lòng với dịch vụ", new { @class = "custom-control-input", id = "reason1" })
+                                            <label class="custom-control-label" for="reason1">Không hài lòng với dịch vụ</label>
+                                        </div>
+                                        <div class="custom-control custom-radio mb-2">
+                                            @Html.RadioButtonFor(model => model.LyDo, "Quá nhiều thủ tục phức tạp", new { @class = "custom-control-input", id = "reason2" })
+                                            <label class="custom-control-label" for="reason2">Quá nhiều thủ tục phức tạp</label>
+                                        </div>
+                                        <div class="custom-control custom-radio mb-2">
+                                            @Html.RadioButtonFor(model => model.LyDo, "Chuyển sang nền tảng khác", new { @class = "custom-control-input", id = "reason3" })
+                                            <label class="custom-control-label" for="reason3">Chuyển sang nền tảng khác</label>
+                                        </div>
+                                        <div class="custom-control custom-radio mb-2">
+                                            @Html.RadioButtonFor(model => model.LyDo, "Ngừng kinh doanh", new { @class = "custom-control-input", id = "reason4" })
+                                            <label class="custom-control-label" for="reason4">Ngừng kinh doanh</label>
+                                        </div>
+                                        <div class="custom-control custom-radio">
+                                            @Html.RadioButtonFor(model => model.LyDo, "Lý do khác", new { @class = "custom-control-input", id = "reason5" })
+                                            <label class="custom-control-label" for="reason5">Lý do khác</label>
+                                        </div>
+                                    </div>
+                                    @Html.ValidationMessageFor(model => model.LyDo, "", new { @class = "text-danger" })
+                                </div>
+
+                                <div class="form-group mt-4">
+                                    <label class="font-weight-medium">Nhập email của bạn để xác nhận</label>
+                                    @Html.TextBoxFor(model => model.Email, new { @class = "form-control", placeholder = "Nhập email của bạn" })
+                                    @Html.ValidationMessageFor(model => model.Email, "", new { @class = "text-danger" })
+                                    <small class="form-text text-muted">Vui lòng nhập email @ViewBag.UserEmail để xác nhận.</small>
+                                </div>
+
+                                <div class="form-group mt-3">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="confirmDelete" required>
+                                        <label class="custom-control-label" for="confirmDelete">
+                                            Tôi hiểu rằng việc xóa tài khoản là không thể hoàn tác và tất cả dữ liệu của tôi sẽ bị mất.
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group mt-5 text-center">
+                                    <button type="submit" class="btn btn-danger px-5" id="deleteAccountBtn" disabled>
+                                        <i class="fas fa-trash-alt mr-1"></i> Xóa tài khoản người bán
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Kích hoạt/vô hiệu hóa nút xóa tài khoản dựa trên checkbox xác nhận
+            $('#confirmDelete').change(function () {
+                if ($(this).is(':checked')) {
+                    $('#deleteAccountBtn').prop('disabled', false);
+                } else {
+                    $('#deleteAccountBtn').prop('disabled', true);
+                }
+            });
+
+            // Hiển thị hộp thoại xác nhận trước khi gửi form
+            $('#deleteAccountForm').submit(function (e) {
+                if (!confirm('Bạn chắc chắn muốn xóa tài khoản người bán? Hành động này không thể hoàn tác.')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+}

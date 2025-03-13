@@ -1,0 +1,625 @@
+﻿@model IEnumerable<WebApplication1.Models.NguoiDung>
+@{
+    ViewBag.Title = "Quản lý người dùng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Sidebar styles */
+    .page-container {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    .sidebar {
+        width: 250px;
+        background-color: #fff;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 100;
+        padding-top: 15px;
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        margin-bottom: 15px;
+    }
+
+    .sidebar-logo {
+        height: 40px;
+        margin-right: 10px;
+    }
+
+    .sidebar-heading {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #6c757d;
+        padding: 0 20px;
+        margin-bottom: 10px;
+    }
+
+    .sidebar-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-item {
+        position: relative;
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        color: #495057;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+        .sidebar-link i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .sidebar-link:hover, .sidebar-item.active .sidebar-link {
+            color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+
+            .sidebar-item.active .sidebar-link:before {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 3px;
+                background-color: #0d6efd;
+            }
+
+    /* Main content styles */
+    .main-content {
+        flex: 1;
+        padding: 20px;
+    }
+
+    /* Table styles để giống hình */
+    .table {
+        margin-bottom: 0;
+    }
+
+        .table thead th {
+            border-bottom: 2px solid #dee2e6;
+            color: #495057;
+            font-weight: 600;
+        }
+
+    .btn-action {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        border-radius: 0.2rem;
+    }
+
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 15px;
+    }
+
+    .badge-role {
+        padding: 5px 10px;
+        border-radius: 20px;
+    }
+
+    .badge-status {
+        padding: 5px 10px;
+        border-radius: 20px;
+    }
+
+</style>
+
+<div class="page-container">
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+
+
+        <h6 class="sidebar-heading">CHỨC NĂNG</h6>
+
+        <ul class="sidebar-nav">
+            <li class="sidebar-item">
+                <a href="@Url.Action("Dashboard", "Admin")" class="sidebar-link">
+                    <i class="bi bi-grid"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item active">
+                <a href="@Url.Action("UserManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-people"></i>
+                    <span>Quản lý người dùng</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("ProductManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-box"></i>
+                    <span>Quản lý sản phẩm</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("CategoryManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-list-nested"></i>
+                    <span>Quản lý danh mục</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("OrderManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-cart3"></i>
+                    <span>Quản lý đơn hàng</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("TransactionManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-currency-exchange"></i>
+                    <span>Quản lý giao dịch</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        @using (Html.BeginForm("EmptyForm", "Admin", FormMethod.Post, new { id = "csrfForm" }))
+        {@Html.AntiForgeryToken()}
+
+        <div class="container-fluid p-0">
+            <h1 class="h3 mb-3">@ViewBag.Title</h1>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <form class="d-flex">
+                                        <input class="form-control me-2" type="search" placeholder="Tìm kiếm tài khoản" aria-label="Search" id="searchInput">
+                                        <button class="btn btn-outline-primary" type="submit"><img src="~/Content/images/Search-icon.png" /></button>
+                                    </form>
+                                </div>
+                                <div class="col-md-2">
+                                    <select class="form-select" id="roleFilter">
+                                        <option value="">Vai trò</option>
+                                        <option value="Admin">Admin</option>
+                                        <option value="Buyer">Buyer</option>
+                                        <option value="Seller">Seller</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <select class="form-select" id="statusFilter">
+                                        <option value="">Trạng thái</option>
+                                        <option value="Active">Active</option>
+                                        <option value="Inactive">Inactive</option>
+                                        <option value="Banned">Banned</option>
+                                        <option value="Upgrade">Upgrade</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Tên</th>
+                                            <th>Vai trò</th>
+                                            <th>Số điện thoại</th>
+                                            <th>Email</th>
+                                            <th>Trạng thái</th>
+                                            <th>Hành động</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in Model)
+                                        {
+                                            var statusClass = item.TrangThai == "Active" ? "bg-success" :
+                                                             (item.TrangThai == "Inactive" ? "bg-secondary" : "bg-danger");
+                                            var roleClass = item.VaiTro == "Admin" ? "bg-primary" :
+                                                           (item.VaiTro == "Seller" ? "bg-info" : "bg-success");
+
+                                            <tr>
+                                                <td>@item.MaNguoiDung</td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        @if (!string.IsNullOrEmpty(item.AnhDaiDien))
+                                                        {
+                                                            <img src="@Url.Content(item.AnhDaiDien)" class="rounded-circle me-2" width="32" height="32" alt="Avatar">
+                                                        }
+                                                        else
+                                                        {
+                                                            <img src="@Url.Content("~/Content/Images/default-avatar.png")" class="rounded-circle me-2" width="32" height="32" alt="Default Avatar">
+                                                        }
+                                                        @item.TenNguoiDung
+                                                    </div>
+                                                </td>
+                                                <td><span class="badge @roleClass">@item.VaiTro</span></td>
+                                                <td>@item.SoDienThoai</td>
+                                                <td>@item.Email</td>
+                                                <td><span class="badge @statusClass">@item.TrangThai</span></td>
+                                                <td class="d-flex gap-1">
+                                                    <a href="@Url.Action("UserDetails", "Admin", new { id = item.MaNguoiDung })" class="btn btn-sm btn-secondary">Xem</a>
+
+                                                    @if (item.TrangThai == "Active")
+                                                    {
+                                                        <button class="btn btn-sm btn-warning lock-user-btn" data-id="@item.MaNguoiDung">Khóa</button>
+
+                                                        if (item.VaiTro != "Admin")
+                                                        {
+                                                            <button class="btn btn-sm btn-danger delete-user-btn" data-id="@item.MaNguoiDung">Xóa</button>
+                                                        }
+                                                    }
+                                                    else if (item.TrangThai == "Banned")
+                                                    {
+                                                        <button class="btn btn-sm btn-info unlock-user-btn" data-id="@item.MaNguoiDung">Mở khóa</button>
+
+                                                        if (item.VaiTro != "Admin")
+                                                        {
+                                                            <button class="btn btn-sm btn-danger delete-user-btn" data-id="@item.MaNguoiDung">Xóa</button>
+                                                        }
+                                                    }
+                                                    else if (item.TrangThai == "Inactive")
+                                                    {
+                                                        <button class="btn btn-sm btn-success restore-user-btn" data-id="@item.MaNguoiDung">Khôi phục</button>
+                                                    }
+                                                    else if (item.TrangThai == "Upgrade")
+                                                    {
+                                                        <button class="btn btn-sm btn-primary upgrade-seller-btn" data-id="@item.MaNguoiDung">Nâng cấp</button>
+                                                        <button class="btn btn-sm btn-danger reject-upgrade-btn" data-id="@item.MaNguoiDung">Từ chối</button>
+                                                        <button class="btn btn-sm btn-warning lock-user-btn" data-id="@item.MaNguoiDung">Khóa</button>
+
+                                                        if (item.VaiTro != "Admin")
+                                                        {
+                                                            <button class="btn btn-sm btn-danger delete-user-btn" data-id="@item.MaNguoiDung">Xóa</button>
+                                                        }
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <nav>
+                                <ul class="pagination justify-content-center mb-0">
+                                    @if (ViewBag.CurrentPage > 1)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" href="@Url.Action("UserManagement", "Admin", new { page = ViewBag.CurrentPage - 1 })" aria-label="Previous">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="page-item disabled">
+                                            <a class="page-link" href="#" tabindex="-1" aria-label="Previous">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                    }
+
+                                    @for (int i = Math.Max(1, ViewBag.CurrentPage - 2); i <= Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 2); i++)
+                                    {
+                                        <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                            <a class="page-link" href="@Url.Action("UserManagement", "Admin", new { page = i })">@i</a>
+                                        </li>
+                                    }
+
+                                    @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" href="@Url.Action("UserManagement", "Admin", new { page = ViewBag.CurrentPage + 1 })" aria-label="Next">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="page-item disabled">
+                                            <a class="page-link" href="#" tabindex="-1" aria-label="Next">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                    }
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Modal xác nhận xóa người dùng -->
+    <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteUserModalLabel">Xác nhận xóa người dùng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Bạn có chắc chắn muốn xóa người dùng này không? Hành động này không thể hoàn tác.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Xóa</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal từ chối nâng cấp người dùng thành người bán -->
+    <div class="modal fade" id="rejectUpgradeModal" tabindex="-1" aria-labelledby="rejectUpgradeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectUpgradeModalLabel">Từ chối nâng cấp thành người bán</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc chắn muốn từ chối yêu cầu nâng cấp thành người bán của người dùng này không?</p>
+                    <p>Hành động này sẽ hủy bỏ yêu cầu nâng cấp của người dùng.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-danger" id="confirmRejectBtn">Từ chối</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal nâng cấp người dùng thành người bán -->
+    <div class="modal fade" id="upgradeSellerModal" tabindex="-1" aria-labelledby="upgradeSellerModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="upgradeSellerModalLabel">Nâng cấp thành người bán</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc chắn muốn nâng cấp người dùng này thành người bán không?</p>
+                    <p>Người dùng sẽ cần cung cấp thêm thông tin cửa hàng sau khi được nâng cấp.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" id="confirmUpgradeBtn">Nâng cấp</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script>
+        $(document).ready(function () {
+            // Thêm dòng này vào đầu phần $(document).ready
+            var token = $('input[name="__RequestVerificationToken"]').val();
+            // Thiết lập các bộ lọc từ ViewBag
+            $("#roleFilter").val('@ViewBag.Role');
+            $("#statusFilter").val('@ViewBag.Status');
+
+            // Xử lý tìm kiếm
+            $("#searchInput").on("keyup", function () {
+                var value = $(this).val().toLowerCase();
+                $("table tbody tr").filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+
+            // Xử lý lọc theo vai trò - chuyển hướng khi thay đổi
+            $("#roleFilter").on("change", function () {
+                applyFilters();
+            });
+
+            // Xử lý lọc theo trạng thái - chuyển hướng khi thay đổi
+            $("#statusFilter").on("change", function () {
+                applyFilters();
+            });
+
+            // Hàm áp dụng tất cả các bộ lọc
+            function applyFilters() {
+                var role = $("#roleFilter").val();
+                var status = $("#statusFilter").val();
+                var url = '@Url.Action("UserManagement", "Admin")';
+
+                var params = [];
+                if (role) params.push("role=" + role);
+                if (status) params.push("status=" + status);
+
+                if (params.length > 0) {
+                    url += "?" + params.join("&");
+                }
+
+                window.location.href = url;
+            }
+
+            function showNotification(type, message) {
+                var alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+                var alertHtml = '<div class="alert ' + alertClass + ' alert-dismissible fade show" role="alert">' +
+                    message +
+                    '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                    '</div>';
+
+                // Thêm thông báo vào đầu trang
+                $('.container-fluid').prepend(alertHtml);
+
+                // Tự động ẩn thông báo sau 5 giây
+                setTimeout(function () {
+                    $('.alert').alert('close');
+                }, 5000);
+            }
+
+            // Xử lý nút xóa người dùng
+            $(".delete-user-btn").on("click", function () {
+                var userId = $(this).data("id");
+                $("#confirmDeleteBtn").data("id", userId);
+                $("#deleteUserModal").modal("show");
+            });
+
+            // Xác nhận xóa người dùng
+            $("#confirmDeleteBtn").on("click", function () {
+                var userId = $(this).data("id");
+
+                $.ajax({
+                    url: '@Url.Action("DeleteUser", "Admin")/' + userId,
+                    type: 'POST',
+                    data: { id: userId, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
+                    success: function (result) {
+                        if (result.success) {
+                            $("#deleteUserModal").modal("hide");
+                            // Reload trang hoặc xóa hàng khỏi bảng
+                            location.reload();
+                        } else {
+                            alert("Lỗi: " + result.message);
+                        }
+                    },
+                    error: function () {
+                        alert("Đã xảy ra lỗi khi xóa người dùng.");
+                    }
+                });
+            });
+
+            // Xử lý nút từ chối nâng cấp
+            $(".reject-upgrade-btn").on("click", function () {
+                var userId = $(this).data("id");
+                $("#confirmRejectBtn").data("id", userId);
+                $("#rejectUpgradeModal").modal("show");
+            });
+
+            // Xác nhận từ chối nâng cấp
+            $("#confirmRejectBtn").on("click", function () {
+                var userId = $(this).data("id");
+
+                $.ajax({
+                    url: '@Url.Action("RejectUpgradeToSeller", "Admin")',
+                    type: 'POST',
+                    data: { id: userId, __RequestVerificationToken: token },
+                    success: function (result) {
+                        if (result.success) {
+                            $("#rejectUpgradeModal").modal("hide");
+                            location.reload();
+                        } else {
+                            alert("Lỗi: " + result.message);
+                        }
+                    },
+                    error: function () {
+                        alert("Đã xảy ra lỗi khi từ chối nâng cấp người dùng.");
+                    }
+                });
+            });
+            // Xử lý nút khóa người dùng
+            $(".lock-user-btn").on("click", function () {
+                var userId = $(this).data("id");
+
+                $.ajax({
+                    url: '@Url.Action("LockUser", "Admin")',
+                    type: 'POST',
+                    data: { id: userId, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
+                    success: function (result) {
+                        if (result.success) {
+                            location.reload();
+                        } else {
+                            alert("Lỗi: " + result.message);
+                        }
+                    },
+                    error: function () {
+                        alert("Đã xảy ra lỗi khi khóa người dùng.");
+                    }
+                });
+            });
+
+            // Xử lý nút mở khóa người dùng
+            $(".unlock-user-btn").on("click", function () {
+                var userId = $(this).data("id");
+
+                $.ajax({
+                    url: '@Url.Action("UnlockUser", "Admin")',
+                    type: 'POST',
+                    data: { id: userId, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
+                    success: function (result) {
+                        if (result.success) {
+                            location.reload();
+                        } else {
+                            alert("Lỗi: " + result.message);
+                        }
+                    },
+                    error: function () {
+                        alert("Đã xảy ra lỗi khi mở khóa người dùng.");
+                    }
+                });
+            });
+
+            // Xử lý nút nâng cấp thành người bán
+            $(".upgrade-seller-btn").on("click", function () {
+                var userId = $(this).data("id");
+                $("#confirmUpgradeBtn").data("id", userId);
+                $("#upgradeSellerModal").modal("show");
+            });
+
+            // Xác nhận nâng cấp thành người bán
+            $("#confirmUpgradeBtn").on("click", function () {
+                var userId = $(this).data("id");
+
+                $.ajax({
+                    url: '@Url.Action("UpgradeToSeller", "Admin")',
+                    type: 'POST',
+                    data: { id: userId, __RequestVerificationToken: token },
+                    success: function (result) {
+                        if (result.success) {
+                            $("#upgradeSellerModal").modal("hide");
+                            location.reload();
+                        } else {
+                            alert("Lỗi: " + result.message);
+                        }
+                    },
+                    error: function () {
+                        alert("Đã xảy ra lỗi khi nâng cấp người dùng.");
+                    }
+                });
+            });
+
+            // Xử lý nút khôi phục người dùng
+            $(".restore-user-btn").on("click", function () {
+                var userId = $(this).data("id");
+
+                if (confirm("Bạn có chắc chắn muốn khôi phục tài khoản này không?")) {
+                    $.ajax({
+                        url: '@Url.Action("RestoreUser", "Admin")',
+                        type: 'POST',
+                        data: { id: userId, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
+                        success: function (result) {
+                            if (result.success) {
+                                location.reload();
+                            } else {
+                                alert("Lỗi: " + result.message);
+                            }
+                        },
+                        error: function () {
+                            alert("Đã xảy ra lỗi khi khôi phục tài khoản người dùng.");
+                        }
+                    });
+                }
+            });
+        });
+        </script>
+    }

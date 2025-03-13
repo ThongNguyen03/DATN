@@ -1,0 +1,63 @@
+﻿@model IEnumerable<WebApplication1.Models.NguoiBan>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.NguoiDung.TenNguoiDung)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.TenCuaHang)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.MoTaCuaHang)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.DiaChiCuaHang)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.SoDienThoaiCuaHang)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.NgayTao)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.NguoiDung.TenNguoiDung)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.TenCuaHang)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.MoTaCuaHang)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.DiaChiCuaHang)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.SoDienThoaiCuaHang)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.NgayTao)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.MaNguoiBan }) |
+            @Html.ActionLink("Details", "Details", new { id=item.MaNguoiBan }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.MaNguoiBan })
+        </td>
+    </tr>
+}
+
+</table>

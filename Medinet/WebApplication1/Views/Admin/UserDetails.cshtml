@@ -1,0 +1,630 @@
+﻿@model WebApplication1.Models.NguoiDung
+@{
+    ViewBag.Title = "Chi tiết người dùng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var statusClass = Model.TrangThai == "Active" ? "bg-success" :
+                     (Model.TrangThai == "Inactive" ? "bg-secondary" :
+                     (Model.TrangThai == "Banned" ? "bg-danger" : "bg-warning"));
+    var roleClass = Model.VaiTro == "Admin" ? "bg-primary" :
+                   (Model.VaiTro == "Seller" ? "bg-info" : "bg-success");
+}
+<style>
+    /* Sidebar styles */
+    .page-container {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    .sidebar {
+        width: 250px;
+        background-color: #fff;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 100;
+        padding-top: 15px;
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        margin-bottom: 15px;
+    }
+
+    .sidebar-logo {
+        height: 40px;
+        margin-right: 10px;
+    }
+
+    .sidebar-heading {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #6c757d;
+        padding: 0 20px;
+        margin-bottom: 10px;
+    }
+
+    .sidebar-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-item {
+        position: relative;
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        color: #495057;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+        .sidebar-link i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .sidebar-link:hover, .sidebar-item.active .sidebar-link {
+            color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+
+            .sidebar-item.active .sidebar-link:before {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 3px;
+                background-color: #0d6efd;
+            }
+
+    /* Main content styles */
+    .main-content {
+        flex: 1;
+        padding: 20px;
+    }
+
+    .badge-role, .badge-status {
+        padding: 5px 10px;
+        border-radius: 20px;
+    }
+
+    /* Card styles */
+    .card {
+        border-radius: 0.25rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        margin-bottom: 1.5rem;
+    }
+
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    /* Button styles */
+    .btn-action {
+        margin-right: 0.25rem;
+    }
+</style>
+
+@using (Html.BeginForm("EmptyForm", "Admin", FormMethod.Post, new { id = "csrfForm" }))
+{@Html.AntiForgeryToken()}
+<div class="page-container">
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+
+        <h6 class="sidebar-heading">CHỨC NĂNG</h6>
+
+        <ul class="sidebar-nav">
+            <li class="sidebar-item">
+                <a href="@Url.Action("Dashboard", "Admin")" class="sidebar-link">
+                    <i class="bi bi-grid"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item active">
+                <a href="@Url.Action("UserManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-people"></i>
+                    <span>Quản lý người dùng</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("ProductManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-box"></i>
+                    <span>Quản lý sản phẩm</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("CategoryManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-list-nested"></i>
+                    <span>Quản lý danh mục</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("OrderManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-cart3"></i>
+                    <span>Quản lý đơn hàng</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("TransactionManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-currency-exchange"></i>
+                    <span>Quản lý giao dịch</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container-fluid p-0">
+            <div class="mb-3">
+                <h1 class="h3 d-inline align-middle">@ViewBag.Title</h1>
+                <a href="@Url.Action("UserManagement", "Admin")" class="btn btn-primary float-end">
+                    <i class="fas fa-arrow-left"></i> Quay lại
+                </a>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 col-xl-3">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Thông tin cơ bản</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            @if (!string.IsNullOrEmpty(Model.AnhDaiDien))
+                            {
+                                <img src="@Url.Content(Model.AnhDaiDien)" alt="@Model.TenNguoiDung" class="img-fluid rounded-circle mb-2" width="128" height="128" />
+                            }
+                            else
+                            {
+                                <img src="@Url.Content("~/Content/Images/default-avatar.png")" alt="Default Avatar" class="img-fluid rounded-circle mb-2" width="128" height="128" />
+                            }
+                            <h5 class="card-title mb-0">@Model.TenNguoiDung</h5>
+                            <div class="text-muted mb-2">@Model.Email</div>
+
+                            <div>
+                                <span class="badge @roleClass">@Model.VaiTro</span>
+                                <span class="badge @statusClass">@Model.TrangThai</span>
+                            </div>
+                        </div>
+                        <hr class="my-0" />
+                        <div class="card-body">
+                            <h5 class="h6 card-title">Thông tin liên hệ</h5>
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-1"><span class="fas fa-phone fa-fw me-1"></span> @Model.SoDienThoai</li>
+                                <li class="mb-1"><span class="fas fa-at fa-fw me-1"></span> @Model.Email</li>
+                                <li class="mb-1"><span class="fas fa-venus-mars fa-fw me-1"></span> @Model.GioiTinh</li>
+                            </ul>
+                        </div>
+                        <hr class="my-0" />
+                        <div class="card-body">
+                            <h5 class="h6 card-title">Hành động</h5>
+                            <div class="d-grid gap-2">
+                                @if (Model.TrangThai == "Active")
+                                {
+                                    <button class="btn btn-warning lock-user-btn" data-id="@Model.MaNguoiDung">Khóa tài khoản</button>
+
+                                    if (Model.VaiTro != "Admin")
+                                    {
+                                        <button class="btn btn-danger delete-user-btn" data-id="@Model.MaNguoiDung">Xóa tài khoản</button>
+                                    }
+                                }
+                                else if (Model.TrangThai == "Banned")
+                                {
+                                    <button class="btn btn-info unlock-user-btn" data-id="@Model.MaNguoiDung">Mở khóa tài khoản</button>
+
+                                    if (Model.VaiTro != "Admin")
+                                    {
+                                        <button class="btn btn-danger delete-user-btn" data-id="@Model.MaNguoiDung">Xóa tài khoản</button>
+                                    }
+                                }
+                                else if (Model.TrangThai == "Inactive")
+                                {
+                                    <button class="btn btn-success restore-user-btn" data-id="@Model.MaNguoiDung">Khôi phục tài khoản</button>
+                                }
+                                else if (Model.TrangThai == "Upgrade")
+                                {
+                                    <button class="btn btn-primary upgrade-seller-btn" data-id="@Model.MaNguoiDung">Nâng cấp thành người bán</button>
+                                    <button class="btn btn-danger reject-upgrade-btn" data-id="@Model.MaNguoiDung">Từ chối nâng cấp</button>
+                                    <button class="btn btn-warning lock-user-btn" data-id="@Model.MaNguoiDung">Khóa tài khoản</button>
+
+                                    if (Model.VaiTro != "Admin")
+                                    {
+                                        <button class="btn btn-danger delete-user-btn" data-id="@Model.MaNguoiDung">Xóa tài khoản</button>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-8 col-xl-9">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Thông tin chi tiết</h5>
+                        </div>
+                        <div class="card-body h-100">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">ID người dùng</label>
+                                        <input type="text" class="form-control" value="@Model.MaNguoiDung" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Họ tên</label>
+                                        <input type="text" class="form-control" value="@Model.TenNguoiDung" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-control" value="@Model.Email" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Số điện thoại</label>
+                                        <input type="text" class="form-control" value="@Model.SoDienThoai" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Giới tính</label>
+                                        <input type="text" class="form-control" value="@Model.GioiTinh" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Ngày sinh</label>
+                                        <input type="text" class="form-control" value="@(Model.NgayThangNamSinh?.ToString("dd/MM/yyyy") ?? "Chưa cập nhật")" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Ngày tạo</label>
+                                        <input type="text" class="form-control" value="@Model.NgayTao.ToString("dd/MM/yyyy HH:mm")" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Ngày cập nhật</label>
+                                        <input type="text" class="form-control" value="@(Model.NgayCapNhat.ToString("dd/MM/yyyy HH:mm") ?? "Chưa cập nhật")" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (Model.VaiTro == "Seller" || Model.TrangThai == "Upgrade" || Model.XetDuyetThanhNguoiBan == true)
+                    {
+                        var nguoiBan = ViewBag.NguoiBan as WebApplication1.Models.NguoiBan;
+                        if (nguoiBan != null)
+                        {
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Thông tin người bán</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Tên cửa hàng</label>
+                                                <input type="text" class="form-control" value="@nguoiBan.TenCuaHang" readonly>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Số điện thoại cửa hàng</label>
+                                                <input type="text" class="form-control" value="@nguoiBan.SoDienThoaiCuaHang" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Địa chỉ cửa hàng</label>
+                                                <input type="text" class="form-control" value="@nguoiBan.DiaChiCuaHang" readonly>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Ngày đăng ký</label>
+                                                <input type="text" class="form-control" value="@nguoiBan.NgayTao.ToString("dd/MM/yyyy HH:mm")" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Mô tả cửa hàng</label>
+                                        <textarea class="form-control" rows="3" readonly>@nguoiBan.MoTaCuaHang</textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Danh sách chứng chỉ -->
+                            <div class="card mt-3">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="card-title mb-0">Chứng chỉ đã tải lên</h5>
+                                </div>
+                                <div class="card-body">
+                                    @if (ViewBag.DanhSachChungChi != null && ((IEnumerable<WebApplication1.Models.AnhChungChi>)ViewBag.DanhSachChungChi).Any())
+                                    {
+                                        <div class="row">
+                                            @foreach (var chungChi in (IEnumerable<WebApplication1.Models.AnhChungChi>)ViewBag.DanhSachChungChi)
+                                            {
+                                                <div class="col-md-4 mb-3">
+                                                    <div class="card">
+                                                        <img src="@Url.Content(chungChi.DuongDanAnh)" class="card-img-top" alt="@chungChi.TenChungChi">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title">@chungChi.TenChungChi</h5>
+                                                            <p class="card-text">Ngày cập nhật: @chungChi.NgayCapNhat.ToString("dd/MM/yyyy")</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            <span>Người dùng đã yêu cầu nâng cấp lên người bán nhưng chưa tải lên chứng chỉ.</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        else if (Model.TrangThai == "Upgrade" || Model.XetDuyetThanhNguoiBan == true)
+                        {
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Thông tin yêu cầu nâng cấp</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <span>Người dùng này đã yêu cầu nâng cấp lên người bán nhưng chưa cung cấp thông tin chi tiết.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal xác nhận xóa người dùng -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteUserModalLabel">Xác nhận xóa người dùng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa người dùng <strong>@Model.TenNguoiDung</strong> không?</p>
+                <p>Hành động này không thể hoàn tác.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn" data-id="@Model.MaNguoiDung">Xóa</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal nâng cấp người dùng thành người bán -->
+<div class="modal fade" id="upgradeSellerModal" tabindex="-1" aria-labelledby="upgradeSellerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="upgradeSellerModalLabel">Nâng cấp thành người bán</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn nâng cấp người dùng <strong>@Model.TenNguoiDung</strong> thành người bán không?</p>
+                <p>Người dùng sẽ được thay đổi vai trò thành Seller trong hệ thống.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="confirmUpgradeBtn" data-id="@Model.MaNguoiDung">Nâng cấp</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal từ chối nâng cấp thành người bán -->
+<div class="modal fade" id="rejectUpgradeModal" tabindex="-1" aria-labelledby="rejectUpgradeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rejectUpgradeModalLabel">Từ chối nâng cấp thành người bán</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn từ chối yêu cầu nâng cấp thành người bán của <strong>@Model.TenNguoiDung</strong> không?</p>
+                <p>Hành động này sẽ hủy bỏ yêu cầu nâng cấp của người dùng.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmRejectBtn" data-id="@Model.MaNguoiDung">Từ chối</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Thêm token chống giả mạo CSRF
+            var token = $('input[name="__RequestVerificationToken"]').val();
+
+            // Xử lý nút xóa người dùng
+            $(".delete-user-btn").on("click", function () {
+                var userId = $(this).data("id");
+                $("#confirmDeleteBtn").data("id", userId);
+                $("#deleteUserModal").modal("show");
+            });
+
+            // Xác nhận xóa người dùng
+            $("#confirmDeleteBtn").on("click", function () {
+                var userId = $(this).data("id");
+
+                $.ajax({
+                    url: '@Url.Action("DeleteUser", "Admin")/' + userId,
+                    type: 'POST',
+                    data: { id: userId, __RequestVerificationToken: token },
+                    success: function (result) {
+                        if (result.success) {
+                            $("#deleteUserModal").modal("hide");
+                            window.location.href = '@Url.Action("UserManagement", "Admin")';
+                        } else {
+                            alert("Lỗi: " + result.message);
+                        }
+                    },
+                    error: function () {
+                        alert("Đã xảy ra lỗi khi xóa người dùng.");
+                    }
+                });
+            });
+
+            // Xử lý nút khóa người dùng
+            $(".lock-user-btn").on("click", function () {
+                var userId = $(this).data("id");
+
+                $.ajax({
+                    url: '@Url.Action("LockUser", "Admin")',
+                    type: 'POST',
+                    data: { id: userId, __RequestVerificationToken: token },
+                    success: function (result) {
+                        if (result.success) {
+                            location.reload();
+                        } else {
+                            alert("Lỗi: " + result.message);
+                        }
+                    },
+                    error: function () {
+                        alert("Đã xảy ra lỗi khi khóa người dùng.");
+                    }
+                });
+            });
+
+            // Xử lý nút mở khóa người dùng
+            $(".unlock-user-btn").on("click", function () {
+                var userId = $(this).data("id");
+
+                $.ajax({
+                    url: '@Url.Action("UnlockUser", "Admin")',
+                    type: 'POST',
+                    data: { id: userId, __RequestVerificationToken: token },
+                    success: function (result) {
+                        if (result.success) {
+                            location.reload();
+                        } else {
+                            alert("Lỗi: " + result.message);
+                        }
+                    },
+                    error: function () {
+                        alert("Đã xảy ra lỗi khi mở khóa người dùng.");
+                    }
+                });
+            });
+
+            // Xử lý nút từ chối nâng cấp
+            $(".reject-upgrade-btn").on("click", function () {
+                var userId = $(this).data("id");
+                $("#confirmRejectBtn").data("id", userId);
+                $("#rejectUpgradeModal").modal("show");
+            });
+
+            // Xác nhận từ chối nâng cấp
+            $("#confirmRejectBtn").on("click", function () {
+                var userId = $(this).data("id");
+
+                $.ajax({
+                    url: '@Url.Action("RejectUpgradeToSeller", "Admin")',
+                    type: 'POST',
+                    data: { id: userId, __RequestVerificationToken: token },
+                    success: function (result) {
+                        if (result.success) {
+                            $("#rejectUpgradeModal").modal("hide");
+                            location.reload();
+                        } else {
+                            alert("Lỗi: " + result.message);
+                        }
+                    },
+                    error: function () {
+                        alert("Đã xảy ra lỗi khi từ chối nâng cấp người dùng.");
+                    }
+                });
+            });
+
+            // Xử lý nút nâng cấp thành người bán
+            $(".upgrade-seller-btn").on("click", function () {
+                var userId = $(this).data("id");
+                $("#confirmUpgradeBtn").data("id", userId);
+                $("#upgradeSellerModal").modal("show");
+            });
+
+            function showNotification(type, message) {
+                var alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+                var alertHtml = '<div class="alert ' + alertClass + ' alert-dismissible fade show" role="alert">' +
+                    message +
+                    '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                    '</div>';
+
+                // Thêm thông báo vào đầu trang
+                $('.container-fluid').prepend(alertHtml);
+
+                // Tự động ẩn thông báo sau 5 giây
+                setTimeout(function () {
+                    $('.alert').alert('close');
+                }, 5000);
+            }
+
+            // Xác nhận nâng cấp thành người bán
+            $("#confirmUpgradeBtn").on("click", function () {
+                var userId = $(this).data("id");
+
+                $.ajax({
+                    url: '@Url.Action("UpgradeToSeller", "Admin")',
+                    type: 'POST',
+                    data: { id: userId, __RequestVerificationToken: token },
+                    success: function (result) {
+                        if (result.success) {
+                            $("#upgradeSellerModal").modal("hide");
+                            location.reload();
+                        } else {
+                            alert("Lỗi: " + result.message);
+                        }
+                    },
+                    error: function () {
+                        alert("Đã xảy ra lỗi khi nâng cấp người dùng.");
+                    }
+                });
+            });
+
+            // Xử lý nút khôi phục người dùng
+            $(".restore-user-btn").on("click", function () {
+                var userId = $(this).data("id");
+
+                if (confirm("Bạn có chắc chắn muốn khôi phục tài khoản này không?")) {
+                    $.ajax({
+                        url: '@Url.Action("RestoreUser", "Admin")',
+                        type: 'POST',
+                        data: { id: userId, __RequestVerificationToken: token },
+                        success: function (result) {
+                            if (result.success) {
+                                location.reload();
+                            } else {
+                                alert("Lỗi: " + result.message);
+                            }
+                        },
+                        error: function () {
+                            alert("Đã xảy ra lỗi khi khôi phục tài khoản người dùng.");
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+}

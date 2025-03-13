@@ -1,0 +1,193 @@
+﻿@model WebApplication1.Controllers.DeleteAccountViewModel
+@{
+    ViewBag.Title = "Xóa tài khoản";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Ưu tiên lấy từ ViewBag, nếu không có thì lấy từ Session
+    var anhDaiDien = ViewBag.AnhDaiDien ?? Session["AnhDaiDien"];
+    var tenNguoiDung = ViewBag.TenNguoiDung ?? Session["TenNguoiDung"];
+    var userEmail = ViewBag.UserEmail ?? "";
+}
+
+<style>
+    /* CSS cho tabs chưa active */
+    .nav-tabs .nav-link {
+        color: #6c757d; /* Màu xám cho các tab chưa được chọn */
+        background-color: transparent;
+        border-bottom: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+        /* CSS cho tab đang active */
+        .nav-tabs .nav-link.active {
+            color: #0d6efd; /* Màu xanh cho tab đang active */
+            background-color: transparent;
+            border-bottom: 2px solid #0d6efd;
+            font-weight: 500;
+        }
+
+        /* Hover effect */
+        .nav-tabs .nav-link:hover:not(.active) {
+            color: #0d6efd;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+    /* CSS cho sidebar item active */
+    .list-group-item.active-account {
+        color: #0d6efd !important;
+        background-color: rgba(13, 110, 253, 0.1);
+        font-weight: 500;
+    }
+
+    /* Initially hide the confirmation form */
+    #confirmDeleteForm {
+        display: none;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <img src="@(string.IsNullOrEmpty(anhDaiDien?.ToString()) ? "~/Content/Images/default-avatar.png" : Url.Content(anhDaiDien.ToString()))" alt="Ảnh đại diện" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
+                    <h5 class="mb-0">@tenNguoiDung</h5>
+                    <p class="text-muted"><a href="@Url.Action("Profile", "NguoiDungs")" class="text-decoration-none"><img src="~/Content/Images/edit-icon.png" width="16" height="16" class="me-1">Sửa thông tin</a></p>
+                </div>
+            </div>
+
+            <div class="list-group mb-4">
+                @{
+                    var accountActions = new[] { "Profile", "Addresses", "SellerUpgrade", "ChangePassword", "DeleteAccount" };
+                    var isAccountActive = accountActions.Contains(ViewContext.RouteData.Values["Action"].ToString());
+                }
+                <a href="@Url.Action("Profile", "NguoiDungs")" class="list-group-item list-group-item-action d-flex align-items-center @(isAccountActive ? "active-account" : "")">
+                    <i class="fas fa-user me-3"></i>Tài khoản của tôi
+                </a>
+                <a href="#" class="list-group-item list-group-item-action d-flex align-items-center">
+                    <i class="fas fa-bell me-3"></i>Thông báo
+                </a>
+                <a href="@Url.Action("Index", "Orders")" class="list-group-item list-group-item-action d-flex align-items-center">
+                    <i class="fas fa-shopping-bag me-3"></i>Đơn mua
+                </a>
+                <a href="@Url.Action("DangXuat", "DangNhap")" class="list-group-item list-group-item-action d-flex align-items-center text-danger">
+                    <i class="fas fa-sign-out-alt me-3"></i>Đăng xuất
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header bg-white p-0">
+                    <ul class="nav nav-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link px-4 @(ViewContext.RouteData.Values["Action"].ToString() == "Profile" ? "active" : "")" href="@Url.Action("Profile", "NguoiDungs")">Hồ sơ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link px-4 @(ViewContext.RouteData.Values["Action"].ToString() == "SellerUpgrade" ? "active" : "")" href="@Url.Action("SellerUpgrade", "NguoiDungs")">Nâng cấp tài khoản</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link px-4 @(ViewContext.RouteData.Values["Action"].ToString() == "ChangePassword" ? "active" : "")" href="@Url.Action("ChangePassword", "NguoiDungs")">Đổi mật khẩu</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link px-4 @(ViewContext.RouteData.Values["Action"].ToString() == "DeleteAccount" ? "active" : "")" href="@Url.Action("DeleteAccount", "NguoiDungs")">Xóa tài khoản</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card-body p-4">
+                    <h4 class="mb-4">Yêu cầu xóa tài khoản</h4>
+
+                    @if (ViewBag.SuccessMessage != null)
+                    {
+                        <div class="alert alert-success">
+                            @ViewBag.SuccessMessage
+                        </div>
+                    }
+
+                    <div id="emailVerificationForm">
+                        <div class="mb-3">
+                            <label class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" id="verifyEmail" class="form-control"  />
+                            <div class="form-text">
+                                Vui lòng nhập email của bạn để tiếp tục quá trình xóa tài khoản.
+                            </div>
+                            <div id="emailError" class="text-danger" style="display: none;">
+                                Email không khớp với tài khoản hiện tại.
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-start">
+                            <button type="button" id="verifyEmailBtn" class="btn btn-primary px-4">Xác nhận</button>
+                        </div>
+                    </div>
+
+                    <div id="confirmDeleteForm">
+                        @using (Html.BeginForm("DeleteAccount", "NguoiDungs", FormMethod.Post, new { @class = "max-width-500" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                            <div class="mb-3">
+                                <label class="form-label">Lý do <span class="text-danger">*</span></label>
+                                @Html.DropDownListFor(m => m.LyDo, new List<SelectListItem>
+                                {
+                                    new SelectListItem { Text = "Chọn lý do", Value = "", Selected = true },
+                                    new SelectListItem { Text = "Không sử dụng nữa", Value = "Không sử dụng nữa" },
+                                    new SelectListItem { Text = "Không hài lòng với dịch vụ", Value = "Không hài lòng với dịch vụ" },
+                                    new SelectListItem { Text = "Tôi có tài khoản khác", Value = "Tôi có tài khoản khác" },
+                                    new SelectListItem { Text = "Khác", Value = "Khác" }
+                                }, new { @class = "form-select" })
+                                @Html.ValidationMessageFor(m => m.LyDo, "", new { @class = "text-danger" })
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">Email <span class="text-danger">*</span></label>
+                                @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @readonly = "readonly" })
+                                <div class="form-text text-muted">
+                                    Vui lòng cung cấp chính xác Email của bạn để chúng tôi có thể liên hệ về việc hủy tài khoản.
+                                </div>
+                                @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                            </div>
+
+                            <div class="d-flex justify-content-start">
+                                <button type="button" id="backBtn" class="btn btn-secondary px-4 me-2">Quay lại</button>
+                                <button type="submit" class="btn btn-primary px-4">Xác nhận xóa</button>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        $(document).ready(function() {
+            // Xử lý khi nhấn nút "Xác nhận" ở form email
+            $("#verifyEmailBtn").click(function() {
+                var inputEmail = $("#verifyEmail").val();
+                var userEmail = "@userEmail";
+                $("#emailError").hide();
+                if (inputEmail === userEmail) {
+                    // Email đúng, hiển thị form xác nhận xóa
+                    $("#emailVerificationForm").hide();
+                    $("#confirmDeleteForm").show();
+                    $("#Email").val(inputEmail); // Cập nhật giá trị email vào form submit
+                } else {
+                    // Email không khớp, hiển thị lỗi
+                    $("#emailError").show();
+                }
+            });
+
+            // Xử lý khi nhấn nút "Quay lại"
+            $("#backBtn").click(function() {
+                $("#confirmDeleteForm").hide();
+                $("#emailVerificationForm").show();
+                $("#emailError").hide();
+            });
+        });
+    </script>
+}

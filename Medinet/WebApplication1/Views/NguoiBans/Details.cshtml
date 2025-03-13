@@ -1,0 +1,66 @@
+﻿@model WebApplication1.Models.NguoiBan
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>NguoiBan</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.NguoiDung.TenNguoiDung)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.NguoiDung.TenNguoiDung)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.TenCuaHang)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.TenCuaHang)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.MoTaCuaHang)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.MoTaCuaHang)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.DiaChiCuaHang)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.DiaChiCuaHang)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.SoDienThoaiCuaHang)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.SoDienThoaiCuaHang)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.NgayTao)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.NgayTao)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.MaNguoiBan }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>

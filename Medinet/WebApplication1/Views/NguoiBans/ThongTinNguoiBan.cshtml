@@ -1,0 +1,137 @@
+﻿@model WebApplication1.Controllers.NguoiBanViewModel
+@{
+    ViewBag.Title = "Thông tin người bán";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <h2 class="text-center">@ViewBag.Title</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Thông tin cá nhân -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Thông tin người bán</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        @if (!string.IsNullOrEmpty(Model.NguoiDung.AnhDaiDien))
+                        {
+                            <img src="@Model.NguoiDung.AnhDaiDien" alt="Ảnh đại diện" class="img-responsive img-circle" style="width: 150px; height: 150px; object-fit: cover;">
+                        }
+                        else
+                        {
+                            <img src="~/Content/Images/default-avatar.png" alt="Ảnh đại diện mặc định" class="img-responsive img-circle" style="width: 150px; height: 150px; object-fit: cover;">
+                        }
+                    </div>
+
+                    <dl class="dl-horizontal">
+                        <dt>Họ và tên:</dt>
+                        <dd>@Model.NguoiDung.TenNguoiDung</dd>
+
+                        <dt>Email:</dt>
+                        <dd>@Model.NguoiDung.Email</dd>
+
+                        <dt>Số điện thoại:</dt>
+                        <dd>@Model.NguoiDung.SoDienThoai</dd>
+
+                        <dt>Giới tính:</dt>
+                        <dd>@Model.NguoiDung.GioiTinh</dd>
+
+                        <dt>Ngày tham gia:</dt>
+                        <dd>@Model.NguoiDung.NgayTao.ToString("dd/MM/yyyy")</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thông tin cửa hàng -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Thông tin cửa hàng</h4>
+                </div>
+                <div class="card-body">
+                    <dl class="dl-horizontal">
+                        <dt>Tên cửa hàng:</dt>
+                        <dd>@Model.NguoiBan.TenCuaHang</dd>
+
+                        <dt>Mô tả:</dt>
+                        <dd>
+                            @if (string.IsNullOrEmpty(Model.NguoiBan.MoTaCuaHang))
+                            {
+                                <span class="text-muted">Chưa có mô tả</span>
+                            }
+                            else
+                            {
+                                @Model.NguoiBan.MoTaCuaHang
+                            }
+                        </dd>
+
+                        <dt>Địa chỉ:</dt>
+                        <dd>
+                            @if (string.IsNullOrEmpty(Model.NguoiBan.DiaChiCuaHang))
+                            {
+                                <span class="text-muted">Chưa có địa chỉ</span>
+                            }
+                            else
+                            {
+                                @Model.NguoiBan.DiaChiCuaHang
+                            }
+                        </dd>
+
+                        <dt>Số điện thoại:</dt>
+                        <dd>
+                            @if (string.IsNullOrEmpty(Model.NguoiBan.SoDienThoaiCuaHang))
+                            {
+                                <span class="text-muted">Chưa có số điện thoại</span>
+                            }
+                            else
+                            {
+                                @Model.NguoiBan.SoDienThoaiCuaHang
+                            }
+                        </dd>
+
+                        <dt>Ngày tạo cửa hàng:</dt>
+                        <dd>@Model.NguoiBan.NgayTao.ToString("dd/MM/yyyy")</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Chứng chỉ -->
+            @if (Model.DanhSachChungChi != null && Model.DanhSachChungChi.Any())
+            {
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h4 class="mb-0">Chứng chỉ / Giấy phép kinh doanh</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @foreach (var chungChi in Model.DanhSachChungChi)
+                            {
+                                <div class="col-md-4 mb-3">
+                                    <div class="card">
+                                        <img src="@chungChi.DuongDanAnh" alt="Chứng chỉ" class="img-responsive card-img-top" style="height: 150px; object-fit: cover;">
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <a href="@Url.Action("Index", "Home")" class="btn btn-primary">
+                <i class="fa fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+    </div>
+</div>
