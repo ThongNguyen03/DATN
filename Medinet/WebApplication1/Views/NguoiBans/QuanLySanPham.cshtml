@@ -1,35 +1,330 @@
-﻿@model IEnumerable<WebApplication1.Models.SanPham>
+﻿@model List<WebApplication1.Models.SanPham>
 @{
     ViewBag.Title = "Quản lý sản phẩm";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    int currentPage = ViewBag.CurrentPage;
+    int totalPages = ViewBag.TotalPages;
+    int totalItems = ViewBag.TotalItems;
+    bool hasPreviousPage = ViewBag.HasPreviousPage;
+    bool hasNextPage = ViewBag.HasNextPage;
+    int pageSize = ViewBag.PageSize;
 }
 
-<div class="container">
-    <div class="row">
-        <div class="col-md-12 mb-4">
-            <h2 class="text-center">@ViewBag.Title - @ViewBag.TenCuaHang</h2>
-        </div>
-    </div>
+<style>
+    /* Custom styles for tabs and sidebar */
+    .seller-sidebar {
+        background-color: #ffffff; /* White background for seller sidebar */
+        border: 1px solid #e9ecef;
+    }
 
+        .seller-sidebar .card-header {
+            background-color: #f8f9fa; /* Light gray header */
+            color: #212529; /* Dark text */
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .seller-sidebar .list-group-item {
+            background-color: transparent;
+            color: #212529; /* Dark text */
+            border-color: #e9ecef;
+        }
+
+            .seller-sidebar .list-group-item:hover {
+                background-color: #f8f9fa;
+            }
+
+            .seller-sidebar .list-group-item.active {
+                background-color: #007bff;
+                border-color: #007bff;
+                color: #ffffff; /* White text for active item */
+            }
+
+    /* Pagination styling */
+    .pagination > li {
+        display: inline-block;
+        margin-right: 5px;
+    }
+
+        .pagination > li > a,
+        .pagination > li > span {
+            color: #007bff;
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 3px;
+            padding: 0.5rem 0.75rem;
+        }
+
+    .pagination > .active > a,
+    .pagination > .active > span {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+    }
+
+    .pagination > .disabled > a,
+    .pagination > .disabled > span {
+        color: #6c757d;
+        pointer-events: none;
+        background-color: #fff;
+    }
+
+    .badge-success {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .badge-warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
+
+    .badge-danger {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .badge-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    /* CSS để đảm bảo button search và input cùng kích thước */
+    .input-group .input-group-append .btn {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        /* Đảm bảo icon nằm giữa button */
+        .input-group .input-group-append .btn i {
+            margin: 0;
+        }
+
+    /* CSS cải thiện cho nhóm nút thao tác */
+    .btn-group .btn {
+        padding: 0.375rem 0.5rem;
+        margin: 0 3px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* Cải thiện hiệu ứng hover */
+    .btn-outline-info:hover {
+        background-color: #17a2b8;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    }
+
+    .btn-outline-primary:hover {
+        background-color: #007bff;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    }
+
+    .btn-outline-danger:hover {
+        background-color: #dc3545;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    }
+
+    /* Đảm bảo biểu tượng nằm giữa và kích thước phù hợp */
+    .btn-group .btn i {
+        margin: 0;
+        font-size: 0.85rem;
+    }
+
+    /* Đảm bảo các nút có kích thước đồng đều */
+    .btn-group .btn {
+        min-width: 36px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Làm tròn góc cho các nút */
+    .btn-outline-info {
+        border-color: #17a2b8;
+        color: #17a2b8;
+    }
+
+    .btn-outline-primary {
+        border-color: #007bff;
+        color: #007bff;
+    }
+
+    .btn-outline-danger {
+        border-color: #dc3545;
+        color: #dc3545;
+    }
+
+    /* Điều chỉnh cột thao tác */
+    #productTable th:last-child,
+    #productTable td:last-child {
+        min-width: 140px;
+        text-align: center;
+    }
+
+    /* CSS căn giữa nội dung trong các ô bảng */
+    #productTable td {
+        vertical-align: middle; /* Căn giữa theo chiều dọc */
+        padding: 0.75rem; /* Đảm bảo padding đủ */
+        line-height: 1.5; /* Chiều cao dòng thích hợp */
+    }
+
+        /* Đảm bảo cột hình ảnh được căn giữa */
+        #productTable td:nth-child(2) {
+            text-align: center;
+        }
+
+        /* Đảm bảo cột giá và tồn kho được căn phải */
+        #productTable td:nth-child(5),
+        #productTable td:nth-child(6) {
+            text-align: center;
+        }
+
+        /* Đảm bảo cột tên sản phẩm */
+        #productTable td:nth-child(3) {
+            text-align: center;
+            font-weight: 500; /* Làm đậm một chút tên sản phẩm */
+        }
+
+        /* Đảm bảo cột trạng thái được căn giữa */
+        #productTable td:nth-child(7) {
+            text-align: center;
+        }
+
+        /* Đảm bảo cột STT căn giữa */
+        #productTable td:first-child {
+            text-align: center;
+        }
+
+    /* Style cho header của bảng */
+    #productTable th {
+        vertical-align: middle;
+        font-weight: 600;
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    /* Cải thiện badge trạng thái */
+    .badge {
+        padding: 0.4rem 0.6rem;
+        font-weight: 500;
+        font-size: 0.85rem;
+        display: inline-block;
+        border-radius: 4px;
+    }
+
+    /* Đảm bảo ảnh sản phẩm cân đối */
+    #productTable img.img-thumbnail {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 4px;
+        margin: 0 auto;
+        display: block;
+    }
+
+    /* CSS căn chỉnh tiêu đề bảng */
+    #productTable th {
+        vertical-align: middle; /* Căn giữa theo chiều dọc */
+        padding: 0.75rem; /* Đảm bảo padding đủ */
+        line-height: 1.5; /* Chiều cao dòng thích hợp */
+        font-weight: 600;
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        text-align: center; /* Căn giữa theo mặc định cho tất cả tiêu đề */
+    }
+
+        /* Cột STT - căn giữa */
+        #productTable th:first-child {
+            text-align: center;
+            width: 60px;
+        }
+
+        /* Cột ảnh - căn giữa */
+        #productTable th:nth-child(2) {
+            text-align: center;
+            width: 80px;
+        }
+
+        /* Cột tên sản phẩm - căn trái */
+        #productTable th:nth-child(3) {
+            text-align: center;
+        }
+
+        /* Cột danh mục - căn trái */
+        #productTable th:nth-child(4) {
+            text-align: center;
+        }
+
+        /* Cột giá - căn phải */
+        #productTable th:nth-child(5) {
+            text-align: center;
+        }
+
+        /* Cột tồn kho - căn phải */
+        #productTable th:nth-child(6) {
+            text-align: center;
+        }
+
+        /* Cột trạng thái - căn giữa */
+        #productTable th:nth-child(7) {
+            text-align: center;
+        }
+
+        /* Cột thao tác - căn giữa */
+        #productTable th:last-child {
+            text-align: center;
+            min-width: 140px;
+        }
+
+    /* Cải thiện giao diện tổng thể bảng */
+    #productTable {
+        border-collapse: collapse;
+        box-shadow: 0 2px 3px rgba(0,0,0,0.05);
+    }
+
+        /* Thêm màu nền xen kẻ cho bảng */
+        #productTable tbody tr:nth-of-type(odd) {
+            background-color: rgba(0,0,0,0.02);
+        }
+
+        /* Style cho hover dòng */
+        #productTable tbody tr:hover {
+            background-color: rgba(0,123,255,0.05);
+        }
+</style>
+
+<div class="container mt-4">
     <div class="row">
         <!-- Sidebar -->
         <div class="col-md-3">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Chức năng</h4>
+            <div class="card seller-sidebar">
+                <div class="card-header text-black">
+                    <h5 class="mb-0">Trang người bán</h5>
                 </div>
                 <div class="list-group list-group-flush">
-                    <a href="@Url.Action("ThongTinNguoiBan", "NguoiBans", new { id = ViewBag.MaNguoiBan })" class="list-group-item list-group-item-action">
-                        <i class="fa fa-user"></i> Thông tin cửa hàng
+                    <a href="@Url.Action("EditSellerProfile", "NguoiDungs")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-store mr-2"></i> Thông tin cửa hàng
                     </a>
                     <a href="@Url.Action("QuanLySanPham", "NguoiBans", new { id = ViewBag.MaNguoiBan })" class="list-group-item list-group-item-action active">
-                        <i class="fa fa-box"></i> Quản lý sản phẩm
+                        <i class="fas fa-box mr-2"></i> Sản phẩm
                     </a>
-                    <a href="#" class="list-group-item list-group-item-action">
-                        <i class="fa fa-shopping-cart"></i> Đơn hàng
+                    <a href="@Url.Action("SellerOrders", "NguoiDungs")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shopping-cart mr-2"></i> Đơn hàng
                     </a>
-                    <a href="#" class="list-group-item list-group-item-action">
-                        <i class="fa fa-chart-bar"></i> Thống kê
+                    <a href="@Url.Action("SellerStatistics", "NguoiDungs")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-line mr-2"></i> Thống kê
+                    </a>
+                    <a href="@Url.Action("DangXuat", "DangNhap")" class="list-group-item list-group-item-action text-danger">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Đăng xuất
                     </a>
                 </div>
             </div>
@@ -38,45 +333,54 @@
         <!-- Main content -->
         <div class="col-md-9">
             <div class="card">
-                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">Danh sách sản phẩm</h4>
-                    <a href="@Url.Action("ThemSanPham", "NguoiBans", new { id = ViewBag.MaNguoiBan })" class="btn btn-light">
-                        <i class="fa fa-plus"></i> Thêm sản phẩm
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Danh sách sản phẩm - @ViewBag.TenCuaHang</h5>
+                    <a href="@Url.Action("ThemSanPham", "NguoiBans", new { id = ViewBag.MaNguoiBan })" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus mr-1"></i> Thêm sản phẩm
                     </a>
                 </div>
                 <div class="card-body">
                     <!-- Phần tìm kiếm và lọc -->
+                    <!-- Thay đổi phần tìm kiếm và lọc -->
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <div class="input-group">
-                                <input type="text" id="searchInput" class="form-control" placeholder="Tìm kiếm sản phẩm...">
-                                <div class="input-group-append">
-                                    <button class="btn btn-outline-secondary" type="button">
-                                        <i class="fa fa-search"></i>
-                                    </button>
+                            <form id="searchForm" method="get" action="@Url.Action("QuanLySanPham", "NguoiBans")">
+                                <input type="hidden" name="id" value="@ViewBag.MaNguoiBan" />
+                                <input type="hidden" name="page" value="1" />
+                                <input type="hidden" name="statusFilter" id="hiddenStatusFilter" value="@ViewBag.StatusFilter" />
+                                <input type="hidden" name="sortOrder" id="hiddenSortOrder" value="@ViewBag.SortOrder" />
+
+                                <div class="input-group">
+                                    <input type="text" id="searchInput" name="searchTerm" class="form-control" placeholder="Tìm kiếm sản phẩm..." value="@ViewBag.SearchTerm">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary h-100" type="submit" style="height: 100%; padding: 0.375rem 0.75rem;">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            </form>
                         </div>
                         <div class="col-md-3">
                             <select id="statusFilter" class="form-control">
                                 <option value="">-- Tất cả trạng thái --</option>
-                                <option value="Đã phê duyệt">Đã phê duyệt</option>
-                                <option value="Đang chờ duyệt">Đang chờ duyệt</option>
-                                <option value="Đã từ chối">Đã từ chối</option>
+                                <option value="Đã phê duyệt" @(ViewBag.StatusFilter == "Đã phê duyệt" ? "selected" : "")>Đã phê duyệt</option>
+                                <option value="Đang chờ xử lý" @(ViewBag.StatusFilter == "Đang chờ xử lý" ? "selected" : "")>Đang chờ xử lý</option>
+                                <option value="Bị từ chối" @(ViewBag.StatusFilter == "Bị từ chối" ? "selected" : "")>Bị từ chối</option>
                             </select>
                         </div>
                         <div class="col-md-3">
                             <select id="sortOrder" class="form-control">
-                                <option value="newest">Mới nhất</option>
-                                <option value="oldest">Cũ nhất</option>
-                                <option value="nameAsc">Tên A-Z</option>
-                                <option value="nameDesc">Tên Z-A</option>
-                                <option value="priceAsc">Giá tăng dần</option>
-                                <option value="priceDesc">Giá giảm dần</option>
+                                <option value="newest" @(ViewBag.SortOrder == "newest" ? "selected" : "")>Mới nhất</option>
+                                <option value="oldest" @(ViewBag.SortOrder == "oldest" ? "selected" : "")>Cũ nhất</option>
+                                <option value="nameAsc" @(ViewBag.SortOrder == "nameAsc" ? "selected" : "")>Tên A-Z</option>
+                                <option value="nameDesc" @(ViewBag.SortOrder == "nameDesc" ? "selected" : "")>Tên Z-A</option>
+                                <option value="priceAsc" @(ViewBag.SortOrder == "priceAsc" ? "selected" : "")>Giá tăng dần</option>
+                                <option value="priceDesc" @(ViewBag.SortOrder == "priceDesc" ? "selected" : "")>Giá giảm dần</option>
                             </select>
                         </div>
                     </div>
 
+                    <!-- Thay thế phần hiển thị thông tin phân trang và bảng -->
                     <!-- Bảng danh sách sản phẩm -->
                     <div class="table-responsive">
                         <table class="table table-striped table-hover" id="productTable">
@@ -95,14 +399,14 @@
                             <tbody>
                                 @if (Model != null && Model.Any())
                                 {
-                                    int stt = 1;
+                                    int stt = (currentPage - 1) * pageSize + 1;
                                     foreach (var item in Model)
                                     {
                                         <tr data-name="@item.TenSanPham.ToLower()" data-status="@item.TrangThai" data-price="@item.GiaSanPham">
                                             <td>@stt</td>
                                             <td>
                                                 @{
-                                                    string anhHienThi = "/Content/Images/default-product.png";
+                                                    string anhHienThi = Url.Content("~/Content/images/no-image.jpeg");
 
                                                     // Kiểm tra và lấy ảnh đầu tiên từ danh sách ảnh sản phẩm nếu có
                                                     if (item.DanhSachAnhSanPham != null && item.DanhSachAnhSanPham.Any())
@@ -119,37 +423,32 @@
                                             <td>
                                                 @if (item.TrangThai == "Đã phê duyệt")
                                                 {
-                                                    <span class="badge bg-success text-white">Đã phê duyệt</span>
+                                                    <span class="badge badge-success">Đã phê duyệt</span>
                                                 }
-                                                else if (item.TrangThai == "Đang chờ duyệt")
+                                                else if (item.TrangThai == "Đang chờ xử lý")
                                                 {
-                                                    <span class="badge bg-warning text-dark">Đang chờ duyệt</span>
+                                                    <span class="badge badge-warning">Đang chờ xử lý</span>
                                                 }
-                                                else if (item.TrangThai == "Đã từ chối")
+                                                else if (item.TrangThai == "Bị từ chối")
                                                 {
-                                                    <span class="badge bg-danger text-white">Đã từ chối</span>
+                                                    <span class="badge badge-danger">Bị từ chối</span>
                                                 }
                                                 else
                                                 {
-                                                    <span class="badge bg-secondary text-white">@item.TrangThai</span>
+                                                    <span class="badge badge-secondary">@item.TrangThai</span>
                                                 }
                                             </td>
-                                            <td>
-                                                <div class="dropdown">
-                                                    <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                        <i class="fa fa-ellipsis-v"></i>
-                                                    </button>
-                                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                                        <a class="dropdown-item" href="@Url.Action("ChiTietSanPham", "NguoiBans", new { id = item.MaSanPham })">
-                                                            <i class="fa fa-eye"></i> Xem chi tiết
-                                                        </a>
-                                                        <a class="dropdown-item" href="@Url.Action("SuaSanPham", "NguoiBans", new { id = item.MaSanPham })">
-                                                            <i class="fa fa-edit"></i> Sửa
-                                                        </a>
-                                                        <a class="dropdown-item text-danger" href="@Url.Action("XoaSanPham", "NguoiBans", new { id = item.MaSanPham })">
-                                                            <i class="fa fa-trash"></i> Xóa
-                                                        </a>
-                                                    </div>
+                                            <td class="text-center">
+                                                <div class="btn-group">
+                                                    <a href="@Url.Action("ChiTietSanPham", "NguoiBans", new { id = item.MaSanPham })" class="btn btn-sm btn-outline-info" title="Xem chi tiết" data-toggle="tooltip">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="@Url.Action("SuaSanPham", "NguoiBans", new { id = item.MaSanPham })" class="btn btn-sm btn-outline-primary" title="Sửa sản phẩm" data-toggle="tooltip">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <a href="@Url.Action("XoaSanPham", "NguoiBans", new { id = item.MaSanPham })" class="btn btn-sm btn-outline-danger" title="Xóa sản phẩm" data-toggle="tooltip">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
                                                 </div>
                                             </td>
                                         </tr>
@@ -159,33 +458,105 @@
                                 else
                                 {
                                     <tr>
-                                        <td colspan="8" class="text-center">Không có sản phẩm nào</td>
+                                        <td colspan="8" class="text-center">
+                                            @if (!string.IsNullOrEmpty(ViewBag.SearchTerm) || !string.IsNullOrEmpty(ViewBag.StatusFilter))
+                                            {
+                                                <div class="alert alert-info mt-2">
+                                                    <i class="fas fa-info-circle mr-2"></i> Không tìm thấy sản phẩm nào phù hợp với bộ lọc.
+                                                    <a href="@Url.Action("QuanLySanPham", "NguoiBans", new { id = ViewBag.MaNguoiBan })" class="alert-link">Xóa bộ lọc</a>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="mt-3">
+                                                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                                                    <p>Không có sản phẩm nào</p>
+                                                    <a href="@Url.Action("ThemSanPham", "NguoiBans", new { id = ViewBag.MaNguoiBan })" class="btn btn-primary btn-sm mt-2">
+                                                        <i class="fas fa-plus mr-1"></i> Thêm sản phẩm mới
+                                                    </a>
+                                                </div>
+                                            }
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
                     </div>
 
-                    <!-- Phân trang -->
-                    @if (Model != null && Model.Count() > 0)
+                    <!-- Phân trang - chỉ hiển thị khi có sản phẩm -->
+                    @if (Model != null && Model.Any() && ViewBag.TotalPages > 1)
                     {
                         <div class="d-flex justify-content-between align-items-center mt-3">
                             <div>
-                                <span>Hiển thị @Model.Count() trên tổng số @Model.Count() sản phẩm</span>
+                                <span>Hiển thị @Model.Count() trên tổng số @ViewBag.TotalItems sản phẩm</span>
                             </div>
                             <div>
-                                <nav aria-label="Page navigation">
-                                    <ul class="pagination justify-content-end mb-0">
-                                        <li class="page-item disabled">
-                                            <a class="page-link" href="#" tabindex="-1">Trước</a>
+                                <ul class="pagination mb-0">
+                                    @if (ViewBag.HasPreviousPage)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" href="@Url.Action("QuanLySanPham", "NguoiBans", new { id = ViewBag.MaNguoiBan, page = ViewBag.CurrentPage - 1, searchTerm = ViewBag.SearchTerm, statusFilter = ViewBag.StatusFilter, sortOrder = ViewBag.SortOrder })">
+                                                <i class="fas fa-chevron-left"></i>
+                                            </a>
                                         </li>
-                                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                    }
+                                    else
+                                    {
                                         <li class="page-item disabled">
-                                            <a class="page-link" href="#">Sau</a>
+                                            <span class="page-link"><i class="fas fa-chevron-left"></i></span>
                                         </li>
-                                    </ul>
-                                </nav>
+                                    }
+
+                                    @{
+                                        const int maxPagesToShow = 5;
+                                        int startPage = Math.Max(1, ViewBag.CurrentPage - maxPagesToShow / 2);
+                                        int endPage = Math.Min(ViewBag.TotalPages, startPage + maxPagesToShow - 1);
+
+                                        // Điều chỉnh lại startPage nếu cần thiết
+                                        if (endPage - startPage + 1 < maxPagesToShow)
+                                        {
+                                            startPage = Math.Max(1, endPage - maxPagesToShow + 1);
+                                        }
+                                    }
+
+                                    @for (int i = startPage; i <= endPage; i++)
+                                    {
+                                        if (i == ViewBag.CurrentPage)
+                                        {
+                                            <li class="page-item active">
+                                                <span class="page-link">@i</span>
+                                            </li>
+                                        }
+                                        else
+                                        {
+                                            <li class="page-item">
+                                                <a class="page-link" href="@Url.Action("QuanLySanPham", "NguoiBans", new { id = ViewBag.MaNguoiBan, page = i, searchTerm = ViewBag.SearchTerm, statusFilter = ViewBag.StatusFilter, sortOrder = ViewBag.SortOrder })">@i</a>
+                                            </li>
+                                        }
+                                    }
+
+                                    @if (ViewBag.HasNextPage)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" href="@Url.Action("QuanLySanPham", "NguoiBans", new { id = ViewBag.MaNguoiBan, page = ViewBag.CurrentPage + 1, searchTerm = ViewBag.SearchTerm, statusFilter = ViewBag.StatusFilter, sortOrder = ViewBag.SortOrder })">
+                                                <i class="fas fa-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+                                        </li>
+                                    }
+                                </ul>
                             </div>
+                        </div>
+                    }
+                    else if (Model != null && Model.Any())
+                    {
+                        <div class="mt-3">
+                            <span>Hiển thị @Model.Count() trên tổng số @ViewBag.TotalItems sản phẩm</span>
                         </div>
                     }
                 </div>
@@ -196,25 +567,16 @@
 
 @section Scripts {
     <script>
+        // Lọc theo trạng thái - JavaScript cần được sửa
         $(document).ready(function () {
             // Tìm kiếm sản phẩm
             $("#searchInput").on("keyup", function () {
-                var value = $(this).val().toLowerCase();
-                $("#productTable tbody tr").filter(function () {
-                    $(this).toggle($(this).data("name").indexOf(value) > -1);
-                });
+                filterProducts();
             });
 
             // Lọc theo trạng thái
             $("#statusFilter").change(function () {
-                var value = $(this).val();
-                if (value === "") {
-                    $("#productTable tbody tr").show();
-                } else {
-                    $("#productTable tbody tr").filter(function () {
-                        $(this).toggle($(this).data("status") === value);
-                    });
-                }
+                filterProducts();
             });
 
             // Sắp xếp sản phẩm
@@ -227,7 +589,6 @@
 
                     switch (value) {
                         case "newest":
-                            // Dựa vào ID (giả định rằng ID mới hơn sẽ lớn hơn)
                             return $(b).index() < $(a).index() ? 1 : -1;
                         case "oldest":
                             return $(a).index() < $(b).index() ? 1 : -1;
@@ -256,10 +617,45 @@
                     $("#productTable tbody").append(row);
                 });
 
-                // Cập nhật lại STT sau khi sắp xếp
-                $("#productTable tbody tr").each(function (index) {
-                    $(this).find("td:first").text(index + 1);
+                // Áp dụng lại bộ lọc sau khi sắp xếp
+                filterProducts();
+            });
+
+            // Hàm lọc sản phẩm tổng hợp (tìm kiếm + trạng thái)
+            function filterProducts() {
+                var searchValue = $("#searchInput").val().toLowerCase();
+                var statusValue = $("#statusFilter").val();
+
+                console.log("Lọc theo trạng thái: " + statusValue);
+
+                $("#productTable tbody tr").each(function () {
+                    var $row = $(this);
+                    var name = $row.data("name").toLowerCase();
+                    var status = $row.data("status");
+
+                    console.log("Dòng trạng thái: " + status);
+
+                    var nameMatch = name.indexOf(searchValue) > -1;
+                    var statusMatch = statusValue === "" || status === statusValue;
+
+                    $row.toggle(nameMatch && statusMatch);
                 });
+
+                updateSTT();
+            }
+
+            // Cập nhật STT sau khi lọc
+            function updateSTT() {
+                var counter = 1;
+                $("#productTable tbody tr:visible").each(function () {
+                    $(this).find("td:first").text(counter);
+                    counter++;
+                });
+            }
+
+            // Kích hoạt tooltip cho các nút thao tác
+            $(function () {
+                $('[data-toggle="tooltip"]').tooltip();
             });
         });
     </script>

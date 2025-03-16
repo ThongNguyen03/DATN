@@ -326,6 +326,9 @@
     <Content Include="Views\QuenMatKhau\DatLaiMatKhau.cshtml" />
     <Content Include="Views\QuenMatKhau\ThanhCong.cshtml" />
     <Content Include="Views\NguoiBans\QuanLySanPham.cshtml" />
+    <Content Include="Views\NguoiBans\ThemSanPham.cshtml" />
+    <Content Include="Views\NguoiBans\ChiTietSanPham.cshtml" />
+    <Content Include="Views\NguoiBans\SuaSanPham.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

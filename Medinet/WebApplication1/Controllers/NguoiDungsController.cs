@@ -783,7 +783,13 @@ namespace WebApplication1.Controllers
             ViewBag.AnhDaiDien = nguoiDung.AnhDaiDien;
             ViewBag.TenNguoiDung = nguoiDung.TenNguoiDung;
 
-            return View();
+            // Create the view model with the seller ID
+            var model = new ChangePasswordViewModel
+            {
+                MaNguoiBan = nguoiBan.MaNguoiBan
+            };
+
+            return View(model);
         }
 
         // POST: NguoiDungs/SellerChangePassword
@@ -853,7 +859,13 @@ namespace WebApplication1.Controllers
             ViewBag.TenNguoiDung = nguoiDung.TenNguoiDung;
             ViewBag.UserEmail = nguoiDung.Email;
 
-            return View();
+            // Tạo model và đặt MaNguoiBan
+            var model = new DeleteAccountViewModel
+            {
+                MaNguoiBan = nguoiBan.MaNguoiBan
+                // Khởi tạo các thuộc tính khác nếu cần
+            };
+            return View(model);
         }
 
         // POST: NguoiDungs/SellerDeleteAccount
@@ -1102,6 +1114,8 @@ namespace WebApplication1.Controllers
         [Display(Name = "Xác nhận mật khẩu mới")]
         [Compare("MatKhauMoi", ErrorMessage = "Mật khẩu mới và xác nhận mật khẩu không khớp.")]
         public string XacNhanMatKhauMoi { get; set; }
+
+        public int MaNguoiBan { get; set; }
     }
 
     // ViewModel cho xóa tài khoản
@@ -1114,6 +1128,7 @@ namespace WebApplication1.Controllers
         [Required(ErrorMessage = "Vui lòng nhập email.")]
         [EmailAddress(ErrorMessage = "Email không hợp lệ.")]
         public string Email { get; set; }
+        public int MaNguoiBan { get; set; }
     }
 
     public class SellerProfileViewModel

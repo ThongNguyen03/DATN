@@ -1,0 +1,699 @@
+﻿@model WebApplication1.Controllers.SanPhamViewModel
+@{
+    ViewBag.Title = "Chỉnh sửa sản phẩm";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Custom styles for form */
+    .seller-sidebar {
+        background-color: #ffffff;
+        border: 1px solid #e9ecef;
+    }
+
+        .seller-sidebar .card-header {
+            background-color: #f8f9fa;
+            color: #212529;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .seller-sidebar .list-group-item {
+            background-color: transparent;
+            color: #212529;
+            border-color: #e9ecef;
+        }
+
+            .seller-sidebar .list-group-item:hover {
+                background-color: #f8f9fa;
+            }
+
+            .seller-sidebar .list-group-item.active {
+                background-color: #007bff;
+                border-color: #007bff;
+                color: #ffffff;
+            }
+
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+        .btn-primary:hover {
+            background-color: #0069d9;
+            border-color: #0062cc;
+        }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            border-color: #545b62;
+        }
+
+    .required-field::after {
+        content: " *";
+        color: red;
+    }
+
+    /* CSS cho textarea tự co giãn */
+    .auto-resize {
+        min-height: 60px;
+        overflow-y: hidden;
+        resize: vertical;
+        transition: height 0.2s ease;
+    }
+
+    .img-upload-preview {
+        border: 2px dashed #ddd;
+        border-radius: 6px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 20px;
+        transition: all 0.3s;
+    }
+
+        .img-upload-preview:hover {
+            border-color: #80bdff;
+            cursor: pointer;
+        }
+
+    #imagePreviewContainer {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .preview-item {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 255, 255, 0.7);
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+    .form-section {
+        margin-bottom: 30px;
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 20px;
+    }
+
+        .form-section h5 {
+            margin-bottom: 20px;
+            color: #495057;
+        }
+
+    .quill-editor {
+        height: 200px;
+        margin-bottom: 20px;
+    }
+
+    .existing-images {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .existing-image-item {
+        position: relative;
+        width: 120px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+        .existing-image-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+        }
+
+        .existing-image-item .delete-image {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #dc3545;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+            .existing-image-item .delete-image:hover {
+                background-color: #dc3545;
+                color: white;
+            }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card seller-sidebar">
+                <div class="card-header text-black">
+                    <h5 class="mb-0">Trang người bán</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="@Url.Action("EditSellerProfile", "NguoiDungs")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-store mr-2"></i> Thông tin cửa hàng
+                    </a>
+                    <a href="@Url.Action("QuanLySanPham", "NguoiBans", new { id = ViewBag.MaNguoiBan })" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-box mr-2"></i> Sản phẩm
+                    </a>
+                    <a href="@Url.Action("SellerOrders", "NguoiDungs")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shopping-cart mr-2"></i> Đơn hàng
+                    </a>
+                    <a href="@Url.Action("SellerStatistics", "NguoiDungs")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-line mr-2"></i> Thống kê
+                    </a>
+                    <a href="@Url.Action("DangXuat", "DangNhap")" class="list-group-item list-group-item-action text-danger">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Đăng xuất
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Chỉnh sửa sản phẩm - @ViewBag.TenCuaHang</h5>
+                    <a href="@Url.Action("QuanLySanPham", "NguoiBans", new { id = ViewBag.MaNguoiBan })" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left mr-1"></i> Quay lại
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        @*<div class="alert alert-success alert-dismissible fade show" role="alert">
+                                @TempData["SuccessMessage"]
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>*@
+                    }
+
+                    @using (Html.BeginForm("SuaSanPham", "NguoiBans", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                        @Html.HiddenFor(model => model.SanPham.MaSanPham)
+                        @Html.HiddenFor(model => model.SanPham.MaNguoiBan)
+                        @Html.HiddenFor(model => model.SanPham.NgayTao)
+                        @Html.HiddenFor(model => model.SanPham.SoLuotMua)
+
+                        <div class="form-section">
+                            <h5><i class="fas fa-info-circle mr-2"></i>Thông tin cơ bản</h5>
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <label class="form-label required-field">Tên sản phẩm</label>
+                                        @Html.EditorFor(model => model.SanPham.TenSanPham, new { htmlAttributes = new { @class = "form-control", placeholder = "Nhập tên sản phẩm" } })
+                                        @Html.ValidationMessageFor(model => model.SanPham.TenSanPham, "", new { @class = "text-danger" })
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label required-field">Danh mục</label>
+                                        @Html.DropDownList("MaDanhMuc", null, "-- Chọn danh mục --", new { @class = "form-select" })
+                                        @Html.ValidationMessageFor(model => model.SanPham.MaDanhMuc, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label required-field">Thương hiệu</label>
+                                        @Html.EditorFor(model => model.SanPham.ThuongHieu, new { htmlAttributes = new { @class = "form-control", placeholder = "Nhập thương hiệu" } })
+                                        @Html.ValidationMessageFor(model => model.SanPham.ThuongHieu, "", new { @class = "text-danger" })
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label required-field">Đối tượng sử dụng</label>
+                                        @Html.EditorFor(model => model.SanPham.DoiTuongSuDung, new { htmlAttributes = new { @class = "form-control", placeholder = "Nhập đối tượng sử dụng" } })
+                                        @Html.ValidationMessageFor(model => model.SanPham.DoiTuongSuDung, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h5><i class="fas fa-image mr-2"></i>Hình ảnh sản phẩm</h5>
+
+                            <!-- Hiển thị ảnh hiện có -->
+                            @if (Model.DanhSachAnh != null && Model.DanhSachAnh.Count > 0)
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label">Ảnh hiện tại</label>
+                                    <div class="existing-images">
+                                        @foreach (var anh in Model.DanhSachAnh)
+                                        {
+                                            <div class="existing-image-item">
+                                                <img src="@anh.DuongDanAnh" alt="@Model.SanPham.TenSanPham" />
+                                                <a href="@Url.Action("XoaAnhSanPham", "NguoiBans", new { id = anh.MaAnh })"
+                                                   class="delete-image"
+                                                   onclick="return confirm('Bạn có chắc chắn muốn xóa ảnh này?');">
+                                                    <i class="fas fa-times"></i>
+                                                </a>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- Upload ảnh mới -->
+                            <div class="img-upload-preview" id="imageUploadArea">
+                                <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-muted"></i>
+                                <p>Kéo thả hình ảnh vào đây hoặc nhấn để chọn</p>
+                                <p class="text-muted small">Hỗ trợ định dạng: JPEG, PNG, JPG (Tối đa 5 hình ảnh)</p>
+                                <input type="file" id="anhSanPham" name="anhSanPham" accept="image/*" multiple />
+                            </div>
+
+                            <!-- Nút browse rõ ràng như giải pháp thay thế -->
+                            <!--<div class="text-center mb-3">
+                                <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('anhSanPham').click()">
+                                    <i class="fas fa-file-image mr-1"></i> Chọn ảnh từ thiết bị
+                                </button>
+                            </div>-->
+
+                            <div id="imagePreviewContainer"></div>
+                        </div>
+
+                        <div class="form-section">
+                            <h5><i class="fas fa-tag mr-2"></i>Giá & Kho hàng</h5>
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label required-field">Giá gốc (VNĐ) *</label>
+                                        <div class="input-group">
+                                            <input type="text" id="GiaGoc" class="form-control" placeholder="Nhập giá gốc sản phẩm" value="@ViewBag.GiaGocHienThi" />
+                                            <div class="input-group-append">
+                                                <span class="input-group-text">VNĐ</span>
+                                            </div>
+                                        </div>
+                                        <small class="form-text text-muted">Giá nhập từ nhà cung cấp</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label required-field">Giá bán (VNĐ) *</label>
+                                        <div class="input-group">
+                                            <!-- Trường hiển thị cho người dùng -->
+                                            <input type="text" id="GiaBan" class="form-control" placeholder="Giá bán sản phẩm" value="@ViewBag.GiaSanPhamHienThi" readonly="readonly" />
+                                            <!-- Trường ẩn lưu giá trị Decimal(10,2) -->
+                                            <input type="hidden" id="GiaSanPhamDecimal" name="GiaSanPham" value="@Model.SanPham.GiaSanPham" />
+                                            <div class="input-group-append">
+                                                <span class="input-group-text">VNĐ</span>
+                                            </div>
+                                        </div>
+                                        @Html.ValidationMessageFor(model => model.SanPham.GiaSanPham, "", new { @class = "text-danger" })
+                                        <small class="form-text text-muted">Giá bán = Giá gốc + 10%</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label required-field">Số lượng tồn kho</label>
+                                        @Html.EditorFor(model => model.SanPham.SoLuongTonKho, new { htmlAttributes = new { @class = "form-control", placeholder = "Nhập số lượng", type = "number", min = "0" } })
+                                        @Html.ValidationMessageFor(model => model.SanPham.SoLuongTonKho, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Số lượng mỗi hộp</label>
+                                        @Html.EditorFor(model => model.SanPham.SoLuongMoiHop, new { htmlAttributes = new { @class = "form-control", placeholder = "Nhập số lượng mỗi hộp", type = "number", min = "0" } })
+                                        @Html.ValidationMessageFor(model => model.SanPham.SoLuongMoiHop, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label required-field">Khối lượng (gram)</label>
+                                        @Html.EditorFor(model => model.SanPham.KhoiLuong, new { htmlAttributes = new { @class = "form-control", placeholder = "Nhập khối lượng", type = "number", min = "1" } })
+                                        @Html.ValidationMessageFor(model => model.SanPham.KhoiLuong, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h5><i class="fas fa-align-left mr-2"></i>Mô tả sản phẩm</h5>
+                            <div class="mb-3">
+                                <label class="form-label required-field">Mô tả ngắn</label>
+                                @Html.TextAreaFor(model => model.SanPham.MoTaSanPham, new { @class = "form-control auto-resize", rows = "3", placeholder = "Nhập mô tả ngắn gọn về sản phẩm" })
+                                @Html.ValidationMessageFor(model => model.SanPham.MoTaSanPham, "", new { @class = "text-danger" })
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label required-field">Thành phần</label>
+                                @Html.TextAreaFor(model => model.SanPham.ThanhPhan, new { @class = "form-control auto-resize", rows = "3", placeholder = "Nhập thành phần của sản phẩm" })
+                                @Html.ValidationMessageFor(model => model.SanPham.ThanhPhan, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h5><i class="fas fa-clipboard-list mr-2"></i>Thông tin bổ sung</h5>
+                            <div class="mb-3">
+                                <label class="form-label required-field">Hướng dẫn sử dụng</label>
+                                @Html.TextAreaFor(model => model.SanPham.HuongDanSuDung, new { @class = "form-control auto-resize", rows = "3", placeholder = "Nhập hướng dẫn sử dụng sản phẩm" })
+                                @Html.ValidationMessageFor(model => model.SanPham.HuongDanSuDung, "", new { @class = "text-danger" })
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label required-field">Bảo quản</label>
+                                @Html.TextAreaFor(model => model.SanPham.BaoQuan, new { @class = "form-control auto-resize", rows = "3", placeholder = "Nhập hướng dẫn bảo quản sản phẩm" })
+                                @Html.ValidationMessageFor(model => model.SanPham.BaoQuan, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-4">
+                            <a href="@Url.Action("QuanLySanPham", "NguoiBans", new { id = ViewBag.MaNguoiBan })" class="btn btn-secondary me-2 mr-2">
+                                <i class="fas fa-times mr-1"></i> Hủy
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save mr-1"></i> Cập nhật sản phẩm
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        $(document).ready(function () {
+            // Xử lý click cho vùng upload ảnh
+            $('#imageUploadArea').click(function () {
+                $('#anhSanPham').click();
+            });
+
+            // Định dạng hiển thị số tiền theo VNĐ
+            function formatCurrency(number) {
+                return new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(number);
+            }
+
+            // Chuyển đổi từ định dạng tiền tệ sang số
+            function parseCurrency(value) {
+                if (!value) return 0;
+                return parseInt(value.replace(/\./g, '').replace(/,/g, '').replace(/\s/g, '')) || 0;
+            }
+
+            // Chuyển đổi giá tiền sang định dạng decimal(10,2) cho database
+            function toDecimal(number) {
+                // Đảm bảo luôn trả về số với 2 chữ số thập phân
+                return parseFloat(number).toFixed(2);
+            }
+
+            // Định dạng giá trị khi người dùng nhập
+            function formatInput(input) {
+                // Lưu vị trí con trỏ
+                var caret = input.selectionStart;
+                var value = input.value;
+                var originalLength = value.length;
+
+                // Loại bỏ tất cả các ký tự không phải số
+                var rawValue = value.replace(/\D/g, '');
+
+                // Chuyển đổi sang số và định dạng
+                var formattedValue = formatCurrency(rawValue ? parseInt(rawValue) : 0);
+
+                // Cập nhật giá trị vào input
+                input.value = formattedValue;
+
+                // Điều chỉnh vị trí con trỏ sau khi định dạng
+                var newLength = input.value.length;
+                var caretAdjust = newLength - originalLength;
+                input.setSelectionRange(caret + caretAdjust, caret + caretAdjust);
+            }
+
+            // Định dạng giá trị ban đầu
+            formatInput(document.getElementById('GiaGoc'));
+            formatInput(document.getElementById('GiaBan'));
+
+            // Xử lý khi nhập giá gốc
+            $('#GiaGoc').on('input', function (e) {
+                var input = this;
+
+                // Định dạng input
+                formatInput(input);
+
+                // Tính và cập nhật giá bán
+                var giaGoc = parseCurrency(input.value);
+                var giaBan = Math.round(giaGoc * 1.1); // Thêm 10%
+
+                // Cập nhật giá bán đã định dạng
+                $('#GiaBan').val(formatCurrency(giaBan));
+
+                // Lưu giá trị thực tế với 2 số thập phân vào hidden field
+                $('#GiaSanPhamDecimal').val(toDecimal(giaBan));
+            });
+
+            // Xử lý auto-resize cho textarea
+            function autoResizeTextareas() {
+                $('.auto-resize').each(function () {
+                    this.style.height = 'auto';
+                    this.style.height = (this.scrollHeight) + 'px';
+                });
+            }
+
+            // Khi gõ vào textarea
+            $('.auto-resize').on('input', function () {
+                autoResizeTextareas();
+            });
+
+            // Khi trang tải xong
+            autoResizeTextareas();
+
+            // Khi window resize
+            $(window).on('resize', function () {
+                autoResizeTextareas();
+            });
+
+            // Upload ảnh
+            $('#anhSanPham').change(function () {
+                const files = this.files;
+                const maxFiles = 5;
+                const existingImagesCount = $('.existing-image-item').length;
+
+                // Kiểm tra số lượng file
+                if (files.length + existingImagesCount > maxFiles) {
+                    alert(`Bạn chỉ có thể có tối đa ${maxFiles} hình ảnh (hiện tại: ${existingImagesCount}). Vui lòng xóa bớt ảnh hiện tại hoặc chọn ít ảnh hơn.`);
+                    this.value = '';
+                    return;
+                }
+
+                // Xóa xem trước cũ
+                $('#imagePreviewContainer').empty();
+
+                // Tạo xem trước cho mỗi file
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    if (!file.type.match('image.*')) {
+                        continue;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const previewItem = $('<div class="preview-item"></div>');
+                        const img = $('<img src="' + e.target.result + '" alt="Preview">');
+                        const removeBtn = $('<button type="button" class="remove-btn"><i class="fas fa-times"></i></button>');
+
+                        previewItem.append(img);
+                        previewItem.append(removeBtn);
+                        $('#imagePreviewContainer').append(previewItem);
+
+                        // Xử lý nút xóa
+                        removeBtn.click(function () {
+                            $(this).parent().remove();
+                        });
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Thêm xử lý kéo thả (drag & drop)
+            const dropArea = document.getElementById('imageUploadArea');
+            if (dropArea) {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, preventDefaults, false);
+                });
+
+                function preventDefaults(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, highlight, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, unhighlight, false);
+                });
+
+                function highlight() {
+                    dropArea.classList.add('border-primary');
+                }
+
+                function unhighlight() {
+                    dropArea.classList.remove('border-primary');
+                }
+
+                dropArea.addEventListener('drop', handleDrop, false);
+
+                function handleDrop(e) {
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    const inputElement = document.getElementById('anhSanPham');
+
+                    if (inputElement) {
+                        inputElement.files = files;
+                        // Kích hoạt sự kiện change để hiển thị xem trước
+                        $(inputElement).trigger('change');
+                    }
+                }
+            }
+
+            // Kiểm tra trước khi submit form
+            $('form').submit(function (e) {
+                try {
+                    // Đảm bảo giá bán đã được điền
+                    let giaBanValue = parseCurrency($('#GiaBan').val());
+                    if (giaBanValue <= 0) {
+                        alert('Vui lòng nhập giá gốc để tính giá bán.');
+                        $('#GiaGoc').focus();
+                        e.preventDefault();
+                        return false;
+                    }
+
+                    // Cập nhật lại giá bán với định dạng decimal(10,2)
+                    $('#GiaSanPhamDecimal').val(toDecimal(giaBanValue));
+
+                    // Kiểm tra các trường bắt buộc khác
+                    if (!$('#SanPham_TenSanPham').val().trim()) {
+                        alert('Vui lòng nhập tên sản phẩm.');
+                        $('#SanPham_TenSanPham').focus();
+                        e.preventDefault();
+                        return false;
+                    }
+
+                    if (!$('#MaDanhMuc').val()) {
+                        alert('Vui lòng chọn danh mục sản phẩm.');
+                        $('#MaDanhMuc').focus();
+                        e.preventDefault();
+                        return false;
+                    }
+
+                    if (!$('#SanPham_SoLuongTonKho').val() || $('#SanPham_SoLuongTonKho').val() <= 0) {
+                        alert('Vui lòng nhập số lượng tồn kho.');
+                        $('#SanPham_SoLuongTonKho').focus();
+                        e.preventDefault();
+                        return false;
+                    }
+
+                    if (!$('#SanPham_ThuongHieu').val().trim()) {
+                        alert('Vui lòng nhập thương hiệu.');
+                        $('#SanPham_ThuongHieu').focus();
+                        e.preventDefault();
+                        return false;
+                    }
+
+                    if (!$('#SanPham_DoiTuongSuDung').val().trim()) {
+                        alert('Vui lòng nhập đối tượng sử dụng.');
+                        $('#SanPham_DoiTuongSuDung').focus();
+                        e.preventDefault();
+                        return false;
+                    }
+
+                    if (!$('#SanPham_ThanhPhan').val().trim()) {
+                        alert('Vui lòng nhập thành phần sản phẩm.');
+                        $('#SanPham_ThanhPhan').focus();
+                        e.preventDefault();
+                        return false;
+                    }
+
+                    if (!$('#SanPham_HuongDanSuDung').val().trim()) {
+                        alert('Vui lòng nhập hướng dẫn sử dụng.');
+                        $('#SanPham_HuongDanSuDung').focus();
+                        e.preventDefault();
+                        return false;
+                    }
+
+                    if (!$('#SanPham_BaoQuan').val().trim()) {
+                        alert('Vui lòng nhập hướng dẫn bảo quản.');
+                        $('#SanPham_BaoQuan').focus();
+                        e.preventDefault();
+                        return false;
+                    }
+
+                    if (!$('#SanPham_KhoiLuong').val() || $('#SanPham_KhoiLuong').val() <= 0) {
+                        alert('Vui lòng nhập khối lượng sản phẩm.');
+                        $('#SanPham_KhoiLuong').focus();
+                        e.preventDefault();
+                        return false;
+                    }
+
+                    // Thiết lập giá trị mặc định cho các trường dễ bị lỗi
+                    if (!$('#SanPham_SoLuongMoiHop').val() || $('#SanPham_SoLuongMoiHop').val() < 0) {
+                        $('#SanPham_SoLuongMoiHop').val("0");
+                    }
+
+                    return true;
+                } catch (error) {
+                    console.error('Lỗi khi kiểm tra form:', error);
+                    alert('Có lỗi xảy ra khi kiểm tra thông tin sản phẩm. Vui lòng thử lại.');
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+        });
+
+    </script>
+}
