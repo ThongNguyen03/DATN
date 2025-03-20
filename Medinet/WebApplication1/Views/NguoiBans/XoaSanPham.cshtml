@@ -1,0 +1,317 @@
+﻿@model WebApplication1.Controllers.SanPhamViewModel
+@{
+    ViewBag.Title = "Xóa sản phẩm";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .product-image {
+        height: 100px;
+        width: 100px;
+        object-fit: cover;
+        border-radius: 5px;
+        border: 1px solid #dee2e6;
+    }
+
+    .card-header {
+        background-color: #f8f9fa;
+    }
+
+    .seller-sidebar {
+        background-color: #ffffff;
+        border: 1px solid #e9ecef;
+    }
+
+        .seller-sidebar .card-header {
+            background-color: #f8f9fa;
+            color: #212529;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .seller-sidebar .list-group-item {
+            background-color: transparent;
+            color: #212529;
+            border-color: #e9ecef;
+        }
+
+            .seller-sidebar .list-group-item:hover {
+                background-color: #f8f9fa;
+            }
+
+            .seller-sidebar .list-group-item.active {
+                background-color: #007bff;
+                border-color: #007bff;
+                color: #ffffff;
+            }
+
+    .delete-warning {
+        background-color: #fff8f8;
+        border-left: 4px solid #dc3545;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .product-info {
+        border-left: 3px solid #007bff;
+        padding-left: 15px;
+    }
+
+    .btn-return {
+        background-color: #f8f9fa;
+        border-color: #ddd;
+        color: #333;
+    }
+
+        .btn-return:hover {
+            background-color: #e9ecef;
+        }
+
+    .image-container {
+        position: relative;
+        display: inline-block;
+        margin-right: 10px;
+        margin-bottom: 10px;
+    }
+
+    .image-preview {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 4px;
+        border: 1px solid #dee2e6;
+    }
+
+    /* Cải thiện kiểu dáng cho badge */
+    .badge {
+        font-size: 0.85rem;
+        padding: 0.4em 0.7em;
+        border-radius: 4px;
+        display: inline-block;
+        font-weight: 500;
+    }
+
+    .badge-success {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .badge-warning {
+        background-color: #ffdd57;
+        color: #212529;
+        font-weight: 600;
+    }
+
+    .badge-danger {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .badge-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card seller-sidebar">
+                <div class="card-header text-black">
+                    <h5 class="mb-0">Trang người bán</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="@Url.Action("EditSellerProfile", "NguoiDungs")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-store mr-2"></i> Thông tin cửa hàng
+                    </a>
+                    <a href="@Url.Action("QuanLySanPham", "NguoiBans", new { id = ViewBag.MaNguoiBan })" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-box mr-2"></i> Sản phẩm
+                    </a>
+                    <a href="@Url.Action("SellerOrders", "NguoiDungs")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shopping-cart mr-2"></i> Đơn hàng
+                    </a>
+                    <a href="@Url.Action("SellerStatistics", "NguoiDungs")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-line mr-2"></i> Thống kê
+                    </a>
+                    <a href="@Url.Action("DangXuat", "DangNhap")" class="list-group-item list-group-item-action text-danger">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Đăng xuất
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Xác nhận xóa sản phẩm</h5>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.CoTrongDonHang == true)
+                    {
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            <strong>Không thể xóa sản phẩm!</strong> Sản phẩm này đã được đặt hàng. Vui lòng liên hệ admin để được hỗ trợ.
+                        </div>
+                        <div class="text-center mt-4">
+                            <a href="@Url.Action("QuanLySanPham", "NguoiBans", new { id = ViewBag.MaNguoiBan })" class="btn btn-primary">
+                                <i class="fas fa-arrow-left mr-2"></i> Quay lại danh sách sản phẩm
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Hiển thị trạng thái riêng để xác định vấn đề -->
+                        <div class="alert alert-info mb-3">
+                            <strong>Trạng thái sản phẩm:</strong>
+                            @if (Model.SanPham.TrangThai == "Đã phê duyệt")
+                            {
+                                <span class="badge badge-success ml-2">Đã phê duyệt</span>
+                            }
+                            else if (Model.SanPham.TrangThai == "Đang chờ xử lý")
+                            {
+                                <span class="badge badge-warning text-dark font-weight-bold ml-2">Đang chờ xử lý</span>
+                            }
+                            else if (Model.SanPham.TrangThai == "Bị từ chối")
+                            {
+                                <span class="badge badge-danger ml-2">Bị từ chối</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary ml-2">@(Model.SanPham.TrangThai ?? "Chưa xác định")</span>
+                            }
+                        </div>
+
+                        <div class="delete-warning mb-4">
+                            <h5><i class="fas fa-exclamation-triangle mr-2 text-danger"></i> Cảnh báo!</h5>
+                            <p class="mb-0">Bạn sắp xóa vĩnh viễn sản phẩm này. Hành động này không thể hoàn tác.</p>
+                            <p class="mb-0 mt-2">Tất cả dữ liệu liên quan đến sản phẩm như hình ảnh, đánh giá sẽ bị xóa.</p>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 text-center">
+                                @{
+                                    string anhHienThi = Url.Content("~/Content/images/no-image.jpeg");
+
+                                    // Lấy ảnh đầu tiên từ danh sách ảnh sản phẩm nếu có
+                                    if (Model.DanhSachAnh != null && Model.DanhSachAnh.Any())
+                                    {
+                                        anhHienThi = Model.DanhSachAnh.First().DuongDanAnh;
+                                    }
+                                }
+                                <img src="@anhHienThi" alt="@Model.SanPham.TenSanPham" class="product-image img-thumbnail mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+
+                                @if (Model.DanhSachAnh != null && Model.DanhSachAnh.Count > 1)
+                                {
+                                    <div class="small text-muted">
+                                        <i class="fas fa-images mr-1"></i> Tổng số @Model.DanhSachAnh.Count hình ảnh
+                                    </div>
+
+                                    <div class="mt-2">
+                                        @foreach (var anh in Model.DanhSachAnh.Take(4))
+                                        {
+                                            <div class="image-container">
+                                                <img src="@anh.DuongDanAnh" class="image-preview" />
+                                            </div>
+                                        }
+                                        @if (Model.DanhSachAnh.Count > 4)
+                                        {
+                                            <div class="image-container">
+                                                <div class="image-preview d-flex justify-content-center align-items-center bg-light">
+                                                    <span>+@(Model.DanhSachAnh.Count - 4)</span>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="col-md-8">
+                                <div class="product-info">
+                                    <h5 class="mb-3">@Model.SanPham.TenSanPham</h5>
+
+                                    <div class="row mb-2">
+                                        <div class="col-sm-5 text-muted">Mã sản phẩm:</div>
+                                        <div class="col-sm-7 font-weight-bold">#@Model.SanPham.MaSanPham</div>
+                                    </div>
+
+                                    <div class="row mb-2">
+                                        <div class="col-sm-5 text-muted">Danh mục:</div>
+                                        <div class="col-sm-7">@(Model.SanPham.DanhMucSanPham != null ? Model.SanPham.DanhMucSanPham.TenDanhMuc : "Không có")</div>
+                                    </div>
+
+                                    <div class="row mb-2">
+                                        <div class="col-sm-5 text-muted">Giá bán:</div>
+                                        <div class="col-sm-7 text-danger font-weight-bold">@String.Format("{0:N0}", Model.SanPham.GiaSanPham) VNĐ</div>
+                                    </div>
+
+                                    <div class="row mb-2">
+                                        <div class="col-sm-5 text-muted">Tồn kho:</div>
+                                        <div class="col-sm-7">@Model.SanPham.SoLuongTonKho sản phẩm</div>
+                                    </div>
+
+                                    <div class="row mb-2">
+                                        <div class="col-sm-5 text-muted">Thương hiệu:</div>
+                                        <div class="col-sm-7">@(string.IsNullOrEmpty(Model.SanPham.ThuongHieu) ? "Không có" : Model.SanPham.ThuongHieu)</div>
+                                    </div>
+
+                                    <div class="row mb-2">
+                                        <div class="col-sm-5 text-muted">Trạng thái:</div>
+                                        <div class="col-sm-7">
+                                            @if (Model.SanPham.TrangThai == "Đã phê duyệt")
+                                            {
+                                                <span class="badge badge-success">Đã phê duyệt</span>
+                                            }
+                                            else if (Model.SanPham.TrangThai == "Đang chờ xử lý")
+                                            {
+                                                <span class="badge badge-warning text-dark font-weight-bold">Đang chờ xử lý</span>
+                                            }
+                                            else if (Model.SanPham.TrangThai == "Bị từ chối")
+                                            {
+                                                <span class="badge badge-danger">Bị từ chối</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-secondary">@(Model.SanPham.TrangThai ?? "Chưa xác định")</span>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-2">
+                                        <div class="col-sm-5 text-muted">Ngày tạo:</div>
+                                        <div class="col-sm-7">@Model.SanPham.NgayTao.ToString("dd/MM/yyyy HH:mm")</div>
+                                    </div>
+                                </div>
+
+                                @using (Html.BeginForm())
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <div class="d-flex justify-content-end mt-4">
+                                        <a href="@Url.Action("QuanLySanPham", "NguoiBans", new { id = ViewBag.MaNguoiBan })" class="btn btn-return mr-2">
+                                            <i class="fas fa-arrow-left mr-1"></i> Quay lại
+                                        </a>
+                                        <button type="submit" class="btn btn-danger" id="btnDelete">
+                                            <i class="fas fa-trash-alt mr-1"></i> Xác nhận xóa
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#btnDelete').click(function (e) {
+                if (!confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+}

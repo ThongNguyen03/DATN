@@ -1,0 +1,457 @@
+﻿@model WebApplication1.Controllers.ListSanPhamViewModel
+@{
+    ViewBag.Title = Model.TenDanhMuc ?? "Sản phẩm";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Thiết lập màu chữ trắng cho các nút phân trang active */
+    .pagination .page-item.active .page-link {
+        color: #fff !important;
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+    /* Đảm bảo màu chữ đen cho các nút phân trang không active */
+    .pagination .page-item:not(.active) .page-link {
+        color: #000;
+    }
+
+        /* Hiệu ứng hover cho các nút phân trang không active */
+        .pagination .page-item:not(.active) .page-link:hover {
+            background-color: #f8f9fa;
+            color: #007bff;
+        }
+
+    /* Thiết lập màu đen và bỏ gạch chân cho tất cả các liên kết sản phẩm */
+    .card-title, .card-body a, .row a, .col-lg-3 a {
+        color: #000 !important;
+        text-decoration: none !important;
+    }
+
+    /* Hiệu ứng khi hover vào liên kết sản phẩm */
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+        /* Thêm hiệu ứng màu chữ khi hover */
+        .card:hover .card-title {
+            color: #007bff !important;
+            transition: color 0.3s ease;
+        }
+
+    /* Hiệu ứng khi hover cho các liên kết phân trang */
+    .pagination .page-link:hover {
+        background-color: #f8f9fa;
+        color: #007bff;
+    }
+
+    /* Style cho checkbox */
+    .custom-checkbox {
+        margin-bottom: 10px;
+    }
+
+    .filter-section {
+        margin-bottom: 20px;
+    }
+
+    .filter-heading {
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .price-range {
+        display: flex;
+        align-items: center;
+    }
+
+    .price-input {
+        width: 100px;
+    }
+
+    .filter-btn {
+        margin-top: 15px;
+    }
+
+    /* Thiết lập cho thông tin người bán */
+    .seller-container {
+        padding: 8px 1px 8px 1px !important;
+        margin-top: -5px;
+    }
+
+    .seller-info {
+        display: flex;
+        align-items: center;
+        padding-left: 0;
+        text-align: left;
+    }
+
+    .seller-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 8px;
+    }
+
+    .seller-name {
+        font-size: 14px;
+        color: #666;
+        line-height: 1.2;
+    }
+
+    /* Loại bỏ border-top nếu cần */
+    .border-top {
+        border-top: none !important;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Thanh bên trái - Bộ lọc -->
+        <div class="col-lg-3">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Bộ lọc tìm kiếm</h5>
+                </div>
+                <div class="card-body">
+                    @using (Html.BeginForm("SanPham", "Home", FormMethod.Get, new { id = "filterForm" }))
+                    {
+                        <!-- Nút xem tất cả sản phẩm -->
+                        <div class="mb-3">
+                            <a href="@Url.Action("SanPham", "Home")" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-list"></i> Xem tất cả sản phẩm
+                            </a>
+                        </div>
+
+                        <!-- Tìm kiếm -->
+                        <div class="filter-section">
+                            <div class="filter-heading">Tìm kiếm</div>
+                            <div class="input-group mb-3">
+                                @Html.TextBoxFor(m => m.TimKiem, new { @class = "form-control", placeholder = "Nhập từ khóa..." })
+                            </div>
+                        </div>
+
+                        <!-- Theo Danh Mục -->
+                        <div class="filter-section">
+                            <div class="filter-heading">Theo Danh Mục</div>
+                            @foreach (var danhMuc in Model.DanhMucSanPhams)
+                            {
+                                <div class="custom-checkbox">
+                                    <input type="radio" id="dm_@danhMuc.MaDanhMuc" name="maDanhMuc" value="@danhMuc.MaDanhMuc"
+                                           @(Model.MaDanhMuc == danhMuc.MaDanhMuc ? "checked" : "")
+                                           class="category-radio" />
+                                    <label for="dm_@danhMuc.MaDanhMuc">@danhMuc.TenDanhMuc</label>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Khoảng Giá -->
+                        <div class="filter-section">
+                            <div class="filter-heading">Khoảng Giá</div>
+                            <div class="price-range">
+                                <div class="form-group">
+                                    <label>Từ:</label>
+                                    @Html.TextBoxFor(m => m.GiaMin, new { @class = "form-control price-input", type = "number" })
+                                </div>
+                                <div class="mx-2">-</div>
+                                <div class="form-group">
+                                    <label>Đến:</label>
+                                    @Html.TextBoxFor(m => m.GiaMax, new { @class = "form-control price-input", type = "number" })
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Thương hiệu -->
+                        <div class="filter-section">
+                            <div class="filter-heading">Thương hiệu</div>
+                            <div id="thuongHieuContainer">
+                                @if (ViewBag.DanhSachThuongHieu != null && ViewBag.DanhSachThuongHieu.Count > 0)
+                                {
+                                    foreach (var thuongHieu in ViewBag.DanhSachThuongHieu)
+                                    {
+                                        <div class="custom-checkbox">
+                                            <input type="radio" id="th_@thuongHieu.Replace(" ", "_")" name="thuongHieu" value="@thuongHieu"
+                                                   @(Model.ThuongHieu == thuongHieu ? "checked" : "")
+                                                   class="brand-radio" />
+                                            <label for="th_@thuongHieu.Replace(" ", "_")">@thuongHieu</label>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-muted">Không có thương hiệu nào.</p>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Nút áp dụng -->
+                        <button type="submit" class="btn btn-primary w-100 filter-btn">Áp dụng</button>
+                    }
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Phần bên phải - Danh sách sản phẩm -->
+        <div class="col-lg-9">
+            <!-- Tiêu đề danh mục -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h2 class="text-uppercase font-weight-bold">@(Model.TenDanhMuc ?? "TẤT CẢ SẢN PHẨM")</h2>
+                    <p>Hiển thị @Model.SanPhams.Count() trên tổng số @ViewBag.TotalItems sản phẩm</p>
+                </div>
+            </div>
+
+            <!-- Danh sách sản phẩm -->
+            <div class="row">
+                @if (Model.SanPhams.Any())
+                {
+                    foreach (var sanPham in Model.SanPhams)
+                    {
+                        <div class="col-lg-4 col-md-6 col-sm-6 mb-4">
+                            <div class="card h-100">
+                                <a href="@Url.Action("ChiTiet", "Home", new { id = sanPham.MaSanPham })">
+                                    @if (sanPham.DanhSachAnhSanPham != null && sanPham.DanhSachAnhSanPham.Any())
+                                    {
+                                        <img class="card-img-top" src="@Url.Content(sanPham.DanhSachAnhSanPham.FirstOrDefault().DuongDanAnh)"
+                                             alt="@sanPham.TenSanPham" style="height: 200px; object-fit: contain;">
+                                    }
+                                    else
+                                    {
+                                        <img class="card-img-top" src="~/Content/Images/no-image.jpeg"
+                                             alt="@sanPham.TenSanPham" style="height: 200px; object-fit: contain;">
+                                    }
+                                <div class="card-body">
+                                    <!-- Hiển thị tên sản phẩm trong 2 dòng -->
+                                    <h5 class="card-title" style="height: 48px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                                        @sanPham.TenSanPham
+                                    </h5>
+                                    <p class="card-text font-weight-bold text-danger">@String.Format("{0:N0}", sanPham.GiaSanPham) đ</p>
+
+                                    <!-- Thông tin người bán - có thể click để xem thông tin người bán -->
+                                    <div class="card-body pt-0 pb-2 border-top seller-container">
+                                        <a href="@Url.Action("ThongTinNguoiBan", "NguoiBans", new { id = sanPham.MaNguoiBan })" class="text-decoration-none">
+                                            <div class="seller-info">
+                                                @if (!string.IsNullOrEmpty(sanPham.NguoiBan.NguoiDung.AnhDaiDien))
+                                                {
+                                                    <img src="@Url.Content(sanPham.NguoiBan.NguoiDung.AnhDaiDien)"
+                                                         alt="@sanPham.NguoiBan.TenCuaHang"
+                                                         class="seller-avatar">
+                                                }
+                                                else
+                                                {
+                                                    <img src="~/Content/Images/default-avatar.png"
+                                                         alt="@sanPham.NguoiBan.TenCuaHang"
+                                                         class="seller-avatar">
+                                                }
+                                                <span class="seller-name">@sanPham.NguoiBan.TenCuaHang</span>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+                                </a>
+                                <div class="card-footer bg-white">
+                                    <button class="btn btn-primary w-100" onclick="addToCart(@sanPham.MaSanPham)">
+                                        <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="col-12 text-center py-5">
+                        <h3>Không tìm thấy sản phẩm nào phù hợp với điều kiện tìm kiếm</h3>
+                        <a href="@Url.Action("SanPham", "Home")" class="btn btn-primary mt-3">Xem tất cả sản phẩm</a>
+                    </div>
+                }
+            </div>
+
+            <!-- Phân trang -->
+            @if (ViewBag.TotalPages > 1)
+            {
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center">
+                                @if (ViewBag.CurrentPage > 1)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" href="@Url.Action("SanPham", "Home", new {
+                                            maDanhMuc = Model.MaDanhMuc,
+                                            timKiem = Model.TimKiem,
+                                            giaMin = Model.GiaMin,
+                                            giaMax = Model.GiaMax,
+                                            thuongHieu = Model.ThuongHieu,
+                                            page = ViewBag.CurrentPage - 1
+                                        })" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                }
+                                else
+                                {
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                }
+
+                                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                                {
+                                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                        <a class="page-link" href="@Url.Action("SanPham", "Home", new {
+                                            maDanhMuc = Model.MaDanhMuc,
+                                            timKiem = Model.TimKiem,
+                                            giaMin = Model.GiaMin,
+                                            giaMax = Model.GiaMax,
+                                            thuongHieu = Model.ThuongHieu,
+                                            page = i
+                                        })">@i</a>
+                                    </li>
+                                }
+
+                                @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" href="@Url.Action("SanPham", "Home", new {
+                                            maDanhMuc = Model.MaDanhMuc,
+                                            timKiem = Model.TimKiem,
+                                            giaMin = Model.GiaMin,
+                                            giaMax = Model.GiaMax,
+                                            thuongHieu = Model.ThuongHieu,
+                                            page = ViewBag.CurrentPage + 1
+                                        })" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                }
+                                else
+                                {
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    $(document).ready(function() {
+        // Khi chọn danh mục
+        $('.category-radio').change(function() {
+            var maDanhMuc = $(this).val();
+
+            // Nếu có mã danh mục, gọi API để lấy danh sách thương hiệu
+            if (maDanhMuc) {
+                $.ajax({
+                    url: '@Url.Action("GetThuongHieuTheoDanhMuc", "Home")',
+                    type: 'GET',
+                    data: { maDanhMuc: maDanhMuc },
+                    success: function(thuongHieus) {
+                        // Xóa tất cả thương hiệu hiện tại
+                        $('#thuongHieuContainer').empty();
+
+                        // Kiểm tra nếu có thương hiệu
+                        if (thuongHieus && thuongHieus.length > 0) {
+                            // Thêm các thương hiệu mới
+                            thuongHieus.forEach(function(thuongHieu) {
+                                var thId = 'th_' + thuongHieu.replace(/\s+/g, '_');
+                                var html = '<div class="custom-checkbox">' +
+                                    '<input type="radio" id="' + thId + '" name="thuongHieu" value="' + thuongHieu + '" class="brand-radio" />' +
+                                    '<label for="' + thId + '">' + thuongHieu + '</label>' +
+                                    '</div>';
+                                $('#thuongHieuContainer').append(html);
+                            });
+
+                            // Thêm lại sự kiện cho nút radio thương hiệu
+                            $('.brand-radio').change(function() {
+                                $('#filterForm').submit();
+                            });
+                        } else {
+                            // Nếu không có thương hiệu nào
+                            $('#thuongHieuContainer').html('<p class="text-muted">Không có thương hiệu nào.</p>');
+                        }
+                    },
+                    error: function() {
+                        console.error('Không thể lấy danh sách thương hiệu');
+                    }
+                });
+            }
+
+            // Submit form để lọc theo danh mục
+            $('#filterForm').submit();
+        });
+
+        // Khi chọn thương hiệu, tự động submit form
+        $('.brand-radio').change(function() {
+            $('#filterForm').submit();
+        });
+
+        // Hàm cập nhật badge giỏ hàng
+        function updateCartBadge(count) {
+            var cartBadge = $(".cart-badge");
+
+            // Nếu badge chưa tồn tại và count > 0, thêm mới
+            if (cartBadge.length === 0 && count > 0) {
+                $(".cart-container").append('<span class="cart-badge">' + count + '</span>');
+            }
+            // Nếu badge đã tồn tại, cập nhật số lượng
+            else if (cartBadge.length > 0) {
+                if (count > 0) {
+                    cartBadge.text(count);
+                } else {
+                    cartBadge.remove();
+                }
+            }
+        }
+
+    });
+
+    function addToCart(maSanPham) {
+        $.ajax({
+            url: '@Url.Action("ThemVaoGio", "Home")',
+            type: 'POST',
+            data: { maSanPham: maSanPham, soLuong: 1 },
+            success: function (result) {
+                if (result.success) {
+                    alert('Đã thêm sản phẩm vào giỏ hàng');
+
+                    // Gọi thêm API để lấy số lượng giỏ hàng hiện tại
+                    $.ajax({
+                        url: '@Url.Action("GetCartCount", "Home")',
+                        type: 'GET',
+                        success: function(countData) {
+                            var cartBadge = $(".cart-badge");
+
+                            if (cartBadge.length > 0) {
+                                cartBadge.text(countData.count);
+                            } else {
+                                $(".cart-container").append('<span class="cart-badge" style="position: absolute; top: -8px; right: -8px; background-color: #dc3545; color: white; border-radius: 50%; min-width: 18px; height: 18px; font-size: 11px; font-weight: bold; display: flex; align-items: center; justify-content: center; padding: 2px;">' + countData.count + '</span>');
+                            }
+                        }
+                    });
+                } else {
+                    alert(result.message);
+                }
+            },
+            error: function () {
+                alert('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
+            }
+        });
+    }
+</script>

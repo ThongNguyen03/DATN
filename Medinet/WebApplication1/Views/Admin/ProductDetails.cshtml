@@ -1,0 +1,533 @@
+﻿@model WebApplication1.Models.SanPham
+@{
+    ViewBag.Title = "Chi tiết sản phẩm";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Sidebar styles - giống UserDetails */
+    .page-container {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    .sidebar {
+        width: 250px;
+        background-color: #fff;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 100;
+        padding-top: 15px;
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        margin-bottom: 15px;
+    }
+
+    .sidebar-logo {
+        height: 40px;
+        margin-right: 10px;
+    }
+
+    .sidebar-heading {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #6c757d;
+        padding: 0 20px;
+        margin-bottom: 10px;
+    }
+
+    .sidebar-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-item {
+        position: relative;
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        color: #495057;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+        .sidebar-link i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .sidebar-link:hover, .sidebar-item.active .sidebar-link {
+            color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+
+            .sidebar-item.active .sidebar-link:before {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 3px;
+                background-color: #0d6efd;
+            }
+
+    /* Main content styles */
+    .main-content {
+        flex: 1;
+        padding: 20px;
+    }
+
+    /* Chi tiết sản phẩm */
+    .product-detail-image {
+        width: 100%;
+        max-height: 400px;
+        object-fit: contain;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+
+    .product-thumbnail {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .product-thumbnail:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-thumbnail.active {
+            border: 2px solid #0d6efd;
+        }
+
+    .product-info {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .product-price {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #dc3545;
+    }
+
+    .seller-info {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .badge-status {
+        padding: 5px 10px;
+        border-radius: 20px;
+    }
+</style>
+
+<div class="page-container">
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h6 class="sidebar-heading">CHỨC NĂNG</h6>
+
+        <ul class="sidebar-nav">
+            <li class="sidebar-item">
+                <a href="@Url.Action("Dashboard", "Admin")" class="sidebar-link">
+                    <i class="bi bi-grid"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("UserManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-people"></i>
+                    <span>Quản lý người dùng</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item active">
+                <a href="@Url.Action("ProductManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-box"></i>
+                    <span>Quản lý sản phẩm</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("CategoryManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-list-nested"></i>
+                    <span>Quản lý danh mục</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("OrderManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-cart3"></i>
+                    <span>Quản lý đơn hàng</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("TransactionManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-currency-exchange"></i>
+                    <span>Quản lý giao dịch</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        @using (Html.BeginForm("EmptyForm", "Admin", FormMethod.Post, new { id = "csrfForm" }))
+        {@Html.AntiForgeryToken()}
+
+        <div class="container-fluid p-0">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h3">@ViewBag.Title</h1>
+                <a href="@Url.Action("ProductManagement", "Admin")" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </a>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Trạng thái sản phẩm</h5>
+                        </div>
+                        <div class="card-body">
+                            @{
+                                var statusClass = Model.TrangThai == "Đã phê duyệt" ? "bg-success" :
+                                                (Model.TrangThai == "Đang chờ xử lý" ? "bg-warning" :
+                                                (Model.TrangThai == "Bị từ chối" ? "bg-danger" : "bg-secondary"));
+                            }
+                            <h4><span class="badge @statusClass">@Model.TrangThai</span></h4>
+
+                            <div class="mt-3">
+                                @if (Model.TrangThai == "Đang chờ xử lý")
+                                {
+                                    <button class="btn btn-success me-2 approve-product-btn" data-id="@Model.MaSanPham">
+                                        <i class="bi bi-check-circle"></i> Duyệt sản phẩm
+                                    </button>
+                                    <button class="btn btn-danger me-2 reject-product-btn" data-id="@Model.MaSanPham">
+                                        <i class="bi bi-x-circle"></i> Từ chối
+                                    </button>
+                                }
+
+                                @*@if (Model.TrangThai != "Đã xóa")
+                                {
+                                    <button class="btn btn-danger delete-product-btn" data-id="@Model.MaSanPham">
+                                        <i class="bi bi-trash"></i> Xóa sản phẩm
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-success restore-product-btn" data-id="@Model.MaSanPham">
+                                        <i class="bi bi-arrow-clockwise"></i> Khôi phục sản phẩm
+                                    </button>
+                                }*@
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Hình ảnh sản phẩm</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            @{
+                                var anhChinh = ViewBag.DanhSachAnh != null && ViewBag.DanhSachAnh.Count > 0 ?
+                                    ViewBag.DanhSachAnh[0] : null;
+
+                                var duongDanAnhChinh = anhChinh != null ? anhChinh.DuongDanAnh : "~/Content/Images/default-product.png";
+                            }
+                            <img id="mainProductImage" src="@Url.Content(duongDanAnhChinh)" class="product-detail-image" alt="@Model.TenSanPham">
+
+                            <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
+                                @if (ViewBag.DanhSachAnh != null && ViewBag.DanhSachAnh.Count > 0)
+                                {
+                                    foreach (var anh in ViewBag.DanhSachAnh)
+                                    {
+                                        <img src="@Url.Content(anh.DuongDanAnh)"
+                                             class="product-thumbnail"
+                                             alt="@Model.TenSanPham"
+                                             onclick="showImage('@Url.Content(anh.DuongDanAnh)')">
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Thông tin sản phẩm</h5>
+                        </div>
+                        <div class="card-body">
+                            <h3>@Model.TenSanPham</h3>
+                            <div class="product-price mb-3">@string.Format("{0:N0} VNĐ", Model.GiaSanPham)</div>
+
+                            <div class="mb-3">
+                                <strong>Danh mục:</strong>
+                                @if (ViewBag.DanhMuc != null)
+                                {
+                                    @ViewBag.DanhMuc.TenDanhMuc
+                                }
+                                else
+                                {
+                                    <span>Không xác định</span>
+                                }
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Số lượng tồn kho:</strong> @Model.SoLuongTonKho
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Thương hiệu:</strong> @(string.IsNullOrEmpty(Model.ThuongHieu) ? "Không có" : Model.ThuongHieu)
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Ngày tạo:</strong> @Model.NgayTao.ToString("dd/MM/yyyy HH:mm")
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Ngày cập nhật:</strong>
+                                @if (Model.NgayCapNhat != DateTime.MinValue && Model.NgayCapNhat != null)
+                                {
+                                    @Model.NgayCapNhat.ToString("dd/MM/yyyy HH:mm")
+                                }
+                                else
+                                {
+                                    <span>Chưa cập nhật</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Thông tin người bán</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (ViewBag.NguoiBan != null)
+                            {
+                                <div class="mb-3">
+                                    <strong>Tên cửa hàng:</strong> @ViewBag.NguoiBan.TenCuaHang
+                                </div>
+                                <div class="mb-3">
+                                    <strong>Số điện thoại:</strong> @ViewBag.NguoiBan.SoDienThoaiCuaHang
+                                </div>
+                                <div class="mb-3">
+                                    <strong>Địa chỉ:</strong> @ViewBag.NguoiBan.DiaChiCuaHang
+                                </div>
+                                <div class="mb-3">
+                                    <a href="@Url.Action("UserDetails", "Admin", new { id = ViewBag.NguoiBan.MaNguoiDung })" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-person"></i> Xem thông tin người bán
+                                    </a>
+                                </div>
+                            }
+                            else
+                            {
+                                <p>Không tìm thấy thông tin người bán</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Mô tả sản phẩm</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (!string.IsNullOrEmpty(Model.MoTaSanPham))
+                            {
+                                <div class="product-description">
+                                    @Html.Raw(Model.MoTaSanPham)
+                                </div>
+                            }
+                            else
+                            {
+                                <p>Không có mô tả</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận xóa sản phẩm -->
+<div class="modal fade" id="deleteProductModal" tabindex="-1" aria-labelledby="deleteProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteProductModalLabel">Xác nhận xóa sản phẩm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn xóa sản phẩm này không?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Xóa</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal từ chối sản phẩm -->
+<div class="modal fade" id="rejectProductModal" tabindex="-1" aria-labelledby="rejectProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rejectProductModalLabel">Từ chối sản phẩm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn từ chối sản phẩm này không?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmRejectBtn">Từ chối</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var token = $('input[name="__RequestVerificationToken"]').val();
+
+            // Xử lý nút duyệt sản phẩm
+            $(".approve-product-btn").on("click", function () {
+                var productId = $(this).data("id");
+
+                if (confirm("Bạn có chắc chắn muốn duyệt sản phẩm này không?")) {
+                    $.ajax({
+                        url: '@Url.Action("ApproveProduct", "Admin")',
+                        type: 'POST',
+                        data: { id: productId, __RequestVerificationToken: token },
+                        success: function (result) {
+                            if (result.success) {
+                                location.reload();
+                            } else {
+                                alert("Lỗi: " + result.message);
+                            }
+                        },
+                        error: function () {
+                            alert("Đã xảy ra lỗi khi duyệt sản phẩm.");
+                        }
+                    });
+                }
+            });
+
+            // Xử lý nút từ chối sản phẩm
+            $(".reject-product-btn").on("click", function () {
+                var productId = $(this).data("id");
+                $("#confirmRejectBtn").data("id", productId);
+                $("#rejectProductModal").modal("show");
+            });
+
+            // Xác nhận từ chối sản phẩm
+            $("#confirmRejectBtn").on("click", function () {
+                var productId = $(this).data("id");
+
+                $.ajax({
+                    url: '@Url.Action("RejectProduct", "Admin")',
+                    type: 'POST',
+                    data: { id: productId, __RequestVerificationToken: token },
+                    success: function (result) {
+                        if (result.success) {
+                            $("#rejectProductModal").modal("hide");
+                            location.reload();
+                        } else {
+                            alert("Lỗi: " + result.message);
+                        }
+                    },
+                    error: function () {
+                        alert("Đã xảy ra lỗi khi từ chối sản phẩm.");
+                    }
+                });
+            });
+
+            // Xử lý nút xóa sản phẩm
+            $(".delete-product-btn").on("click", function () {
+                var productId = $(this).data("id");
+                $("#confirmDeleteBtn").data("id", productId);
+                $("#deleteProductModal").modal("show");
+            });
+
+            // Xác nhận xóa sản phẩm
+            $("#confirmDeleteBtn").on("click", function () {
+                var productId = $(this).data("id");
+
+                $.ajax({
+                    url: '@Url.Action("DeleteProduct", "Admin")',
+                    type: 'POST',
+                    data: { id: productId, __RequestVerificationToken: token },
+                    success: function (result) {
+                        if (result.success) {
+                            $("#deleteProductModal").modal("hide");
+                            window.location.href = '@Url.Action("ProductManagement", "Admin")';
+                        } else {
+                            alert("Lỗi: " + result.message);
+                        }
+                    },
+                    error: function () {
+                        alert("Đã xảy ra lỗi khi xóa sản phẩm.");
+                    }
+                });
+            });
+
+            // Xử lý nút khôi phục sản phẩm
+            $(".restore-product-btn").on("click", function () {
+                var productId = $(this).data("id");
+
+                if (confirm("Bạn có chắc chắn muốn khôi phục sản phẩm này không?")) {
+                    $.ajax({
+                        url: '@Url.Action("RestoreProduct", "Admin")',
+                        type: 'POST',
+                        data: { id: productId, __RequestVerificationToken: token },
+                        success: function (result) {
+                            if (result.success) {
+                                location.reload();
+                            } else {
+                                alert("Lỗi: " + result.message);
+                            }
+                        },
+                        error: function () {
+                            alert("Đã xảy ra lỗi khi khôi phục sản phẩm.");
+                        }
+                    });
+                }
+            });
+        });
+
+        // Hàm hiển thị ảnh được chọn
+        function showImage(imageUrl) {
+            $("#mainProductImage").attr("src", imageUrl);
+            $(".product-thumbnail").removeClass("active");
+            $(".product-thumbnail[src='" + imageUrl + "']").addClass("active");
+        }
+    </script>
+}

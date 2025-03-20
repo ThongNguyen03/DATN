@@ -24,6 +24,7 @@ namespace WebApplication1.Models
         public DbSet<NguoiBan> NguoiBans { get; set; }
         public DbSet<AnhSanPham> AnhSanPhams { get; set; }
         public DbSet<AnhChungChi> AnhChungChis { get; set; }
+        public DbSet<GioHang> GioHangs { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {

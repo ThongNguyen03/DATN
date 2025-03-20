@@ -1,0 +1,317 @@
+﻿@model WebApplication1.Models.DanhMucSanPham
+@{
+    ViewBag.Title = "Chi tiết danh mục";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Sidebar styles */
+    .page-container {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    .sidebar {
+        width: 250px;
+        background-color: #fff;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 100;
+        padding-top: 15px;
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        margin-bottom: 15px;
+    }
+
+    .sidebar-logo {
+        height: 40px;
+        margin-right: 10px;
+    }
+
+    .sidebar-heading {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #6c757d;
+        padding: 0 20px;
+        margin-bottom: 10px;
+    }
+
+    .sidebar-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-item {
+        position: relative;
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        color: #495057;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+        .sidebar-link i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .sidebar-link:hover, .sidebar-item.active .sidebar-link {
+            color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+
+            .sidebar-item.active .sidebar-link:before {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 3px;
+                background-color: #0d6efd;
+            }
+
+    /* Main content styles */
+    .main-content {
+        flex: 1;
+        padding: 20px;
+    }
+
+    .category-detail-card {
+        margin-bottom: 20px;
+    }
+
+    .category-image {
+        max-width: 200px;
+        max-height: 200px;
+        object-fit: contain;
+    }
+
+    .product-image {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+
+    .category-info {
+        display: flex;
+        align-items: flex-start;
+        gap: 20px;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #6c757d;
+    }
+
+    .product-count-badge {
+        font-size: 14px;
+        padding: 5px 10px;
+        border-radius: 20px;
+    }
+</style>
+
+<div class="page-container">
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h6 class="sidebar-heading">CHỨC NĂNG</h6>
+
+        <ul class="sidebar-nav">
+            <li class="sidebar-item">
+                <a href="@Url.Action("Dashboard", "Admin")" class="sidebar-link">
+                    <i class="bi bi-grid"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("UserManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-people"></i>
+                    <span>Quản lý người dùng</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("ProductManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-box"></i>
+                    <span>Quản lý sản phẩm</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item active">
+                <a href="@Url.Action("CategoryManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-list-nested"></i>
+                    <span>Quản lý danh mục</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("OrderManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-cart3"></i>
+                    <span>Quản lý đơn hàng</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("TransactionManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-currency-exchange"></i>
+                    <span>Quản lý giao dịch</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container-fluid p-0">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h3">@ViewBag.Title: @Model.TenDanhMuc</h1>
+                <div>
+                    <a href="@Url.Action("CategoryManagement", "Admin")" class="btn btn-secondary me-2">
+                        <i class="bi bi-arrow-left me-1"></i> Quay lại
+                    </a>
+                    <a href="@Url.Action("EditCategory", "Admin", new { id = Model.MaDanhMuc })" class="btn btn-primary">
+                        <i class="bi bi-pencil me-1"></i> Chỉnh sửa
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card category-detail-card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Thông tin danh mục</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="category-info">
+                                <div>
+                                    @{
+                                        string anhHienThi = string.IsNullOrEmpty(Model.AnhDanhMucSanPham)
+                                            ? Url.Content("~/Content/images/no-image.jpeg")
+                                            : Url.Content(Model.AnhDanhMucSanPham);
+                                    }
+                                    <img src="@anhHienThi" alt="@Model.TenDanhMuc" class="category-image mb-3">
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="row mb-2">
+                                        <div class="col-md-3 detail-label">Mã danh mục:</div>
+                                        <div class="col-md-9">@Model.MaDanhMuc</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-3 detail-label">Tên danh mục:</div>
+                                        <div class="col-md-9">@Model.TenDanhMuc</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-3 detail-label">Danh mục cha:</div>
+                                        <div class="col-md-9">
+                                            @{
+                                                string tenDanhMucCha = "Không có";
+                                                if (Model.MaDanhMucCha.HasValue)
+                                                {
+                                                    var danhMucCha = ViewBag.ParentCategory as WebApplication1.Models.DanhMucSanPham;
+                                                    if (danhMucCha != null)
+                                                    {
+                                                        tenDanhMucCha = danhMucCha.TenDanhMuc;
+                                                    }
+                                                }
+                                            }
+                                            @tenDanhMucCha
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-3 detail-label">Ngày tạo:</div>
+                                        <div class="col-md-9">@(Model.NgayTao != null ? Model.NgayTao.ToString("dd/MM/yyyy HH:mm") : "N/A")</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-3 detail-label">Số lượng sản phẩm:</div>
+                                        <div class="col-md-9">
+                                            <span class="badge bg-primary product-count-badge">@ViewBag.SoLuongSanPham sản phẩm</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Danh sách sản phẩm thuộc danh mục</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (ViewBag.SanPhamTrongDanhMuc != null && ((IEnumerable<WebApplication1.Models.SanPham>)ViewBag.SanPhamTrongDanhMuc).Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Ảnh</th>
+                                                <th>Tên sản phẩm</th>
+                                                <th>Giá</th>
+                                                <th>Số lượng</th>
+                                                <th>Trạng thái</th>
+                                                <th>Hành động</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in (IEnumerable<WebApplication1.Models.SanPham>)ViewBag.SanPhamTrongDanhMuc)
+                                            {
+                                                var statusClass = item.TrangThai == "Đã phê duyệt" ? "bg-success" :
+                                                                 (item.TrangThai == "Đang chờ xử lý" ? "bg-warning" :
+                                                                 (item.TrangThai == "Bị từ chối" ? "bg-danger" : "bg-secondary"));
+
+                                                <tr>
+                                                    <td>@item.MaSanPham</td>
+                                                    <td>
+                                                        @{
+                                                            string anhSpHienThi = "~/Content/images/no-image.jpeg";
+                                                            if (item.DanhSachAnhSanPham != null && item.DanhSachAnhSanPham.Any())
+                                                            {
+                                                                anhSpHienThi = item.DanhSachAnhSanPham.First().DuongDanAnh;
+                                                            }
+                                                        }
+                                                        <img src="@Url.Content(anhSpHienThi)" alt="@item.TenSanPham" class="product-image">
+                                                    </td>
+                                                    <td>@item.TenSanPham</td>
+                                                    <td>@string.Format("{0:N0} VNĐ", item.GiaSanPham)</td>
+                                                    <td>@item.SoLuongTonKho</td>
+                                                    <td><span class="badge @statusClass">@item.TrangThai</span></td>
+                                                    <td>
+                                                        <a href="@Url.Action("ProductDetails", "Admin", new { id = item.MaSanPham })" class="btn btn-sm btn-secondary">
+                                                            <i class="bi bi-eye"></i> Xem
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle me-2"></i> Không có sản phẩm nào thuộc danh mục này.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

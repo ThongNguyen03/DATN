@@ -14,6 +14,7 @@ namespace WebApplication1.Controllers
     {
         // Database connection string
         private string connectionString = "Data Source=DESKTOP-C6TH3H0;Initial Catalog=MediNet;Integrated Security=True";
+        private MedinetDATN db = new MedinetDATN(); // Thêm DbContext
         // GET: DangNhap
         public ActionResult DangNhap()
         {
@@ -42,6 +43,7 @@ namespace WebApplication1.Controllers
             }
             using (SqlConnection con = new SqlConnection(connectionString))
             {
+                con.Open();
                 if (!string.IsNullOrEmpty(password))
                 {
                     string MatKhauMaHoa = HashPassword(password);
@@ -58,24 +60,49 @@ namespace WebApplication1.Controllers
                     SqlCommand cmd = new SqlCommand(query, con);
                     cmd.Parameters.AddWithValue("@Email", Email);
                     cmd.Parameters.AddWithValue("@MatKhauMaHoa", MatKhauMaHoa);
-                    con.Open();
-                    SqlDataReader reader = cmd.ExecuteReader();
-                    if (reader.Read())
+
+                    int maNguoiDung = 0;
+                    string tenNguoiDung = string.Empty;
+                    string vaiTro = string.Empty;
+                    string anhDaiDien = string.Empty;
+                    bool isAuthenticated = false;
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
                     {
-                        Session["MaNguoiDung"] = reader["MaNguoiDung"];
-                        Session["TenNguoiDung"] = reader["TenNguoiDung"];
-                        Session["VaiTro"] = reader["VaiTro"];
-                        Session["AnhDaiDien"] = reader["AnhDaiDien"] ?? "~/Content/Images/default-avatar.png"; ;
-                        // Xử lý ghi nhớ đăng nhập
-                        //if (rememberMe)
-                        //{
-                        //    HttpCookie cookie = new HttpCookie("UserLogin");
-                        //    cookie.Values["Email"] = email;
-                        //    cookie.Expires = DateTime.Now.AddDays(30);
-                        //    Response.Cookies.Add(cookie);
-                        //}
+                        if (reader.Read())
+                        {
+                            isAuthenticated = true;
+                            maNguoiDung = Convert.ToInt32(reader["MaNguoiDung"]);
+                            tenNguoiDung = reader["TenNguoiDung"].ToString();
+                            vaiTro = reader["VaiTro"].ToString();
+                            anhDaiDien = reader["AnhDaiDien"] != DBNull.Value ? reader["AnhDaiDien"].ToString() : "~/Content/Images/default-avatar.png";
+                        }
+                    }
+
+                    if (isAuthenticated)
+                    {
+                        // Lưu thông tin vào session
+                        Session["MaNguoiDung"] = maNguoiDung;
+                        Session["TenNguoiDung"] = tenNguoiDung;
+                        Session["VaiTro"] = vaiTro;
+                        Session["AnhDaiDien"] = anhDaiDien;
+
+                        // Tính số lượng sản phẩm trong giỏ hàng
+                        string cartQuery = @"
+                            SELECT COUNT(*) as SoLoaiSanPham
+                            FROM GioHang
+                            WHERE MaNguoiDung = @MaNguoiDung";
+
+                        SqlCommand cartCmd = new SqlCommand(cartQuery, con);
+                        cartCmd.Parameters.AddWithValue("@MaNguoiDung", maNguoiDung);
+                        object result = cartCmd.ExecuteScalar();
+
+                        // Lưu số lượng sản phẩm vào session
+                        Session["SoLuongGioHang"] = Convert.ToInt32(result);
+
                         // Thiết lập cookie xác thực để Forms Authentication hoạt động
                         System.Web.Security.FormsAuthentication.SetAuthCookie(Email, false);
+
                         // Xử lý chuyển hướng sau đăng nhập
                         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                         {
@@ -84,7 +111,6 @@ namespace WebApplication1.Controllers
                         else
                         {
                             // Chuyển hướng theo vai trò nếu không có returnUrl
-                            string vaiTro = reader["VaiTro"].ToString();
                             switch (vaiTro)
                             {
                                 case "Admin":
@@ -93,16 +119,16 @@ namespace WebApplication1.Controllers
                                     return RedirectToAction("EditSellerProfile", "NguoiDungs");
                                 case "Buyer":
                                     return RedirectToAction("Index", "Home");
-                                    //default:
-                                    //    return RedirectToAction("Index", "Home");
+                                default:
+                                    return RedirectToAction("Index", "Home");
                             }
                         }
-
                     }
                     else
                     {
                         ViewBag.MessageLogin = "Thông tin đăng nhập không hợp lệ";
                     }
+
                     return View();
                 }
                 else
@@ -114,16 +140,28 @@ namespace WebApplication1.Controllers
             }
         }
 
-
-
-
         // GET: DangXuat
         public ActionResult DangXuat()
         {
-            Session.Clear();
-            return RedirectToAction("DangNhap","DangNhap");
-        }
+            // Lưu thời gian đăng nhập cuối cùng trước khi xóa session
+            if (Session["MaNguoiDung"] != null)
+            {
+                int maNguoiDung = Convert.ToInt32(Session["MaNguoiDung"]);
+                using (SqlConnection con = new SqlConnection(connectionString))
+                {
+                    con.Open();
+                    string updateQuery = "UPDATE NguoiDung SET DangNhapCuoiCung = @NgayGio WHERE MaNguoiDung = @MaNguoiDung";
+                    SqlCommand updateCmd = new SqlCommand(updateQuery, con);
+                    updateCmd.Parameters.AddWithValue("@NgayGio", DateTime.Now);
+                    updateCmd.Parameters.AddWithValue("@MaNguoiDung", maNguoiDung);
+                    updateCmd.ExecuteNonQuery();
+                }
+            }
 
+            System.Web.Security.FormsAuthentication.SignOut();
+            Session.Clear();
+            return RedirectToAction("DangNhap", "DangNhap");
+        }
 
         public NguoiDung GetUserById(int MaNguoiDung)
         {
@@ -142,17 +180,17 @@ namespace WebApplication1.Controllers
                 cmd.Parameters.AddWithValue("@MaNguoiDung", MaNguoiDung);
 
                 con.Open();
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                if (reader.Read())
+                using (SqlDataReader reader = cmd.ExecuteReader())
                 {
-                    user = new NguoiDung()
+                    if (reader.Read())
                     {
-                        TenNguoiDung = (string)reader["first_name"],
-                        Email = (string)reader["email"],
-                    };
+                        user = new NguoiDung()
+                        {
+                            TenNguoiDung = (string)reader["first_name"],
+                            Email = (string)reader["email"],
+                        };
+                    }
                 }
-                reader.Close();
             }
             return user;
         }

@@ -1,0 +1,267 @@
+﻿@model WebApplication1.Models.DanhMucSanPham
+@{
+    ViewBag.Title = "Thêm danh mục mới";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Sidebar styles */
+    .page-container {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    .sidebar {
+        width: 250px;
+        background-color: #fff;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 100;
+        padding-top: 15px;
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        margin-bottom: 15px;
+    }
+
+    .sidebar-logo {
+        height: 40px;
+        margin-right: 10px;
+    }
+
+    .sidebar-heading {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #6c757d;
+        padding: 0 20px;
+        margin-bottom: 10px;
+    }
+
+    .sidebar-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-item {
+        position: relative;
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        color: #495057;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+        .sidebar-link i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .sidebar-link:hover, .sidebar-item.active .sidebar-link {
+            color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+
+            .sidebar-item.active .sidebar-link:before {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 3px;
+                background-color: #0d6efd;
+            }
+
+    /* Main content styles */
+    .main-content {
+        flex: 1;
+        padding: 20px;
+    }
+
+    .input-validation-error {
+        border-color: #dc3545;
+    }
+
+    .field-validation-error {
+        color: #dc3545;
+        font-size: 0.875rem;
+    }
+
+    .image-preview {
+        max-width: 200px;
+        max-height: 200px;
+        margin-top: 10px;
+        display: none;
+    }
+
+    .submit-btn {
+        min-width: 120px;
+    }
+</style>
+
+<div class="page-container">
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h6 class="sidebar-heading">CHỨC NĂNG</h6>
+
+        <ul class="sidebar-nav">
+            <li class="sidebar-item">
+                <a href="@Url.Action("Dashboard", "Admin")" class="sidebar-link">
+                    <i class="bi bi-grid"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("UserManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-people"></i>
+                    <span>Quản lý người dùng</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("ProductManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-box"></i>
+                    <span>Quản lý sản phẩm</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item active">
+                <a href="@Url.Action("CategoryManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-list-nested"></i>
+                    <span>Quản lý danh mục</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("OrderManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-cart3"></i>
+                    <span>Quản lý đơn hàng</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("TransactionManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-currency-exchange"></i>
+                    <span>Quản lý giao dịch</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container-fluid p-0">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h3">@ViewBag.Title</h1>
+                <a href="@Url.Action("CategoryManagement", "Admin")" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Quay lại
+                </a>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Nhập thông tin danh mục</h5>
+                        </div>
+                        <div class="card-body">
+                            @using (Html.BeginForm("CreateCategory", "Admin", FormMethod.Post, new { enctype = "multipart/form-data", @class = "needs-validation", novalidate = "novalidate" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                                <div class="row mb-3">
+                                    <label for="TenDanhMuc" class="col-md-3 col-form-label">Tên danh mục <span class="text-danger">*</span></label>
+                                    <div class="col-md-9">
+                                        @Html.EditorFor(model => model.TenDanhMuc, new { htmlAttributes = new { @class = "form-control", required = "required" } })
+                                        @Html.ValidationMessageFor(model => model.TenDanhMuc, "", new { @class = "field-validation-error" })
+                                        <div class="invalid-feedback">Vui lòng nhập tên danh mục.</div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="MaDanhMucCha" class="col-md-3 col-form-label">Danh mục cha</label>
+                                    <div class="col-md-9">
+                                        <select class="form-select" id="MaDanhMucCha" name="MaDanhMucCha">
+                                            <option value="">-- Không có --</option>
+                                            @foreach (var category in ViewBag.ParentCategories ?? new List<WebApplication1.Models.DanhMucSanPham>())
+                                            {
+                                                <option value="@category.MaDanhMuc">@category.TenDanhMuc</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="categoryImage" class="col-md-3 col-form-label">Ảnh danh mục</label>
+                                    <div class="col-md-9">
+                                        <input type="file" class="form-control" id="categoryImage" name="categoryImage" accept="image/*">
+                                        <small class="form-text text-muted">Chọn ảnh đại diện cho danh mục. Định dạng: JPG, PNG, GIF. Kích thước tối đa: 2MB.</small>
+                                        <img id="imagePreview" class="image-preview mt-2" alt="Xem trước hình ảnh" />
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="offset-md-3 col-md-9">
+                                        <button type="submit" class="btn btn-primary submit-btn">
+                                            <i class="bi bi-save me-1"></i> Lưu danh mục
+                                        </button>
+                                        <a href="@Url.Action("CategoryManagement", "Admin")" class="btn btn-secondary ms-2">Hủy</a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Preview image before upload
+            $('#categoryImage').change(function () {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        $('#imagePreview').attr('src', e.target.result);
+                        $('#imagePreview').css('display', 'block');
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    $('#imagePreview').css('display', 'none');
+                }
+            });
+
+            // Form validation
+            (function () {
+                'use strict';
+                window.addEventListener('load', function () {
+                    var forms = document.getElementsByClassName('needs-validation');
+                    var validation = Array.prototype.filter.call(forms, function (form) {
+                        form.addEventListener('submit', function (event) {
+                            if (form.checkValidity() === false) {
+                                event.preventDefault();
+                                event.stopPropagation();
+                            }
+                            form.classList.add('was-validated');
+                        }, false);
+                    });
+                }, false);
+            })();
+        });
+    </script>
+}

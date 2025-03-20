@@ -1,0 +1,487 @@
+﻿@model WebApplication1.Controllers.GioHangViewModel
+@{
+    ViewBag.Title = "Giỏ hàng của tôi";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Custom styles for shopping cart - Medinet */
+    .card {
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: none;
+    }
+
+    .voucher-toggle {
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+        .voucher-toggle:hover {
+            text-decoration: underline;
+        }
+
+    .cart-item {
+        padding: 12px 0;
+    }
+
+    .cart-item-image img {
+        object-fit: contain;
+        border-radius: 8px;
+    }
+
+    .btn-primary {
+        background-color: #1e88e5;
+        border-color: #1e88e5;
+        padding: 10px 16px;
+        font-weight: 500;
+    }
+
+    .form-check-input:checked {
+        background-color: #1e88e5;
+        border-color: #1e88e5;
+    }
+
+    .delete-item, .decrease-qty, .increase-qty {
+        border-color: #e0e0e0;
+        color: #616161;
+    }
+
+    .item-qty {
+        border-left: none;
+        border-right: none;
+    }
+
+    .address-section {
+        background-color: #f5f5f5;
+        padding: 12px;
+        border-radius: 8px;
+    }
+
+    .edit-address {
+        text-decoration: none;
+    }
+</style>
+<div class="container mt-4">
+    <div class="row">
+        <!-- Left side - Cart items -->
+        <div class="col-md-8">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input select-all" id="selectAll">
+                                <label class="form-check-label fw-bold" for="selectAll">Tất cả</label>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm delete-selected" disabled>
+                            <i class="fa fa-trash"></i> Xóa
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            @if (Model.ShopGroups.Count == 0)
+            {
+                <div class="card mb-3">
+                    <div class="card-body text-center">
+                        <p>Giỏ hàng của bạn đang trống.</p>
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-primary">Tiếp tục mua sắm</a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                foreach (var shopGroup in Model.ShopGroups)
+                {
+                    <div class="card mb-3 shop-group">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input select-shop" data-shop="@shopGroup.TenCuaHang">
+                                    <label class="form-check-label fw-bold">@shopGroup.TenCuaHang</label>
+                                </div>
+                                <div class="voucher-section">
+                                    <span class="text-danger voucher-toggle" data-bs-toggle="collapse" data-bs-target="#voucher-@shopGroup.TenCuaHang.Replace(" ", "")" aria-expanded="false">
+                                        <i class="fa fa-tag"></i> voucher
+                                    </span>
+                                    <div class="collapse" id="voucher-@shopGroup.TenCuaHang.Replace(" ", "")">
+                                        <div class="mt-2">
+                                            <div class="input-group">
+                                                <input type="text" class="form-control voucher-input" placeholder="Mã giảm giá">
+                                                <button class="btn btn-outline-primary apply-voucher" data-shop="@shopGroup.TenCuaHang">Áp dụng</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @foreach (var item in shopGroup.Items)
+                            {
+                                <div class="cart-item d-flex align-items-center py-2 border-top">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input select-item"
+                                               data-id="@item.MaGioHang"
+                                               data-shop="@shopGroup.TenCuaHang"
+                                               value="@item.ThanhTien">
+                                    </div>
+                                    <div class="cart-item-image mx-3">
+                                        <img src="@Url.Content(item.AnhSanPham)" alt="@item.TenSanPham" class="img-thumbnail" style="width: 80px; height: 80px;">
+                                    </div>
+                                    <div class="cart-item-details flex-grow-1">
+                                        <h6 class="mb-1">@item.TenSanPham</h6>
+                                        <div class="d-flex justify-content-between align-items-center mt-2">
+                                            <div class="quantity-controls">
+                                                <div class="input-group" style="width: 120px;">
+                                                    <button type="button" class="btn btn-outline-secondary decrease-qty" data-id="@item.MaGioHang">-</button>
+                                                    <input type="text" class="form-control text-center item-qty" value="@item.SoLuong" data-id="@item.MaGioHang">
+                                                    <button type="button" class="btn btn-outline-secondary increase-qty" data-id="@item.MaGioHang">+</button>
+                                                </div>
+                                            </div>
+                                            <div class="price-and-actions d-flex align-items-center">
+                                                <div class="price me-3">
+                                                    <span class="fw-bold">@string.Format("{0:N0}", item.ThanhTien)</span>
+                                                </div>
+                                                <button type="button" class="btn btn-outline-secondary delete-item" data-id="@item.MaGioHang">
+                                                    <i class="fa fa-trash"></i> Xóa
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <!-- Right side - Order summary -->
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Địa Chỉ</h5>
+                    <div class="address-section mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fa fa-map-marker-alt me-2"></i>
+                                <span>@Model.DiaChi</span>
+                            </div>
+                            <a href="" class="text-primary edit-address">
+                                <i class="fa fa-edit"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tổng Tiền Hàng:</span>
+                        <span class="fw-bold" id="selected-subtotal">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tổng Tiền Chi Phí Vận Chuyển:</span>
+                        <span class="fw-bold" id="shipping-fee">30,000</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Giảm Giá Chi Phí Vận Chuyển:</span>
+                        <span class="fw-bold text-danger" id="shipping-discount">-30,000</span>
+                    </div>
+                    @if (Model.GiamGiaVoucher > 0)
+                    {
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Giảm Giá Voucher:</span>
+                            <span class="fw-bold text-danger" id="voucher-discount">-@string.Format("{0:N0}", Model.GiamGiaVoucher)</span>
+                        </div>
+                    }
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="fw-bold">Tổng Thanh Toán:</span>
+                        <span class="fw-bold fs-5" id="selected-total">0</span>
+                    </div>
+
+                    <form method="post" action="@Url.Action("TienHanhThanhToan", "GioHangs")" id="checkout-form">
+                        <input type="hidden" name="selectedItems" id="selected-items-input" value="" />
+                        <button type="submit" id="checkout-button" class="btn btn-primary w-100 disabled">
+                            Đặt Hàng
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+            $(document).ready(function () {
+                // Tính toán tổng tiền của các sản phẩm được chọn
+                function calculateSelectedTotal() {
+                    var subtotal = 0;
+
+                    // Tính tổng tiền từ các sản phẩm được chọn
+                    $('.select-item:checked').each(function() {
+                        // Lấy giá từ value của checkbox thay vì data-price
+                        var price = parseInt($(this).val()) || 0;
+                        subtotal += price;
+                    });
+
+                    // Giá trị cố định
+                    var shippingFee = 30000;
+                    var shippingDiscount = -30000;
+                    var voucherDiscount = 0;
+
+                    // Chỉ áp dụng phí vận chuyển nếu có sản phẩm được chọn
+                    var total = subtotal;
+                    if (subtotal > 0) {
+                        total = subtotal + shippingFee + shippingDiscount;
+                    }
+
+                    // Hiển thị giá trị đã tính toán
+                    $('#selected-subtotal').text(formatCurrency(subtotal));
+                    $('#selected-total').text(formatCurrency(total));
+
+                    // Cập nhật danh sách sản phẩm đã chọn để gửi lên server
+                    var selectedIds = [];
+                    $('.select-item:checked').each(function() {
+                        selectedIds.push($(this).data('id'));
+                    });
+                    $('#selected-items-input').val(selectedIds.join(','));
+
+                    // Cập nhật trạng thái nút đặt hàng
+                    $('#checkout-button').toggleClass('disabled', selectedIds.length === 0);
+                }
+
+                // Định dạng số tiền theo format VND
+                function formatCurrency(amount) {
+                    return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                }
+
+                // Khởi tạo tính toán tổng tiền ban đầu
+                calculateSelectedTotal();
+
+                // Chọn tất cả
+                $('#selectAll').change(function () {
+                    $('.select-shop, .select-item').prop('checked', $(this).prop('checked'));
+                    updateDeleteButtonState();
+                    calculateSelectedTotal();
+                });
+
+                // Chọn theo shop
+                $('.select-shop').change(function () {
+                    var shop = $(this).data('shop');
+                    $('.select-item[data-shop="' + shop + '"]').prop('checked', $(this).prop('checked'));
+                    updateSelectAllState();
+                    updateDeleteButtonState();
+                    calculateSelectedTotal();
+                });
+
+                // Chọn từng item
+                $('.select-item').change(function () {
+                    var shop = $(this).data('shop');
+
+                    // Kiểm tra nếu tất cả item của shop đều được chọn
+                    var allChecked = $('.select-item[data-shop="' + shop + '"]').length ===
+                                     $('.select-item[data-shop="' + shop + '"]:checked').length;
+
+                    $('.select-shop[data-shop="' + shop + '"]').prop('checked', allChecked);
+
+                    updateSelectAllState();
+                    updateDeleteButtonState();
+                    calculateSelectedTotal();
+                });
+
+                // Cập nhật trạng thái nút chọn tất cả
+                function updateSelectAllState() {
+                    $('#selectAll').prop('checked',
+                        $('.select-item').length > 0 &&
+                        $('.select-item').length === $('.select-item:checked').length
+                    );
+                }
+
+                // Cập nhật trạng thái nút xóa
+                function updateDeleteButtonState() {
+                    var hasSelectedItems = $('.select-item:checked').length > 0;
+                    $('.delete-selected').prop('disabled', !hasSelectedItems);
+                }
+
+                // Tăng số lượng
+                $('.increase-qty').click(function () {
+                    var id = $(this).data('id');
+                    var input = $('.item-qty[data-id="' + id + '"]');
+                    var currentVal = parseInt(input.val());
+
+                    if (!isNaN(currentVal)) {
+                        input.val(currentVal + 1);
+                        updateQuantity(id, currentVal + 1);
+                    }
+                });
+
+                // Giảm số lượng
+                $('.decrease-qty').click(function () {
+                    var id = $(this).data('id');
+                    var input = $('.item-qty[data-id="' + id + '"]');
+                    var currentVal = parseInt(input.val());
+
+                    if (!isNaN(currentVal) && currentVal > 1) {
+                        input.val(currentVal - 1);
+                        updateQuantity(id, currentVal - 1);
+                    }
+                });
+
+                // Cập nhật số lượng khi thay đổi trực tiếp giá trị input
+                $('.item-qty').change(function () {
+                    var id = $(this).data('id');
+                    var newVal = parseInt($(this).val());
+
+                    if (isNaN(newVal) || newVal < 1) {
+                        $(this).val(1);
+                        newVal = 1;
+                    }
+
+                    updateQuantity(id, newVal);
+                });
+
+                // Gọi API cập nhật số lượng
+                function updateQuantity(id, quantity) {
+                    $.ajax({
+                        url: '@Url.Action("CapNhatSoLuong", "GioHangs")',
+                        type: 'POST',
+                        data: { maGioHang: id, soLuong: quantity },
+                        success: function (response) {
+                            if (response.success) {
+                                // Cập nhật giá hiển thị cho item
+                                var itemRow = $('.select-item[data-id="' + id + '"]').closest('.cart-item');
+                                itemRow.find('.price .fw-bold').text(response.thanhTien);
+
+                                // Cập nhật value của checkbox - QUAN TRỌNG!
+                                var newPrice = parseInt(response.thanhTien.replace(/,/g, ''));
+                                $('.select-item[data-id="' + id + '"]').val(newPrice);
+
+                                // Tính lại tổng tiền nếu item đang được chọn
+                                calculateSelectedTotal();
+                            } else {
+                                alert(response.message);
+                            }
+                        },
+                        error: function () {
+                            alert('Đã xảy ra lỗi, vui lòng thử lại sau.');
+                        }
+                    });
+                }
+
+                // Xóa một sản phẩm
+                $('.delete-item').click(function () {
+                    var id = $(this).data('id');
+                    if (confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) {
+                        $.ajax({
+                            url: '@Url.Action("XoaSanPham", "GioHangs")',
+                            type: 'POST',
+                            data: { maGioHang: id },
+                            success: function (response) {
+                                if (response.success) {
+                                    location.reload();
+                                }
+                            }
+                        });
+                    }
+                });
+
+                // Xóa nhiều sản phẩm đã chọn
+                $('.delete-selected').click(function () {
+                    var selectedItems = $('.select-item:checked');
+
+                    if (selectedItems.length > 0 && confirm('Bạn có chắc muốn xóa các sản phẩm đã chọn?')) {
+                        var ids = [];
+                        selectedItems.each(function () {
+                            ids.push($(this).data('id'));
+                        });
+
+                        $.ajax({
+                            url: '@Url.Action("XoaNhieu", "GioHangs")',
+                            type: 'POST',
+                            data: { maGioHangs: ids },
+                            traditional: true,
+                            success: function (response) {
+                                if (response.success) {
+                                    location.reload();
+                                }
+                            }
+                        });
+                    }
+                });
+
+                // Xử lý voucher
+                $('.apply-voucher').click(function () {
+                    var shop = $(this).data('shop');
+                    var voucher = $(this).prev('.voucher-input').val();
+
+                    if (voucher.trim() !== '') {
+                        $.ajax({
+                            url: '@Url.Action("ApDungVoucher", "GioHangs")',
+                            type: 'POST',
+                            data: { maVoucher: voucher },
+                            success: function (response) {
+                                if (response.success) {
+                                    alert(response.message);
+                                    location.reload();
+                                } else {
+                                    alert(response.message);
+                                }
+                            }
+                        });
+                    } else {
+                        alert('Vui lòng nhập mã voucher!');
+                    }
+                });
+
+                 // Xử lý hiển thị popup chỉnh sửa địa chỉ
+                $('.edit-address').click(function(e) {
+                    e.preventDefault();
+                    $('#editAddressModal').modal('show');
+                });
+
+                // Xử lý lưu địa chỉ
+                $('#saveAddressBtn').click(function() {
+                    var diaChi = $('#diaChi').val();
+
+                    // Kiểm tra dữ liệu
+                    if (!diaChi) {
+                        alert('Vui lòng nhập địa chỉ!');
+                        return;
+                    }
+
+                    // Gọi API cập nhật địa chỉ
+                    $.ajax({
+                        url: '@Url.Action("CapNhatDiaChi", "GioHangs")',
+                        type: 'POST',
+                        data: {
+                            diaChi: diaChi
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                // Cập nhật thông tin địa chỉ trên giao diện
+                                $('.address-section span').text(response.diaChi);
+
+                                // Đóng popup
+                                $('#editAddressModal').modal('hide');
+
+                                // Hiển thị thông báo thành công
+                                alert(response.message);
+                            } else {
+                                alert(response.message);
+                            }
+                        },
+                        error: function() {
+                            alert('Đã xảy ra lỗi khi cập nhật địa chỉ. Vui lòng thử lại sau!');
+                        }
+                    });
+                });
+            });
+    </script>
+
+    @Html.Partial("CapNhatDiaChi", Model)
+}

@@ -31,6 +31,7 @@ namespace WebApplication1.Models
         public DateTime? NgayTuChoiNangCap { get; set; }
         public string MaXacNhan { get; set; }
         public DateTime? ThoiGianHetHan { get; set; }
+        public string DiaChi { get; set; }
         public virtual ICollection<GioHang> GioHangs { get; set; }
         public virtual ICollection<DonHang> DonHangs { get; set; }
         public virtual ICollection<DanhGiaSanPham> DanhGiaSanPhams { get; set; }

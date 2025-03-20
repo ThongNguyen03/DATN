@@ -5,6 +5,72 @@
 
 }
 
+<style>
+    /* Thiết lập màu chữ trắng cho các nút phân trang active */
+    .pagination .page-item.active .page-link {
+        color: #fff !important;
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+    /* Đảm bảo màu chữ đen cho các nút phân trang không active */
+    .pagination .page-item:not(.active) .page-link {
+        color: #000;
+    }
+
+        /* Hiệu ứng hover cho các nút phân trang không active */
+        .pagination .page-item:not(.active) .page-link:hover {
+            background-color: #f8f9fa;
+            color: #007bff;
+        }
+
+    /* Thiết lập màu đen và bỏ gạch chân cho tất cả các liên kết sản phẩm */
+    .card-title, .card-body a, .row a, .col-lg-3 a {
+        color: #000 !important;
+        text-decoration: none !important;
+    }
+
+    /* Hiệu ứng khi hover vào liên kết sản phẩm */
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+        /* Thêm hiệu ứng màu chữ khi hover */
+        .card:hover .card-title {
+            color: #007bff !important;
+            transition: color 0.3s ease;
+        }
+
+    /* Hiệu ứng khi hover cho các liên kết phân trang */
+    .pagination .page-link:hover {
+        background-color: #f8f9fa;
+        color: #007bff;
+    }
+
+    .col-lg-3 .card-title, .col-md-4 .card-title, .col-sm-6 .card-title {
+        color: #000;
+        text-decoration: none;
+    }
+
+    .col-lg-3 .card:hover, .col-md-4 .card:hover, .col-sm-6 .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .row .card-title {
+        color: #000;
+        text-decoration: none;
+    }
+
+    .row .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+</style>
 <div class="container mt-4">
     <!-- Phần hiển thị danh mục sản phẩm -->
     <div class="row mb-4">
@@ -18,14 +84,14 @@
         {
             <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
                 <div class="card h-100 text-center">
-                    <a href="@Url.Action("Index", "SanPham", new { maDanhMuc = danhMuc.MaDanhMuc })">
+                    <a href="@Url.Action("SanPham", "Home", new { maDanhMuc = danhMuc.MaDanhMuc })">
                         @if (!string.IsNullOrEmpty(danhMuc.AnhDanhMucSanPham))
                         {
                             <img class="card-img-top" src="@Url.Content(danhMuc.AnhDanhMucSanPham)" alt="@danhMuc.TenDanhMuc" style="height: 150px; object-fit: cover;">
                         }
                         else
                         {
-                            <img class="card-img-top" src="~/Content/Images/no-image.jpeg" alt="@danhMuc.TenDanhMuc" style="height: 150px; object-fit: cover;">
+                            <img class="card-img-top" src="~/Content/images/no-image.jpeg" alt="@danhMuc.TenDanhMuc" style="height: 150px; object-fit: cover;">
                         }
                         <div class="card-body">
                             <h5 class="card-title">@danhMuc.TenDanhMuc</h5>
@@ -41,9 +107,9 @@
         <div class="col-10">
             <h2 class="text-uppercase font-weight-bold">SẢN PHẨM ĐƯỢC ĐỀ XUẤT</h2>
         </div>
-        <div class="col-2 text-right">
+        @*<div class="col-2 text-right">
             <a href="@Url.Action("Index", "SanPham")" class="btn btn-link">Xem thêm</a>
-        </div>
+        </div>*@
     </div>
 
     <div class="row">
@@ -69,4 +135,58 @@
             </div>
         }
     </div>
+
+    <!-- Phân trang -->
+    @if (ViewBag.TotalPages > 1)
+    {
+        <div class="row">
+            <div class="col-12">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        @if (ViewBag.CurrentPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="@Url.Action("Index", "Home", new { page = ViewBag.CurrentPage - 1 })" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        }
+
+                        @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                <a class="page-link" href="@Url.Action("Index", "Home", new { page = i })">@i</a>
+                            </li>
+                        }
+
+                        @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="@Url.Action("Index", "Home", new { page = ViewBag.CurrentPage + 1 })" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    }
+
 </div>

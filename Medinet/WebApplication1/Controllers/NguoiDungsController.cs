@@ -43,7 +43,8 @@ namespace WebApplication1.Controllers
                 SoDienThoai = nguoiDung.SoDienThoai,
                 GioiTinh = nguoiDung.GioiTinh,
                 NgaySinh = nguoiDung.NgayThangNamSinh ?? DateTime.Now,
-                AnhDaiDien = nguoiDung.AnhDaiDien
+                AnhDaiDien = nguoiDung.AnhDaiDien,
+                DiaChi = nguoiDung.DiaChi
             };
 
             return View("~/Views/NguoiDungs/Profile.cshtml", viewModel);
@@ -71,6 +72,7 @@ namespace WebApplication1.Controllers
                 nguoiDung.GioiTinh = model.GioiTinh;
                 nguoiDung.NgayThangNamSinh = model.NgaySinh;
                 nguoiDung.NgayCapNhat = DateTime.Now;
+                nguoiDung.DiaChi = model.DiaChi;
 
                 // Xử lý upload ảnh đại diện nếu có
                 if (anhDaiDien != null && anhDaiDien.ContentLength > 0)
@@ -1094,6 +1096,8 @@ namespace WebApplication1.Controllers
 
         [Display(Name = "Ảnh đại diện")]
         public string AnhDaiDien { get; set; }
+        [Display(Name = "Địa chỉ")]
+        public string DiaChi { get; set; }
     }
 
     // ViewModel cho đổi mật khẩu

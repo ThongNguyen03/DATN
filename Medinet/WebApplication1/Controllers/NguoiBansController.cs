@@ -122,7 +122,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: NguoiBans/ThongTinNguoiBan/5
-        public ActionResult ThongTinNguoiBan(int? id)
+        public ActionResult ThongTinNguoiBan(int? id, int? page = 1, string sort = "newest", int pageSize = 9)
         {
             if (id == null)
             {
@@ -140,13 +140,51 @@ namespace WebApplication1.Controllers
                 return HttpNotFound();
             }
 
-            // Tạo ViewModel với dữ liệu người bán
+            // Lấy danh sách sản phẩm của người bán
+            var sanPhamQuery = db.SanPhams
+                .Include(s => s.DanhSachAnhSanPham)
+                .Include(s => s.DanhMucSanPham)
+                .Where(s => s.MaNguoiBan == id && s.TrangThai == "Đã phê duyệt");
+
+            // Áp dụng sắp xếp
+            switch (sort)
+            {
+                case "priceAsc":
+                    sanPhamQuery = sanPhamQuery.OrderBy(s => s.GiaSanPham);
+                    break;
+                case "priceDesc":
+                    sanPhamQuery = sanPhamQuery.OrderByDescending(s => s.GiaSanPham);
+                    break;
+                default: // "newest"
+                    sanPhamQuery = sanPhamQuery.OrderByDescending(s => s.NgayTao);
+                    break;
+            }
+
+            int totalItems = sanPhamQuery.Count();
+            int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+            int pageNumber = (page ?? 1);
+
+            // Lấy sản phẩm theo trang
+            var sanPhams = sanPhamQuery
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            // Tạo ViewModel với dữ liệu người bán và sản phẩm
             var viewModel = new NguoiBanViewModel
             {
                 NguoiDung = nguoiBan.NguoiDung,
                 NguoiBan = nguoiBan,
-                DanhSachChungChi = nguoiBan.DanhSachChungChi.ToList()
+                DanhSachChungChi = nguoiBan.DanhSachChungChi.ToList(),
+                DanhSachSanPham = sanPhams
             };
+
+            // Thông tin phân trang và sắp xếp
+            ViewBag.CurrentPage = pageNumber;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalItems = totalItems;
+            ViewBag.PageSize = pageSize;
+            ViewBag.CurrentSort = sort;
 
             return View(viewModel);
         }
@@ -631,28 +669,95 @@ namespace WebApplication1.Controllers
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
 
+            // Lấy thông tin sản phẩm từ database kèm thông tin liên quan
             SanPham sanPham = db.SanPhams
                 .Include(s => s.DanhMucSanPham)
                 .Include(s => s.NguoiBan)
                 .FirstOrDefault(s => s.MaSanPham == id);
+
+            // Kiểm tra và log trạng thái
+            string trangThai = sanPham?.TrangThai;
+            System.Diagnostics.Debug.WriteLine("Trạng thái sản phẩm: " + trangThai);
 
             if (sanPham == null)
             {
                 return HttpNotFound();
             }
 
+            // Kiểm tra quyền truy cập - nếu người dùng hiện tại không phải là chủ sản phẩm
+            if (Session["MaNguoiDung"] != null)
+            {
+                int maNguoiDung = (int)Session["MaNguoiDung"];
+                var nguoiBan = db.NguoiBans.FirstOrDefault(n => n.MaNguoiDung == maNguoiDung);
+
+                if (nguoiBan == null || nguoiBan.MaNguoiBan != sanPham.MaNguoiBan)
+                {
+                    TempData["ErrorMessage"] = "Bạn không có quyền xóa sản phẩm này!";
+                    return RedirectToAction("QuanLySanPham", new { id = nguoiBan?.MaNguoiBan });
+                }
+            }
+            else
+            {
+                return RedirectToAction("DangNhap", "DangNhap");
+            }
+
             // Lấy danh sách ảnh của sản phẩm
             var danhSachAnh = db.AnhSanPhams.Where(a => a.MaSanPham == id).ToList();
 
-            // Tạo ViewModel
+            // Kiểm tra sản phẩm đã có trong đơn hàng chưa
+            bool coTrongDonHang = db.ChiTietDonHangs.Any(c => c.MaSanPham == id);
+
+            // Tạo một bản sao của đối tượng sản phẩm để tránh vấn đề với Entity Framework
+            var sanPhamClone = new SanPham
+            {
+                MaSanPham = sanPham.MaSanPham,
+                MaNguoiBan = sanPham.MaNguoiBan,
+                MaDanhMuc = sanPham.MaDanhMuc,
+                TenSanPham = sanPham.TenSanPham,
+                MoTaSanPham = sanPham.MoTaSanPham,
+                GiaSanPham = sanPham.GiaSanPham,
+                SoLuongTonKho = sanPham.SoLuongTonKho,
+                TrangThai = sanPham.TrangThai, // Đảm bảo trạng thái được sao chép
+                SoLuotMua = sanPham.SoLuotMua,
+                ThuongHieu = sanPham.ThuongHieu,
+                SoLuongMoiHop = sanPham.SoLuongMoiHop,
+                ThanhPhan = sanPham.ThanhPhan,
+                DoiTuongSuDung = sanPham.DoiTuongSuDung,
+                HuongDanSuDung = sanPham.HuongDanSuDung,
+                KhoiLuong = sanPham.KhoiLuong,
+                BaoQuan = sanPham.BaoQuan,
+                NgayTao = sanPham.NgayTao,
+                NgayCapNhat = sanPham.NgayCapNhat,
+                DanhMucSanPham = sanPham.DanhMucSanPham,
+                NguoiBan = sanPham.NguoiBan
+            };
+
+            // Tạo ViewModel với bản sao mới
             var viewModel = new SanPhamViewModel
             {
-                SanPham = sanPham,
+                SanPham = sanPhamClone,
                 DanhSachAnh = danhSachAnh
             };
 
             ViewBag.MaNguoiBan = sanPham.MaNguoiBan;
             ViewBag.TenCuaHang = sanPham.NguoiBan.TenCuaHang;
+            ViewBag.CoTrongDonHang = coTrongDonHang;
+
+            // Đảm bảo trạng thái không bị null
+            if (string.IsNullOrEmpty(sanPham.TrangThai))
+            {
+                sanPham.TrangThai = "Chưa xác định";
+            }
+
+            // Truyền trạng thái trực tiếp qua ViewBag để tránh vấn đề với model binding
+            ViewBag.TrangThaiSanPham = sanPham.TrangThai;
+
+            // Truy vấn trực tiếp trạng thái từ database để đảm bảo
+            var trangThaiTrucTiep = db.Database.SqlQuery<string>(
+                "SELECT TrangThai FROM SanPham WHERE MaSanPham = @p0",
+                id).FirstOrDefault();
+
+            ViewBag.TrangThaiTrucTiep = trangThaiTrucTiep;
 
             return View(viewModel);
         }
@@ -662,55 +767,111 @@ namespace WebApplication1.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult XoaSanPhamConfirmed(int id)
         {
-            SanPham sanPham = db.SanPhams.Find(id);
-            int maNguoiBan = sanPham.MaNguoiBan;
-
-            // Xóa tất cả các ảnh liên quan đến sản phẩm
-            var danhSachAnh = db.AnhSanPhams.Where(a => a.MaSanPham == id).ToList();
-            foreach (var anh in danhSachAnh)
+            try
             {
-                db.AnhSanPhams.Remove(anh);
+                SanPham sanPham = db.SanPhams.Find(id);
+
+                if (sanPham == null)
+                {
+                    return HttpNotFound();
+                }
+
+                int maNguoiBan = sanPham.MaNguoiBan;
+
+                // Kiểm tra quyền truy cập - nếu người dùng hiện tại không phải là chủ sản phẩm
+                if (Session["MaNguoiDung"] != null)
+                {
+                    int maNguoiDung = (int)Session["MaNguoiDung"];
+                    var nguoiBan = db.NguoiBans.FirstOrDefault(n => n.MaNguoiDung == maNguoiDung);
+
+                    if (nguoiBan == null || nguoiBan.MaNguoiBan != sanPham.MaNguoiBan)
+                    {
+                        TempData["ErrorMessage"] = "Bạn không có quyền xóa sản phẩm này!";
+                        return RedirectToAction("QuanLySanPham", new { id = nguoiBan?.MaNguoiBan });
+                    }
+                }
+                else
+                {
+                    return RedirectToAction("DangNhap", "DangNhap");
+                }
+
+                // Kiểm tra sản phẩm có trong đơn hàng không
+                bool coTrongDonHang = db.ChiTietDonHangs.Any(c => c.MaSanPham == id);
+
+                if (coTrongDonHang)
+                {
+                    TempData["ErrorMessage"] = "Không thể xóa sản phẩm đã có trong đơn hàng!";
+                    return RedirectToAction("QuanLySanPham", new { id = maNguoiBan });
+                }
+
+                // Bắt đầu transaction để đảm bảo tính toàn vẹn dữ liệu
+                using (var transaction = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        // Xóa tất cả các ảnh liên quan đến sản phẩm
+                        var danhSachAnh = db.AnhSanPhams.Where(a => a.MaSanPham == id).ToList();
+                        foreach (var anh in danhSachAnh)
+                        {
+                            // Xóa file ảnh từ thư mục nếu cần
+                            string duongDanAnh = anh.DuongDanAnh;
+                            if (!string.IsNullOrEmpty(duongDanAnh) && duongDanAnh.StartsWith("/Content/images/Products/"))
+                            {
+                                string duongDanDay = Server.MapPath("~" + duongDanAnh);
+                                if (System.IO.File.Exists(duongDanDay))
+                                {
+                                    try
+                                    {
+                                        System.IO.File.Delete(duongDanDay);
+                                    }
+                                    catch
+                                    {
+                                        // Ghi log lỗi nếu cần
+                                    }
+                                }
+                            }
+
+                            db.AnhSanPhams.Remove(anh);
+                        }
+
+                        // Xóa đánh giá sản phẩm nếu có
+                        var danhGia = db.DanhGiaSanPhams.Where(d => d.MaSanPham == id).ToList();
+                        foreach (var dg in danhGia)
+                        {
+                            db.DanhGiaSanPhams.Remove(dg);
+                        }
+
+                        // Xóa giỏ hàng có sản phẩm này nếu có
+                        var gioHang = db.GioHangs.Where(g => g.MaSanPham == id).ToList();
+                        foreach (var gh in gioHang)
+                        {
+                            db.GioHangs.Remove(gh);
+                        }
+
+                        // Xóa sản phẩm
+                        db.SanPhams.Remove(sanPham);
+                        db.SaveChanges();
+
+                        // Commit transaction nếu mọi thứ thành công
+                        transaction.Commit();
+
+                        TempData["SuccessMessage"] = "Xóa sản phẩm thành công!";
+                    }
+                    catch (Exception ex)
+                    {
+                        // Rollback lại nếu có lỗi
+                        transaction.Rollback();
+                        TempData["ErrorMessage"] = "Lỗi khi xóa sản phẩm: " + ex.Message;
+                    }
+                }
+
+                return RedirectToAction("QuanLySanPham", new { id = maNguoiBan });
             }
-
-            // Xóa sản phẩm
-            db.SanPhams.Remove(sanPham);
-            db.SaveChanges();
-
-            return RedirectToAction("QuanLySanPham", new { id = maNguoiBan });
-        }
-
-        // GET: NguoiBans/XoaAnhSanPham/5
-        public ActionResult XoaAnhSanPham(int? id)
-        {
-            if (id == null)
+            catch (Exception ex)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                TempData["ErrorMessage"] = "Đã xảy ra lỗi: " + ex.Message;
+                return RedirectToAction("QuanLySanPham", new { id = Session["MaNguoiBan"] });
             }
-
-            AnhSanPham anhSanPham = db.AnhSanPhams
-                .Include(a => a.SanPham)
-                .FirstOrDefault(a => a.MaAnh == id);
-
-            if (anhSanPham == null)
-            {
-                return HttpNotFound();
-            }
-
-            return View(anhSanPham);
-        }
-
-        // POST: NguoiBans/XoaAnhSanPham/5
-        [HttpPost, ActionName("XoaAnhSanPham")]
-        [ValidateAntiForgeryToken]
-        public ActionResult XoaAnhSanPhamConfirmed(int id)
-        {
-            AnhSanPham anhSanPham = db.AnhSanPhams.Find(id);
-            int maSanPham = anhSanPham.MaSanPham;
-
-            db.AnhSanPhams.Remove(anhSanPham);
-            db.SaveChanges();
-
-            return RedirectToAction("SuaSanPham", new { id = maSanPham });
         }
 
         protected override void Dispose(bool disposing)
@@ -727,6 +888,7 @@ namespace WebApplication1.Controllers
             public NguoiDung NguoiDung { get; set; }
             public NguoiBan NguoiBan { get; set; }
             public List<AnhChungChi> DanhSachChungChi { get; set; }
+            public List<SanPham> DanhSachSanPham { get; set; }
         }
 
         public class SanPhamViewModel

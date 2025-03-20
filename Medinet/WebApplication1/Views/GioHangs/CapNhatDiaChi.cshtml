@@ -1,0 +1,97 @@
+﻿@model WebApplication1.Controllers.GioHangViewModel
+<div class="modal fade" id="editAddressModal" tabindex="-1" aria-labelledby="editAddressModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editAddressModalLabel">Cập nhật địa chỉ và số điện thoại</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addressForm">
+                    <div class="mb-3">
+                        <label for="diaChi" class="form-label">Địa chỉ</label>
+                        <textarea class="form-control" id="diaChi" name="diaChi" rows="2" style="width: 100%;">@Model.DiaChi</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="soDienThoai" class="form-label">Số điện thoại</label>
+                        <input type="tel" class="form-control" id="soDienThoai" name="soDienThoai"
+                               value="@Model.SoDienThoai"
+                               placeholder="Nhập số điện thoại"
+                               pattern="[0-9]{10}"
+                               title="Số điện thoại phải có 10 chữ số">
+                        <small class="form-text text-muted">Số điện thoại phải có 10 chữ số</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="saveAddressBtn">Lưu thông tin</button>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    #editAddressModal .modal-dialog {
+        max-width: 500px;
+        width: 100%;
+    }
+
+    #editAddressModal .modal-content {
+        width: 100%;
+    }
+
+    #diaChi {
+        resize: horizontal;
+        min-height: 80px;
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        // Xử lý lưu địa chỉ và số điện thoại
+        $('#saveAddressBtn').click(function() {
+            var diaChi = $('#diaChi').val();
+            var soDienThoai = $('#soDienThoai').val();
+
+            // Kiểm tra dữ liệu
+            if (!diaChi) {
+                alert('Vui lòng nhập địa chỉ!');
+                return;
+            }
+
+            // Kiểm tra số điện thoại
+            var phoneRegex = /^[0-9]{10}$/;
+            if (!phoneRegex.test(soDienThoai)) {
+                alert('Số điện thoại phải có 10 chữ số!');
+                return;
+            }
+
+            // Gọi API cập nhật địa chỉ và số điện thoại
+            $.ajax({
+                url: '@Url.Action("CapNhatDiaChi", "GioHangs")',
+                type: 'POST',
+                data: {
+                    diaChi: diaChi,
+                    soDienThoai: soDienThoai
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Cập nhật thông tin địa chỉ trên giao diện
+                        $('.address-section span').text(response.diaChi);
+
+                        // Đóng popup
+                        $('#editAddressModal').modal('hide');
+
+                        // Hiển thị thông báo thành công
+                        alert(response.message);
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function() {
+                    alert('Đã xảy ra lỗi khi cập nhật thông tin. Vui lòng thử lại sau!');
+                }
+            });
+        });
+    });
+</script>
