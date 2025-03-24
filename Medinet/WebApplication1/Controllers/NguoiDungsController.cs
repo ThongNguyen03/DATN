@@ -1060,6 +1060,88 @@ namespace WebApplication1.Controllers
                 return Json(new { success = false, message = "Lỗi xử lý: " + ex.Message }, JsonRequestBehavior.AllowGet);
             }
         }
+
+        // Thêm phương thức này vào NguoiDungsController
+
+        // POST: NguoiDungs/CapNhatDiaChi
+        [HttpPost]
+        public ActionResult CapNhatDiaChi(string diaChi, string soDienThoai)
+        {
+            try
+            {
+                // Lấy ID người dùng hiện tại
+                int maNguoiDung = GetCurrentUserId();
+                if (maNguoiDung <= 0)
+                {
+                    return Json(new { success = false, message = "Vui lòng đăng nhập để thực hiện chức năng này!" });
+                }
+
+                // Kiểm tra dữ liệu đầu vào
+                if (string.IsNullOrEmpty(diaChi))
+                {
+                    return Json(new { success = false, message = "Địa chỉ không được để trống!" });
+                }
+
+                // Kiểm tra số điện thoại
+                if (string.IsNullOrEmpty(soDienThoai) || !System.Text.RegularExpressions.Regex.IsMatch(soDienThoai, @"^[0-9]{10}$"))
+                {
+                    return Json(new { success = false, message = "Số điện thoại không hợp lệ!" });
+                }
+
+                // Tìm người dùng trong cơ sở dữ liệu
+                var nguoiDung = db.NguoiDungs.Find(maNguoiDung);
+                if (nguoiDung == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy thông tin người dùng!" });
+                }
+
+                // Cập nhật thông tin địa chỉ và số điện thoại
+                nguoiDung.DiaChi = diaChi;
+                nguoiDung.SoDienThoai = soDienThoai;
+
+                // Lưu thay đổi vào cơ sở dữ liệu
+                db.Entry(nguoiDung).State = EntityState.Modified;
+                db.SaveChanges();
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Cập nhật địa chỉ và số điện thoại thành công!",
+                    diaChi = diaChi,
+                    soDienThoai = soDienThoai
+                });
+            }
+            catch (Exception ex)
+            {
+                // Ghi log lỗi
+                System.Diagnostics.Debug.WriteLine("Lỗi CapNhatDiaChi: " + ex.Message);
+                return Json(new { success = false, message = "Đã xảy ra lỗi khi cập nhật thông tin. Vui lòng thử lại sau!" });
+            }
+        }
+
+        // Phương thức lấy ID người dùng hiện tại
+        private int GetCurrentUserId()
+        {
+            // Lấy Email người dùng đã đăng nhập
+            var userName = User.Identity.Name;
+
+            // Tìm người dùng trong cơ sở dữ liệu theo Email
+            var nguoiDung = db.NguoiDungs.FirstOrDefault(n => n.Email == userName);
+
+            if (nguoiDung != null)
+            {
+                return nguoiDung.MaNguoiDung;
+            }
+
+            // Nếu không tìm thấy người dùng, thử lấy từ Session
+            if (Session["MaNguoiDung"] != null)
+            {
+                return Convert.ToInt32(Session["MaNguoiDung"]);
+            }
+
+            // Nếu vẫn không có, trả về giá trị mặc định
+            return 0; // Trả về 0 để biểu thị không tìm thấy người dùng
+        }
         protected override void Dispose(bool disposing)
         {
             if (disposing)

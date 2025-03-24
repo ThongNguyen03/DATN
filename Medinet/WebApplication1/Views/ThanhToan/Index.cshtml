@@ -1,0 +1,420 @@
+﻿@model WebApplication1.Controllers.ThanhToanViewModel
+@{
+    ViewBag.Title = "Thanh Toán";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .checkout-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .checkout-section {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .checkout-header {
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .address-card {
+        position: relative;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+        .address-card.selected {
+            border: 2px solid #007bff;
+        }
+
+        .address-card .edit-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+    .product-item {
+        display: flex;
+        border-bottom: 1px solid #eee;
+        padding: 15px 0;
+    }
+
+    .product-image {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+        margin-right: 15px;
+    }
+
+    .product-details {
+        flex-grow: 1;
+    }
+
+    .shop-header {
+        background-color: #f8f9fa;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        font-weight: bold;
+    }
+
+    .price-summary {
+        border-top: 1px solid #eee;
+        padding-top: 15px;
+        margin-top: 15px;
+    }
+
+    .price-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+    }
+
+    .total-row {
+        font-weight: bold;
+        font-size: 1.1em;
+        border-top: 1px solid #ddd;
+        padding-top: 10px;
+        margin-top: 10px;
+    }
+
+    .payment-method {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        cursor: pointer;
+    }
+
+        .payment-method.selected {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+
+    .payment-method-icon {
+        width: 40px;
+        margin-right: 15px;
+    }
+
+    .place-order-btn {
+        background-color: #007bff;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 20px;
+    }
+
+        .place-order-btn:hover {
+            background-color: #0069d9;
+        }
+
+    .note-textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        resize: vertical;
+        min-height: 80px;
+    }
+</style>
+
+<div class="checkout-container">
+    <h2 class="mb-4">Thanh Toán</h2>
+
+    @using (Html.BeginForm("XacNhanDatHang", "ThanhToan", FormMethod.Post, new { id = "checkoutForm" }))
+    {
+        @Html.AntiForgeryToken()
+
+        <!-- Địa chỉ giao hàng -->
+        <div class="checkout-section">
+            <div class="checkout-header">
+                <h4><i class="fas fa-map-marker-alt"></i> Địa Chỉ Giao Hàng</h4>
+            </div>
+
+            <div class="address-card selected">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div><strong>@Model.TenNguoiDung</strong> | @Model.SoDienThoai</div>
+                        <div>@Model.DiaChi</div>
+                        @if (!string.IsNullOrEmpty(Model.DiaChi) && Model.DiaChi != "Chưa có địa chỉ")
+                        {
+                            <span class="badge bg-primary">Mặc định</span>
+                        }
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addressModal">
+                            <i class="fas fa-edit"></i> @(string.IsNullOrEmpty(Model.DiaChi) || Model.DiaChi == "Chưa có địa chỉ" ? "Thêm địa chỉ" : "Sửa địa chỉ")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danh sách sản phẩm -->
+        <div class="checkout-section">
+            <div class="checkout-header">
+                <h4><i class="fas fa-shopping-basket"></i> Sản Phẩm Đặt Mua</h4>
+            </div>
+
+            @foreach (var shopGroup in Model.ShopGroups)
+            {
+                <div class="shop-group mb-4">
+                    <div class="shop-header">
+                        <i class="fas fa-store"></i> @shopGroup.TenCuaHang
+                    </div>
+
+                    @foreach (var item in shopGroup.Items)
+                    {
+                        <div class="product-item">
+                            <img src="@Url.Content(item.AnhSanPham)" alt="@item.TenSanPham" class="product-image">
+                            <div class="product-details">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h5>@item.TenSanPham</h5>
+                                        <p class="text-secondary">Số lượng: @item.SoLuong</p>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <p class="fw-bold text-danger">@string.Format("{0:N0}đ", item.ThanhTien)</p>
+                                        <p class="text-secondary">@string.Format("{0:N0}đ", item.GiaSanPham) x @item.SoLuong</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
+            <div class="form-group mt-4">
+                <label for="ghiChu"><i class="fas fa-clipboard"></i> Ghi chú đơn hàng:</label>
+                <textarea id="ghiChu" name="GhiChu" class="note-textarea" placeholder="Nhập ghi chú cho đơn hàng (không bắt buộc)..."></textarea>
+            </div>
+        </div>
+
+        <!-- Phương thức thanh toán -->
+        <div class="checkout-section">
+            <div class="checkout-header">
+                <h4><i class="fas fa-credit-card"></i> Phương Thức Thanh Toán</h4>
+            </div>
+
+            <div class="payment-methods">
+                <div class="payment-method selected" onclick="selectPaymentMethod('COD')">
+                    <input type="radio" name="PhuongThucThanhToan" value="COD" id="payment-cod" checked>
+                    <label for="payment-cod" class="ms-2 w-100">
+                        <strong>Thanh Toán Khi Nhận Hàng (COD)</strong>
+                        <span class="text-muted mb-0">Thanh toán bằng tiền mặt khi nhận hàng</span>
+                    </label>
+                </div>
+
+                <div class="payment-method mt-3" onclick="selectPaymentMethod('VNPAY')">
+                    <input type="radio" name="PhuongThucThanhToan" value="VNPAY" id="payment-vnpay">
+                    <img src="~/Content/images/vnpay-logo.png" alt="VNPAY" class="payment-method-icon">
+                    <label for="payment-vnpay" class="w-100">
+                        <strong>Thanh Toán Qua VNPAY</strong>
+                        <span class="text-muted mb-0">Thanh toán qua ví VNPAY hoặc thẻ ngân hàng</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thông tin thanh toán -->
+        <div class="checkout-section">
+            <div class="checkout-header">
+                <h4><i class="fas fa-file-invoice-dollar"></i> Thông Tin Thanh Toán</h4>
+            </div>
+
+            <div class="price-summary">
+                <div class="price-row">
+                    <span>Tổng tiền hàng:</span>
+                    <span>@string.Format("{0:N0}đ", Model.TongTienHang)</span>
+                </div>
+                <div class="price-row">
+                    <span>Phí vận chuyển:</span>
+                    <span>@string.Format("{0:N0}đ", Model.PhiVanChuyen)</span>
+                </div>
+                @if (Model.GiamGiaVanChuyen < 0)
+                {
+                    <div class="price-row text-success">
+                        <span>Giảm giá vận chuyển:</span>
+                        <span>@string.Format("{0:N0}đ", Model.GiamGiaVanChuyen)</span>
+                    </div>
+                }
+                @if (Model.GiamGiaVoucher > 0)
+                {
+                    <div class="price-row text-success">
+                        <span>Giảm giá voucher:</span>
+                        <span>-@string.Format("{0:N0}đ", Model.GiamGiaVoucher)</span>
+                    </div>
+                }
+                <div class="price-row total-row">
+                    <span>Tổng thanh toán:</span>
+                    <span class="text-danger">@string.Format("{0:N0}đ", Model.TongThanhToan)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nút đặt hàng -->
+        <button type="submit" class="place-order-btn" id="btnDatHang">
+            <i class="fas fa-shopping-cart"></i> ĐẶT HÀNG
+        </button>
+
+        <!-- Hidden fields -->
+        @Html.HiddenFor(m => m.TongTienHang)
+        @Html.HiddenFor(m => m.PhiVanChuyen)
+        @Html.HiddenFor(m => m.GiamGiaVanChuyen)
+        @Html.HiddenFor(m => m.GiamGiaVoucher)
+        @Html.HiddenFor(m => m.TongThanhToan)
+        @Html.HiddenFor(m => m.SelectedCartItems)
+    }
+</div>
+
+<!-- Modal Địa chỉ -->
+<div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addressModalLabel">Cập nhật địa chỉ giao hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addressForm">
+                    <div class="mb-3">
+                        <label for="soDienThoai" class="form-label">Số điện thoại</label>
+                        <input type="text" class="form-control" id="soDienThoai" name="soDienThoai" value="@Model.SoDienThoai" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="diaChi" class="form-label">Địa chỉ nhận hàng</label>
+                        <textarea class="form-control" id="diaChi" name="diaChi" rows="3" required>@(Model.DiaChi == "Chưa có địa chỉ" ? "" : Model.DiaChi)</textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="saveAddressBtn">Lưu địa chỉ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            // Hiển thị thông báo lỗi nếu có
+            @if (TempData["Error"] != null)
+            {
+                <text>
+                alert('@TempData["Error"]');
+                </text>
+            }
+
+            // Xử lý lưu địa chỉ
+            $("#saveAddressBtn").click(function () {
+                var diaChi = $("#diaChi").val();
+                var soDienThoai = $("#soDienThoai").val();
+
+                // Validate
+                if (!diaChi) {
+                    alert("Vui lòng nhập địa chỉ giao hàng");
+                    return;
+                }
+
+                if (!soDienThoai) {
+                    alert("Vui lòng nhập số điện thoại");
+                    return;
+                }
+
+                if (!soDienThoai.match(/^[0-9]{10}$/)) {
+                    alert("Số điện thoại không hợp lệ");
+                    return;
+                }
+
+                // Gửi AJAX cập nhật địa chỉ
+                $.ajax({
+                    url: '@Url.Action("CapNhatDiaChi", "NguoiDungs")',
+                    type: 'POST',
+                    data: {
+                        diaChi: diaChi,
+                        soDienThoai: soDienThoai
+                    },
+                    success: function (result) {
+                        if (result.success) {
+                            // Cập nhật thông tin địa chỉ trên trang
+                            $(".address-card .row .col-md-6:first-child").html(
+                                '<div><strong>@Model.TenNguoiDung</strong> | ' + soDienThoai + '</div>' +
+                                '<div>' + diaChi + '</div>' +
+                                '<span class="badge bg-primary">Mặc định</span>'
+                            );
+
+                            // Đổi text nút
+                            $(".address-card .btn-outline-primary").html('<i class="fas fa-edit"></i> Sửa địa chỉ');
+
+                            // Đóng modal
+                            $("#addressModal").modal('hide');
+                        } else {
+                            alert(result.message || "Đã xảy ra lỗi khi cập nhật địa chỉ");
+                        }
+                    },
+                    error: function (err) {
+                        console.error("Lỗi khi cập nhật địa chỉ:", err);
+                        alert("Đã xảy ra lỗi. Vui lòng thử lại sau.");
+                    }
+                });
+            });
+
+            // Sửa lại phần xử lý submit form
+            $("#checkoutForm").submit(function (e) {
+                // Kiểm tra địa chỉ giao hàng
+                var diaChi = $(".address-card .row .col-md-6:first-child div:nth-child(2)").text();
+
+                if (diaChi === "Chưa có địa chỉ" || diaChi === "") {
+                    e.preventDefault();
+                    alert("Vui lòng nhập địa chỉ giao hàng trước khi đặt hàng");
+                    $("#addressModal").modal('show');
+                    return false;
+                }
+
+                // Hiển thị thông báo đang xử lý
+                $("#btnDatHang").html('<i class="fas fa-spinner fa-spin"></i> ĐANG XỬ LÝ...');
+                $("#btnDatHang").prop("disabled", true);
+
+                // Cho phép form submit
+                return true;
+            });
+        });
+
+        // Chọn phương thức thanh toán
+        function selectPaymentMethod(method) {
+            // Bỏ chọn tất cả
+            $(".payment-method").removeClass("selected");
+
+            // Chọn phương thức được click
+            if (method === 'COD') {
+                $("#payment-cod").prop("checked", true);
+                $("#payment-cod").closest(".payment-method").addClass("selected");
+                console.log("Đã chọn COD");
+                $("#btnDatHang").text("ĐẶT HÀNG");
+            } else if (method === 'VNPAY') {
+                $("#payment-vnpay").prop("checked", true);
+                $("#payment-vnpay").closest(".payment-method").addClass("selected");
+                console.log("Đã chọn VNPAY");
+                $("#btnDatHang").text("TIẾP TỤC VỚI VNPAY");
+            }
+        }
+    </script>
+}

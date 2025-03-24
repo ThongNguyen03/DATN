@@ -1,0 +1,353 @@
+﻿@model WebApplication1.Models.Escrow
+@{
+    ViewBag.Title = "Chi tiết ký quỹ #" + Model.MaKyQuy;
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    .escrow-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .escrow-section {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .escrow-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 15px;
+    }
+
+    .escrow-title {
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    .escrow-status {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: bold;
+    }
+
+    .status-holding {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    .status-released {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+
+    .status-refunded {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .escrow-info-row {
+        margin-bottom: 10px;
+    }
+
+    .escrow-info-label {
+        font-weight: bold;
+        color: #555;
+    }
+
+    .order-details {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 20px;
+    }
+
+    .order-details-title {
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .action-buttons {
+        margin-top: 20px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .btn-release {
+        background-color: #28a745;
+        color: white;
+        border: none;
+    }
+
+    .btn-release:hover {
+        background-color: #218838;
+    }
+
+    .btn-refund {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+    }
+
+    .btn-refund:hover {
+        background-color: #c82333;
+    }
+
+    .money-flow {
+        background-color: #e7f5fe;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 20px;
+    }
+
+    .money-flow-title {
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .flow-arrow {
+        font-size: 20px;
+        margin: 0 10px;
+    }
+
+    .flow-amount {
+        font-weight: bold;
+    }
+
+    .flow-platform {
+        color: #28a745;
+    }
+
+    .flow-seller {
+        color: #007bff;
+    }
+</style>
+
+<div class="escrow-container">
+    <h2 class="mb-4">Chi tiết ký quỹ</h2>
+    
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i> @TempData["Success"]
+        </div>
+    }
+    
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+        </div>
+    }
+
+    <div class="escrow-section">
+        <div class="escrow-header">
+            <div class="escrow-title">Ký quỹ #@Model.MaKyQuy</div>
+            <div class="escrow-status 
+                @(Model.TrangThai == "Đang giữ" ? "status-holding" : "")
+                @(Model.TrangThai == "Đã giải ngân" ? "status-released" : "")
+                @(Model.TrangThai == "Đã hoàn tiền" ? "status-refunded" : "")">
+                @Model.TrangThai
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="escrow-info-row">
+                    <div class="escrow-info-label">Mã đơn hàng:</div>
+                    <div>#@Model.MaDonHang</div>
+                </div>
+                <div class="escrow-info-row">
+                    <div class="escrow-info-label">Người bán:</div>
+                    <div>@(Model.NguoiBan?.TenCuaHang ?? "Không xác định")</div>
+                </div>
+                <div class="escrow-info-row">
+                    <div class="escrow-info-label">Tổng tiền:</div>
+                    <div class="text-danger fw-bold">@string.Format("{0:N0}đ", Model.TongTien)</div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="escrow-info-row">
+                    <div class="escrow-info-label">Phí nền tảng (10%):</div>
+                    <div>@string.Format("{0:N0}đ", Model.PhiNenTang)</div>
+                </div>
+                <div class="escrow-info-row">
+                    <div class="escrow-info-label">Tiền chuyển cho người bán:</div>
+                    <div>@string.Format("{0:N0}đ", Model.TienChuyenChoNguoiBan)</div>
+                </div>
+                <div class="escrow-info-row">
+                    <div class="escrow-info-label">Ngày tạo:</div>
+                    <div>@Model.NgayTao.ToString("dd/MM/yyyy HH:mm")</div>
+                </div>
+                @if (Model.NgayGiaiNgan.HasValue)
+                {
+                    <div class="escrow-info-row">
+                        <div class="escrow-info-label">Ngày giải ngân/hoàn tiền:</div>
+                        <div>@Model.NgayGiaiNgan.Value.ToString("dd/MM/yyyy HH:mm")</div>
+                    </div>
+                }
+            </div>
+        </div>
+        
+        <div class="money-flow">
+            <div class="money-flow-title">Luồng tiền:</div>
+            <div class="d-flex align-items-center justify-content-center mt-3">
+                <div class="text-center">
+                    <i class="fas fa-user fa-2x mb-2"></i>
+                    <div>Người mua</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="text-center">
+                    <i class="fas fa-building fa-2x mb-2"></i>
+                    <div>Nền tảng</div>
+                    <div class="flow-amount flow-platform">@string.Format("{0:N0}đ", Model.PhiNenTang)</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="text-center">
+                    <i class="fas fa-store fa-2x mb-2"></i>
+                    <div>Người bán</div>
+                    <div class="flow-amount flow-seller">@string.Format("{0:N0}đ", Model.TienChuyenChoNguoiBan)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="escrow-section">
+        <h4>Thông tin đơn hàng</h4>
+        
+        @if (Model.DonHang != null)
+        {
+            <div class="order-details">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="escrow-info-row">
+                            <div class="escrow-info-label">Trạng thái đơn hàng:</div>
+                            <div>@Model.DonHang.TrangThaiDonHang</div>
+                        </div>
+                        <div class="escrow-info-row">
+                            <div class="escrow-info-label">Người mua:</div>
+                            <div>@(Model.DonHang.NguoiDung?.TenNguoiDung ?? "Không xác định")</div>
+                        </div>
+                        <div class="escrow-info-row">
+                            <div class="escrow-info-label">Địa chỉ giao hàng:</div>
+                            <div>@(Model.DonHang.NguoiDung?.DiaChi ?? "Không có thông tin")</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="escrow-info-row">
+                            <div class="escrow-info-label">Ngày đặt hàng:</div>
+                            <div>@Model.DonHang.NgayTao.ToString("dd/MM/yyyy HH:mm")</div>
+                        </div>
+                        <div class="escrow-info-row">
+                            <div class="escrow-info-label">Phương thức thanh toán:</div>
+                            <div>@Model.DonHang.PhuongThucThanhToan</div>
+                        </div>
+                        <div class="escrow-info-row">
+                            <div class="escrow-info-label">Đã xác nhận nhận hàng:</div>
+                            <div>
+                                @if (Model.DonHang.DaXacNhanNhanHang)
+                                {
+                                    <span class="text-success"><i class="fas fa-check-circle"></i> Đã xác nhận</span>
+                                }
+                                else
+                                {
+                                    <span class="text-warning"><i class="fas fa-times-circle"></i> Chưa xác nhận</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr />
+                
+                <div class="order-details-title mt-3">Chi tiết sản phẩm:</div>
+                
+                @if (Model.DonHang.ChiTietDonHangs != null && Model.DonHang.ChiTietDonHangs.Any())
+                {
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th class="text-center">Số lượng</th>
+                                <th class="text-end">Đơn giá</th>
+                                <th class="text-end">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.DonHang.ChiTietDonHangs)
+                            {
+                                <tr>
+                                    <td>@(item.SanPham?.TenSanPham ?? "Sản phẩm không còn tồn tại")</td>
+                                    <td class="text-center">@item.SoLuong</td>
+                                    <td class="text-end">@string.Format("{0:N0}đ", item.Gia)</td>
+                                    <td class="text-end">@string.Format("{0:N0}đ", item.SoLuong * item.Gia)</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">Tổng cộng:</td>
+                                <td class="text-end fw-bold">@string.Format("{0:N0}đ", Model.DonHang.TongSoTien)</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                }
+                else
+                {
+                    <div class="text-muted">Không có thông tin chi tiết sản phẩm</div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> Không tìm thấy thông tin đơn hàng liên quan.
+            </div>
+        }
+        
+        <!-- Nút thực hiện hành động -->
+        @if (Model.TrangThai == "Đang giữ")
+        {
+            <div class="action-buttons">
+                <button type="button" class="btn btn-outline-secondary" onclick="history.back()">
+                    <i class="fas fa-arrow-left"></i> Quay lại
+                </button>
+                
+                @using (Html.BeginForm("GiaiNganKyQuy", "Admin", new { id = Model.MaKyQuy }, FormMethod.Post, new { style = "display:inline;" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-release" onclick="return confirm('Bạn có chắc chắn muốn giải ngân tiền cho người bán?');">
+                        <i class="fas fa-check-circle"></i> Giải ngân cho người bán
+                    </button>
+                }
+                
+                @using (Html.BeginForm("HoanTienKyQuy", "Admin", new { id = Model.MaKyQuy }, FormMethod.Post, new { style = "display:inline;" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-refund" onclick="return confirm('Bạn có chắc chắn muốn hoàn tiền cho người mua?');">
+                        <i class="fas fa-undo"></i> Hoàn tiền cho người mua
+                    </button>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="action-buttons">
+                <button type="button" class="btn btn-outline-secondary" onclick="history.back()">
+                    <i class="fas fa-arrow-left"></i> Quay lại
+                </button>
+            </div>
+        }
+    </div>
+</div>

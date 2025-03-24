@@ -61,6 +61,42 @@
     .edit-address {
         text-decoration: none;
     }
+
+    .payment-methods {
+        margin-top: 15px;
+        border-top: 1px solid #eee;
+        padding-top: 15px;
+    }
+
+    .payment-method {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .payment-method:hover {
+            border-color: #1e88e5;
+            background-color: #f5f9ff;
+        }
+
+        .payment-method.selected {
+            border-color: #1e88e5;
+            background-color: #e3f2fd;
+        }
+
+    .payment-method-icon {
+        width: 40px;
+        margin-right: 10px;
+    }
+
+    .phone-number-section {
+        margin-top: 15px;
+    }
 </style>
 <div class="container mt-4">
     <div class="row">
@@ -161,16 +197,24 @@
         <div class="col-md-4">
             <div class="card mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Địa Chỉ</h5>
+                    <h5 class="card-title">Địa Chỉ Giao Hàng</h5>
                     <div class="address-section mb-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <i class="fa fa-map-marker-alt me-2"></i>
                                 <span>@Model.DiaChi</span>
                             </div>
-                            <a href="" class="text-primary edit-address">
+                            <a href="#" class="text-primary edit-address" data-bs-toggle="modal" data-bs-target="#addressModal">
                                 <i class="fa fa-edit"></i>
                             </a>
+                        </div>
+                    </div>
+                    <div class="phone-number-section">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fa fa-phone me-2"></i>
+                                <span>@Model.SoDienThoai</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -200,16 +244,67 @@
                     <hr>
                     <div class="d-flex justify-content-between mb-3">
                         <span class="fw-bold">Tổng Thanh Toán:</span>
-                        <span class="fw-bold fs-5" id="selected-total">0</span>
+                        <span class="fw-bold fs-5 text-danger" id="selected-total">0</span>
                     </div>
 
-                    <form method="post" action="@Url.Action("TienHanhThanhToan", "GioHangs")" id="checkout-form">
+                    <!-- Phương thức thanh toán -->
+                    <!--<div class="payment-methods">
+                            <h6 class="mb-3">Phương thức thanh toán</h6>
+                            <div class="payment-method selected" data-method="COD">
+                                <input type="radio" name="payment-method" id="payment-cod" checked class="me-2">
+                                <label for="payment-cod" class="mb-0 w-100">Thanh toán khi nhận hàng (COD)</label>
+                            </div>
+                            <div class="payment-method" data-method="VNPAY">
+                                <input type="radio" name="payment-method" id="payment-vnpay" class="me-2">
+                                <img src="~/Content/images/vnpay-logo.png" alt="VNPAY" class="payment-method-icon">
+                                <label for="payment-vnpay" class="mb-0">Thanh toán qua VNPAY</label>
+                            </div>
+                        </div>-->
+                                        @*<form method="post" action="@Url.Action("TienHanhThanhToan", "GioHangs")" id="checkout-form">
+                                <input type="hidden" name="selectedItems" id="selected-items-input" value="" />
+                                <input type="hidden" name="paymentMethod" id="payment-method-input" value="COD" />
+                                <button type="submit" id="checkout-button" class="btn btn-primary w-100 mt-3 disabled">
+                                    Đặt Hàng
+                                </button>
+                            </form>*@
+
+                    <!-- Sửa phần form trong trang giỏ hàng -->
+                    <form method="post" action="@Url.Action("Index", "ThanhToan")" id="checkout-form">
                         <input type="hidden" name="selectedItems" id="selected-items-input" value="" />
-                        <button type="submit" id="checkout-button" class="btn btn-primary w-100 disabled">
+                        <button type="submit" id="checkout-button" class="btn btn-primary w-100 mt-3 disabled">
                             Đặt Hàng
                         </button>
                     </form>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Địa chỉ -->
+<div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addressModalLabel">Cập nhật địa chỉ giao hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addressForm">
+                    <div class="mb-3">
+                        <label for="soDienThoai" class="form-label">Số điện thoại</label>
+                        <input type="text" class="form-control" id="soDienThoai" name="soDienThoai" value="@(Model.SoDienThoai == "Chưa có số điện thoại" ? "" : Model.SoDienThoai)" required>
+                        <div class="form-text">Vui lòng nhập số điện thoại 10 số</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="diaChi" class="form-label">Địa chỉ nhận hàng</label>
+                        <textarea class="form-control" id="diaChi" name="diaChi" rows="3" required>@(Model.DiaChi == "Chưa có địa chỉ" ? "" : Model.DiaChi)</textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="saveAddressBtn">Lưu địa chỉ</button>
             </div>
         </div>
     </div>
@@ -232,12 +327,12 @@
                     // Giá trị cố định
                     var shippingFee = 30000;
                     var shippingDiscount = -30000;
-                    var voucherDiscount = 0;
+                    var voucherDiscount = @Model.GiamGiaVoucher;
 
                     // Chỉ áp dụng phí vận chuyển nếu có sản phẩm được chọn
                     var total = subtotal;
                     if (subtotal > 0) {
-                        total = subtotal + shippingFee + shippingDiscount;
+                        total = subtotal + shippingFee + shippingDiscount - voucherDiscount;
                     }
 
                     // Hiển thị giá trị đã tính toán
@@ -438,19 +533,19 @@
                     }
                 });
 
-                 // Xử lý hiển thị popup chỉnh sửa địa chỉ
-                $('.edit-address').click(function(e) {
-                    e.preventDefault();
-                    $('#editAddressModal').modal('show');
-                });
-
                 // Xử lý lưu địa chỉ
                 $('#saveAddressBtn').click(function() {
                     var diaChi = $('#diaChi').val();
+                    var soDienThoai = $('#soDienThoai').val();
 
                     // Kiểm tra dữ liệu
                     if (!diaChi) {
                         alert('Vui lòng nhập địa chỉ!');
+                        return;
+                    }
+
+                    if (!soDienThoai || !/^[0-9]{10}$/.test(soDienThoai)) {
+                        alert('Vui lòng nhập số điện thoại hợp lệ (10 số)!');
                         return;
                     }
 
@@ -459,15 +554,17 @@
                         url: '@Url.Action("CapNhatDiaChi", "GioHangs")',
                         type: 'POST',
                         data: {
-                            diaChi: diaChi
+                            diaChi: diaChi,
+                            soDienThoai: soDienThoai
                         },
                         success: function(response) {
                             if (response.success) {
                                 // Cập nhật thông tin địa chỉ trên giao diện
                                 $('.address-section span').text(response.diaChi);
+                                $('.phone-number-section span').text(response.soDienThoai);
 
                                 // Đóng popup
-                                $('#editAddressModal').modal('hide');
+                                $('#addressModal').modal('hide');
 
                                 // Hiển thị thông báo thành công
                                 alert(response.message);
@@ -480,8 +577,63 @@
                         }
                     });
                 });
+
+                //// Xử lý chọn phương thức thanh toán
+                //$('.payment-method').click(function() {
+                //    // Bỏ chọn tất cả
+                //    $('.payment-method').removeClass('selected');
+                //    $('.payment-method input[type="radio"]').prop('checked', false);
+
+                //    // Chọn phương thức được click
+                //    $(this).addClass('selected');
+                //    $(this).find('input[type="radio"]').prop('checked', true);
+
+                //    // Cập nhật hidden input với phương thức thanh toán
+                //    var method = $(this).data('method');
+                //    $('#payment-method-input').val(method);
+
+                //    // Cập nhật text của nút đặt hàng
+                //    if (method === 'VNPAY') {
+                //        $('#checkout-button').text('Tiếp tục với VNPAY');
+                //    } else {
+                //        $('#checkout-button').text('Đặt Hàng');
+                //    }
+                //});
+
+                // Xử lý form thanh toán
+                $('#checkout-form').submit(function(e) {
+                    var selectedItems = $('#selected-items-input').val();
+                    var diaChi = $('.address-section span').text();
+                    var soDienThoai = $('.phone-number-section span').text();
+
+                    if (!selectedItems) {
+                        e.preventDefault();
+                        alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán!');
+                        return;
+                    }
+
+                    if (diaChi === 'Chưa có địa chỉ') {
+                        e.preventDefault();
+                        alert('Vui lòng cập nhật địa chỉ giao hàng trước khi đặt hàng!');
+                        $('#addressModal').modal('show');
+                        return;
+                    }
+
+                    if (soDienThoai === 'Chưa có số điện thoại') {
+                        e.preventDefault();
+                        alert('Vui lòng cập nhật số điện thoại trước khi đặt hàng!');
+                        $('#addressModal').modal('show');
+                        return;
+                    }
+
+                    //// Thêm phương thức thanh toán vào form
+                    //var paymentMethod = $('#payment-method-input').val();
+                    //$(this).append('<input type="hidden" name="paymentMethod" value="' + paymentMethod + '">');
+
+                    // Hiển thị loading
+                    $('#checkout-button').html('<i class="fas fa-spinner fa-spin"></i> Đang xử lý...');
+                    $('#checkout-button').prop('disabled', true);
+                });
             });
     </script>
-
-    @Html.Partial("CapNhatDiaChi", Model)
 }

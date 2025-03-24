@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using WebApplication1.Models;
@@ -878,6 +879,261 @@ namespace WebApplication1.Controllers
         {
             // This is just an empty action to support the CSRF token form
             return new EmptyResult();
+        }
+
+
+
+        // GET: Admin/QuanLyKyQuy
+        public ActionResult QuanLyKyQuy()
+        {
+            try
+            {
+                var escrows = db.Escrows
+                    .Include(e => e.DonHang)
+                    .Include(e => e.NguoiBan)
+                    .OrderByDescending(e => e.NgayTao)
+                    .ToList();
+
+                return View(escrows);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Lỗi tải dữ liệu ký quỹ: " + ex.Message);
+                TempData["Error"] = "Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại sau!";
+                return RedirectToAction("Index", "Admin");
+            }
+        }
+
+        // GET: Admin/ChiTietKyQuy/5
+        public ActionResult ChiTietKyQuy(int id)
+        {
+            try
+            {
+                var escrow = db.Escrows
+                    .Include(e => e.DonHang)
+                    .Include(e => e.DonHang.NguoiDung)
+                    .Include(e => e.NguoiBan)
+                    .Include(e => e.DonHang.ChiTietDonHangs)
+                    .Include(e => e.DonHang.ChiTietDonHangs.Select(c => c.SanPham))
+                    .FirstOrDefault(e => e.MaKyQuy == id);
+
+                if (escrow == null)
+                {
+                    return HttpNotFound();
+                }
+
+                return View(escrow);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Lỗi tải chi tiết ký quỹ: " + ex.Message);
+                TempData["Error"] = "Đã xảy ra lỗi khi tải thông tin. Vui lòng thử lại sau!";
+                return RedirectToAction("QuanLyKyQuy");
+            }
+        }
+
+        // POST: Admin/GiaiNganKyQuy/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> GiaiNganKyQuy(int id)
+        {
+            try
+            {
+                var escrow = db.Escrows.Find(id);
+                if (escrow == null)
+                {
+                    return HttpNotFound();
+                }
+
+                if (escrow.TrangThai != "Đang giữ")
+                {
+                    TempData["Error"] = "Tiền ký quỹ đã được giải ngân hoặc hoàn trả!";
+                    return RedirectToAction("ChiTietKyQuy", new { id = id });
+                }
+
+                // Cập nhật trạng thái
+                escrow.TrangThai = "Đã giải ngân";
+                escrow.NgayGiaiNgan = DateTime.Now;
+
+                // Cập nhật đơn hàng
+                var donHang = db.DonHangs.Find(escrow.MaDonHang);
+                if (donHang != null)
+                {
+                    donHang.DaGiaiNganChoSeller = true;
+                    donHang.TrangThaiDonHang = "Đã hoàn thành";
+                    db.Entry(donHang).State = EntityState.Modified;
+                }
+
+                db.Entry(escrow).State = EntityState.Modified;
+                await db.SaveChangesAsync();
+
+                TempData["Success"] = $"Đã giải ngân {escrow.TienChuyenChoNguoiBan:N0} VNĐ cho người bán thành công!";
+                return RedirectToAction("QuanLyKyQuy");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Lỗi giải ngân: " + ex.Message);
+                TempData["Error"] = "Đã xảy ra lỗi khi giải ngân. Vui lòng thử lại sau!";
+                return RedirectToAction("ChiTietKyQuy", new { id = id });
+            }
+        }
+
+        // POST: Admin/HoanTienKyQuy/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> HoanTienKyQuy(int id)
+        {
+            try
+            {
+                var escrow = db.Escrows.Find(id);
+                if (escrow == null)
+                {
+                    return HttpNotFound();
+                }
+
+                if (escrow.TrangThai != "Đang giữ")
+                {
+                    TempData["Error"] = "Tiền ký quỹ đã được giải ngân hoặc hoàn trả!";
+                    return RedirectToAction("ChiTietKyQuy", new { id = id });
+                }
+
+                // Cập nhật trạng thái
+                escrow.TrangThai = "Đã hoàn tiền";
+                escrow.NgayGiaiNgan = DateTime.Now;
+
+                // Cập nhật đơn hàng
+                var donHang = db.DonHangs.Find(escrow.MaDonHang);
+                if (donHang != null)
+                {
+                    donHang.TrangThaiDonHang = "Đã hủy";
+                    db.Entry(donHang).State = EntityState.Modified;
+                }
+
+                db.Entry(escrow).State = EntityState.Modified;
+                await db.SaveChangesAsync();
+
+                TempData["Success"] = $"Đã hoàn {escrow.TongTien:N0} VNĐ cho người mua thành công!";
+                return RedirectToAction("QuanLyKyQuy");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Lỗi hoàn tiền: " + ex.Message);
+                TempData["Error"] = "Đã xảy ra lỗi khi hoàn tiền. Vui lòng thử lại sau!";
+                return RedirectToAction("ChiTietKyQuy", new { id = id });
+            }
+        }
+
+        // GET: Admin/ThongKeDoanhThu
+        public ActionResult ThongKeDoanhThu(DateTime? tuNgay, DateTime? denNgay)
+        {
+            try
+            {
+                // Xử lý ngày mặc định nếu không có ngày truyền vào
+                if (!tuNgay.HasValue)
+                {
+                    tuNgay = DateTime.Now.AddMonths(-1);
+                }
+
+                if (!denNgay.HasValue)
+                {
+                    denNgay = DateTime.Now;
+                }
+
+                // Lấy dữ liệu từ bảng Escrow
+                var escrows = db.Escrows
+                    .Where(e => e.TrangThai == "Đã giải ngân" &&
+                              e.NgayGiaiNgan >= tuNgay.Value &&
+                              e.NgayGiaiNgan <= denNgay.Value.AddDays(1))
+                    .ToList();
+
+                // Tính toán thống kê
+                var tongDoanhThu = escrows.Sum(e => e.TongTien);
+                var tongPhiNenTang = escrows.Sum(e => e.PhiNenTang);
+                var tongTienChuyenChoNguoiBan = escrows.Sum(e => e.TienChuyenChoNguoiBan);
+
+                // Thống kê theo ngày
+                var thongKeTheoNgay = escrows
+                    .GroupBy(e => e.NgayGiaiNgan.Value.Date)
+                    .Select(g => new ThongKeNgayViewModel
+                    {
+                        Ngay = g.Key,
+                        DoanhThu = g.Sum(e => e.TongTien),
+                        PhiNenTang = g.Sum(e => e.PhiNenTang),
+                        TienChuyenChoNguoiBan = g.Sum(e => e.TienChuyenChoNguoiBan)
+                    })
+                    .OrderByDescending(t => t.Ngay)
+                    .ToList();
+
+                var viewModel = new ThongKeDoanhThuViewModel
+                {
+                    TuNgay = tuNgay.Value,
+                    DenNgay = denNgay.Value,
+                    TongDoanhThu = tongDoanhThu,
+                    TongPhiNenTang = tongPhiNenTang,
+                    TongTienChuyenChoNguoiBan = tongTienChuyenChoNguoiBan,
+                    ThongKeTheoNgay = thongKeTheoNgay
+                };
+
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Lỗi thống kê doanh thu: " + ex.Message);
+                TempData["Error"] = "Đã xảy ra lỗi khi tạo báo cáo. Vui lòng thử lại sau!";
+                return RedirectToAction("QuanLyKyQuy");
+            }
+        }
+
+        // GET: Admin/ThongKeNguoiBan
+        public ActionResult ThongKeNguoiBan(DateTime? tuNgay, DateTime? denNgay)
+        {
+            try
+            {
+                // Xử lý ngày mặc định
+                if (!tuNgay.HasValue)
+                {
+                    tuNgay = DateTime.Now.AddMonths(-1);
+                }
+
+                if (!denNgay.HasValue)
+                {
+                    denNgay = DateTime.Now;
+                }
+
+                // Lấy dữ liệu từ bảng Escrow
+                var escrows = db.Escrows
+                    .Where(e => e.TrangThai == "Đã giải ngân" &&
+                              e.NgayGiaiNgan >= tuNgay.Value &&
+                              e.NgayGiaiNgan <= denNgay.Value.AddDays(1))
+                    .Include(e => e.NguoiBan)
+                    .ToList();
+
+                // Thống kê theo người bán
+                var thongKeTheoNguoiBan = escrows
+                    .GroupBy(e => e.MaNguoiBan)
+                    .Select(g => new ThongKeNguoiBanViewModel
+                    {
+                        MaNguoiBan = g.Key,
+                        TenCuaHang = g.First().NguoiBan?.TenCuaHang ?? "Không xác định",
+                        SoDonHang = g.Count(),
+                        TongDoanhThu = g.Sum(e => e.TongTien),
+                        TongPhiNenTang = g.Sum(e => e.PhiNenTang),
+                        TongTienNhan = g.Sum(e => e.TienChuyenChoNguoiBan)
+                    })
+                    .OrderByDescending(t => t.TongDoanhThu)
+                    .ToList();
+
+                ViewBag.TuNgay = tuNgay.Value;
+                ViewBag.DenNgay = denNgay.Value;
+
+                return View(thongKeTheoNguoiBan);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Lỗi thống kê theo người bán: " + ex.Message);
+                TempData["Error"] = "Đã xảy ra lỗi khi tạo báo cáo. Vui lòng thử lại sau!";
+                return RedirectToAction("QuanLyKyQuy");
+            }
         }
 
         protected override void Dispose(bool disposing)

@@ -45,12 +45,10 @@ namespace WebApplication1.Controllers
                     if (diaChiParts.Length > 1)
                     {
                         viewModel.DiaChi = diaChiParts[diaChiParts.Length - 1].Trim();
-
                     }
                     else
                     {
                         viewModel.DiaChi = nguoiDung.DiaChi;
-
                     }
                 }
                 else
@@ -59,7 +57,7 @@ namespace WebApplication1.Controllers
                 }
 
                 // Thêm xử lý số điện thoại
-                viewModel.SoDienThoai = !string.IsNullOrEmpty(nguoiDung.SoDienThoai)
+                viewModel.SoDienThoai = !string.IsNullOrEmpty(nguoiDung?.SoDienThoai)
                     ? nguoiDung.SoDienThoai
                     : "Chưa có số điện thoại";
 
@@ -327,7 +325,7 @@ namespace WebApplication1.Controllers
 
         // POST: GioHangs/TienHanhThanhToan - Tiến hành thanh toán chỉ với các sản phẩm được chọn
         [HttpPost]
-        public ActionResult TienHanhThanhToan(string selectedItems)
+        public ActionResult TienHanhThanhToan(string selectedItems, string paymentMethod = "COD")
         {
             int maNguoiDung = GetCurrentUserId();
 
@@ -344,6 +342,9 @@ namespace WebApplication1.Controllers
             // Lấy các mục đã chọn từ giỏ hàng
             var cartItems = db.GioHangs
                 .Where(g => g.MaNguoiDung == maNguoiDung && selectedIds.Contains(g.MaGioHang))
+                .Include(g => g.SanPham)
+                .Include(g => g.SanPham.NguoiBan)
+                .Include(g => g.SanPham.DanhSachAnhSanPham)
                 .ToList();
 
             if (cartItems.Count == 0)
@@ -352,129 +353,115 @@ namespace WebApplication1.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            // Kiểm tra địa chỉ và số điện thoại của người dùng
+            var nguoiDung = db.NguoiDungs.Find(maNguoiDung);
+            if (nguoiDung == null || string.IsNullOrEmpty(nguoiDung.DiaChi) || string.IsNullOrEmpty(nguoiDung.SoDienThoai))
+            {
+                TempData["Error"] = "Vui lòng cập nhật địa chỉ giao hàng và số điện thoại trước khi thanh toán!";
+                return RedirectToAction(nameof(Index));
+            }
+
             // Lưu thông tin giỏ hàng đã chọn vào session để sử dụng ở trang thanh toán
             Session["CartItems"] = cartItems;
             Session["SelectedItems"] = selectedIds;
+            Session["PaymentMethod"] = paymentMethod;
+
+            // Lưu phương thức thanh toán
+            if (!string.IsNullOrEmpty(paymentMethod))
+            {
+                Session["PaymentMethod"] = paymentMethod;
+            }
 
             return RedirectToAction("Index", "ThanhToan");
         }
 
-        // Phương thức lấy thông tin giỏ hàng cho ViewModel
-        private GioHangViewModel GetGioHangViewModel(int maNguoiDung)
+        // GET: GioHangs/ThanhToanTrucTiep - Thanh toán trực tiếp từ giỏ hàng
+        [HttpGet]
+        public ActionResult ThanhToanTrucTiep(string paymentMethod = "COD")
         {
             try
             {
-                // Debug: Kiểm tra maNguoiDung
-                System.Diagnostics.Debug.WriteLine("MaNguoiDung: " + maNguoiDung);
+                int maNguoiDung = GetCurrentUserId();
+                if (maNguoiDung <= 0)
+                {
+                    return RedirectToAction("DangNhap", "DangNhap");
+                }
 
-                // Lấy các mục trong giỏ hàng của người dùng
-                var gioHangItems = db.GioHangs
+                // Lấy tất cả sản phẩm trong giỏ hàng
+                var cartItems = db.GioHangs
                     .Where(g => g.MaNguoiDung == maNguoiDung)
                     .Include(g => g.SanPham)
                     .Include(g => g.SanPham.NguoiBan)
                     .Include(g => g.SanPham.DanhSachAnhSanPham)
                     .ToList();
 
-                // Debug: Kiểm tra số lượng mục trong giỏ hàng
-                System.Diagnostics.Debug.WriteLine("Số lượng mục trong giỏ hàng: " + gioHangItems.Count);
-
-                // Chuyển đổi danh sách GioHang thành CartItemViewModel
-                var cartItems = new List<CartItemViewModel>();
-
-                foreach (var g in gioHangItems)
+                if (cartItems.Count == 0)
                 {
-                    // Kiểm tra sản phẩm có tồn tại không
-                    if (g.SanPham == null)
-                    {
-                        continue; // Bỏ qua nếu không tìm thấy sản phẩm
-                    }
-
-                    // Lấy đường dẫn ảnh đầu tiên hoặc ảnh mặc định
-                    string anhSanPham = "/Content/Images/default-product.jpg";
-                    if (g.SanPham.DanhSachAnhSanPham != null && g.SanPham.DanhSachAnhSanPham.Any())
-                    {
-                        anhSanPham = g.SanPham.DanhSachAnhSanPham.First().DuongDanAnh;
-                    }
-
-                    // Lấy tên cửa hàng
-                    string tenCuaHang = "Medinet Shop";
-                    if (g.SanPham.NguoiBan != null)
-                    {
-                        tenCuaHang = g.SanPham.NguoiBan.TenCuaHang;
-                    }
-
-                    cartItems.Add(new CartItemViewModel
-                    {
-                        MaGioHang = g.MaGioHang,
-                        MaSanPham = g.MaSanPham,
-                        TenSanPham = g.SanPham.TenSanPham,
-                        SoLuong = g.SoLuong,
-                        GiaSanPham = g.SanPham.GiaSanPham,
-                        ThanhTien = g.SoLuong * g.SanPham.GiaSanPham,
-                        AnhSanPham = anhSanPham,
-                        TenCuaHang = tenCuaHang
-                    });
+                    TempData["Error"] = "Giỏ hàng của bạn đang trống!";
+                    return RedirectToAction(nameof(Index));
                 }
 
-                // Tính toán tổng tiền
-                decimal tongTienHang = cartItems.Sum(i => i.ThanhTien);
-                decimal phiVanChuyen = cartItems.Any() ? 30000 : 0; // Phí vận chuyển cố định
-                decimal giamGiaVanChuyen = phiVanChuyen > 0 ? -phiVanChuyen : 0; // Giảm giá vận chuyển
+                // Lưu thông tin vào session
+                Session["CartItems"] = cartItems;
+                Session["SelectedItems"] = cartItems.Select(c => c.MaGioHang).ToList();
+                Session["PaymentMethod"] = paymentMethod;
 
-                // Lấy giảm giá voucher từ session nếu có
-                decimal giamGiaVoucher = 0;
-                if (Session["AppliedVoucher"] != null)
-                {
-                    decimal.TryParse(Session["VoucherDiscount"]?.ToString(), out giamGiaVoucher);
-                }
-
-                // Lấy thông tin địa chỉ của người dùng
-                var nguoiDung = db.NguoiDungs.Find(maNguoiDung);
-                string diaChi = "Chưa có địa chỉ";
-                if (nguoiDung != null && !string.IsNullOrEmpty(nguoiDung.DiaChi))
-                {
-                    diaChi = nguoiDung.DiaChi;
-                }
-
-                // Phân nhóm giỏ hàng theo cửa hàng
-                var groupedCartItems = cartItems.GroupBy(i => i.TenCuaHang)
-                    .Select(g => new ShopCartGroup
-                    {
-                        TenCuaHang = g.Key,
-                        Items = g.ToList()
-                    }).ToList();
-
-                var viewModel = new GioHangViewModel
-                {
-                    CartItems = cartItems,
-                    ShopGroups = groupedCartItems,
-                    TongTienHang = tongTienHang,
-                    PhiVanChuyen = phiVanChuyen,
-                    GiamGiaVanChuyen = giamGiaVanChuyen,
-                    GiamGiaVoucher = giamGiaVoucher,
-                    TongThanhToan = tongTienHang + phiVanChuyen + giamGiaVanChuyen - giamGiaVoucher,
-                    DiaChi = diaChi,
-                };
-
-                return viewModel;
+                return RedirectToAction("Index", "ThanhToan");
             }
             catch (Exception ex)
             {
-                // Ghi log lỗi
-                System.Diagnostics.Debug.WriteLine("Lỗi GetGioHangViewModel: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("Lỗi ThanhToanTrucTiep: " + ex.Message);
+                TempData["Error"] = "Đã xảy ra lỗi khi xử lý thanh toán. Vui lòng thử lại sau!";
+                return RedirectToAction(nameof(Index));
+            }
+        }
 
-                // Trả về ViewModel rỗng để tránh lỗi
-                return new GioHangViewModel
+        // GET: GioHangs/ChuyenSangThanhToanVNPay - Chuyển đổi sang thanh toán VNPAY trực tiếp
+        [HttpGet]
+        public ActionResult ChuyenSangThanhToanVNPay()
+        {
+            try
+            {
+                int maNguoiDung = GetCurrentUserId();
+                if (maNguoiDung <= 0)
                 {
-                    CartItems = new List<CartItemViewModel>(),
-                    ShopGroups = new List<ShopCartGroup>(),
-                    TongTienHang = 0,
-                    PhiVanChuyen = 0,
-                    GiamGiaVanChuyen = 0,
-                    GiamGiaVoucher = 0,
-                    TongThanhToan = 0,
-                    DiaChi = "Chưa có địa chỉ",
-                };
+                    return RedirectToAction("DangNhap", "DangNhap");
+                }
+
+                // Lấy thông tin người dùng
+                var nguoiDung = db.NguoiDungs.Find(maNguoiDung);
+                if (nguoiDung == null || string.IsNullOrEmpty(nguoiDung.DiaChi) || string.IsNullOrEmpty(nguoiDung.SoDienThoai))
+                {
+                    TempData["Error"] = "Vui lòng cập nhật địa chỉ giao hàng và số điện thoại trước khi thanh toán!";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Lấy tất cả sản phẩm trong giỏ hàng
+                var cartItems = db.GioHangs
+                    .Where(g => g.MaNguoiDung == maNguoiDung)
+                    .Include(g => g.SanPham)
+                    .Include(g => g.SanPham.NguoiBan)
+                    .Include(g => g.SanPham.DanhSachAnhSanPham)
+                    .ToList();
+
+                if (cartItems.Count == 0)
+                {
+                    TempData["Error"] = "Giỏ hàng của bạn đang trống!";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Lưu thông tin vào session
+                Session["CartItems"] = cartItems;
+                Session["SelectedItems"] = cartItems.Select(c => c.MaGioHang).ToList();
+                Session["PaymentMethod"] = "VNPAY";
+
+                return RedirectToAction("Index", "ThanhToan");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Lỗi ChuyenSangThanhToanVNPay: " + ex.Message);
+                TempData["Error"] = "Đã xảy ra lỗi khi chuyển sang thanh toán VNPAY. Vui lòng thử lại sau!";
+                return RedirectToAction(nameof(Index));
             }
         }
 
@@ -510,30 +497,6 @@ namespace WebApplication1.Controllers
             }
 
             return Json(new { count = count }, JsonRequestBehavior.AllowGet);
-        }
-
-        // Phương thức lấy ID người dùng hiện tại
-        private int GetCurrentUserId()
-        {
-            // Lấy Email người dùng đã đăng nhập
-            var userName = User.Identity.Name;
-
-            // Tìm người dùng trong cơ sở dữ liệu theo Email
-            var nguoiDung = db.NguoiDungs.FirstOrDefault(n => n.Email == userName);
-
-            if (nguoiDung != null)
-            {
-                return nguoiDung.MaNguoiDung;
-            }
-
-            // Nếu không tìm thấy người dùng, thử lấy từ Session
-            if (Session["MaNguoiDung"] != null)
-            {
-                return Convert.ToInt32(Session["MaNguoiDung"]);
-            }
-
-            // Nếu vẫn không có, trả về giá trị mặc định
-            return 0; // Trả về 0 để biểu thị không tìm thấy người dùng
         }
 
         // POST: GioHangs/CapNhatDiaChi - Cập nhật địa chỉ người dùng
@@ -589,6 +552,161 @@ namespace WebApplication1.Controllers
                 // Ghi log lỗi
                 System.Diagnostics.Debug.WriteLine("Lỗi CapNhatDiaChi: " + ex.Message);
                 return Json(new { success = false, message = "Đã xảy ra lỗi khi cập nhật thông tin. Vui lòng thử lại sau!" });
+            }
+        }
+
+        // Phương thức lấy ID người dùng hiện tại
+        private int GetCurrentUserId()
+        {
+            // Lấy Email người dùng đã đăng nhập
+            var userName = User.Identity.Name;
+
+            // Tìm người dùng trong cơ sở dữ liệu theo Email
+            var nguoiDung = db.NguoiDungs.FirstOrDefault(n => n.Email == userName);
+
+            if (nguoiDung != null)
+            {
+                return nguoiDung.MaNguoiDung;
+            }
+
+            // Nếu không tìm thấy người dùng, thử lấy từ Session
+            if (Session["MaNguoiDung"] != null)
+            {
+                return Convert.ToInt32(Session["MaNguoiDung"]);
+            }
+
+            // Nếu vẫn không có, trả về giá trị mặc định
+            return 0; // Trả về 0 để biểu thị không tìm thấy người dùng
+        }
+
+        // Phương thức lấy thông tin giỏ hàng cho ViewModel
+        private GioHangViewModel GetGioHangViewModel(int maNguoiDung)
+        {
+            try
+            {
+                // Debug: Kiểm tra maNguoiDung
+                System.Diagnostics.Debug.WriteLine("MaNguoiDung: " + maNguoiDung);
+
+                // Lấy các mục trong giỏ hàng của người dùng
+                var gioHangItems = db.GioHangs
+                    .Where(g => g.MaNguoiDung == maNguoiDung)
+                    .Include(g => g.SanPham)
+                    .Include(g => g.SanPham.NguoiBan)
+                    .Include(g => g.SanPham.DanhSachAnhSanPham)
+                    .ToList();
+
+                // Debug: Kiểm tra số lượng mục trong giỏ hàng
+                System.Diagnostics.Debug.WriteLine("Số lượng mục trong giỏ hàng: " + gioHangItems.Count);
+
+                // Chuyển đổi danh sách GioHang thành CartItemViewModel
+                var cartItems = new List<CartItemViewModel>();
+
+                foreach (var g in gioHangItems)
+                {
+                    // Kiểm tra sản phẩm có tồn tại không
+                    if (g.SanPham == null)
+                    {
+                        continue; // Bỏ qua nếu không tìm thấy sản phẩm
+                    }
+
+                    // Lấy đường dẫn ảnh đầu tiên hoặc ảnh mặc định
+                    string anhSanPham = "/Content/images/no-image.jpeg";
+                    if (g.SanPham.DanhSachAnhSanPham != null && g.SanPham.DanhSachAnhSanPham.Any())
+                    {
+                        anhSanPham = g.SanPham.DanhSachAnhSanPham.First().DuongDanAnh;
+                    }
+
+                    // Lấy tên cửa hàng
+                    string tenCuaHang = "Medinet Shop";
+                    if (g.SanPham.NguoiBan != null)
+                    {
+                        tenCuaHang = g.SanPham.NguoiBan.TenCuaHang;
+                    }
+
+                    cartItems.Add(new CartItemViewModel
+                    {
+                        MaGioHang = g.MaGioHang,
+                        MaSanPham = g.MaSanPham,
+                        TenSanPham = g.SanPham.TenSanPham,
+                        SoLuong = g.SoLuong,
+                        GiaSanPham = g.SanPham.GiaSanPham,
+                        ThanhTien = g.SoLuong * g.SanPham.GiaSanPham,
+                        AnhSanPham = anhSanPham,
+                        TenCuaHang = tenCuaHang
+                    });
+                }
+
+                // Tính toán tổng tiền
+                decimal tongTienHang = cartItems.Sum(i => i.ThanhTien);
+                decimal phiVanChuyen = cartItems.Any() ? 30000 : 0; // Phí vận chuyển cố định
+                decimal giamGiaVanChuyen = phiVanChuyen > 0 ? -phiVanChuyen : 0; // Giảm giá vận chuyển
+
+                // Lấy giảm giá voucher từ session nếu có
+                decimal giamGiaVoucher = 0;
+                if (Session["AppliedVoucher"] != null)
+                {
+                    decimal.TryParse(Session["VoucherDiscount"]?.ToString(), out giamGiaVoucher);
+                }
+
+                // Lấy thông tin địa chỉ của người dùng
+                var nguoiDung = db.NguoiDungs.Find(maNguoiDung);
+                string diaChi = "Chưa có địa chỉ";
+                string soDienThoai = "Chưa có số điện thoại";
+
+                if (nguoiDung != null)
+                {
+                    if (!string.IsNullOrEmpty(nguoiDung.DiaChi))
+                    {
+                        diaChi = nguoiDung.DiaChi;
+                    }
+
+                    if (!string.IsNullOrEmpty(nguoiDung.SoDienThoai))
+                    {
+                        soDienThoai = nguoiDung.SoDienThoai;
+                    }
+                }
+
+                // Phân nhóm giỏ hàng theo cửa hàng
+                var groupedCartItems = cartItems.GroupBy(i => i.TenCuaHang)
+                    .Select(g => new ShopCartGroup
+                    {
+                        TenCuaHang = g.Key,
+                        Items = g.ToList()
+                    }).ToList();
+
+                var viewModel = new GioHangViewModel
+                {
+                    CartItems = cartItems,
+                    ShopGroups = groupedCartItems,
+                    TongTienHang = tongTienHang,
+                    PhiVanChuyen = phiVanChuyen,
+                    GiamGiaVanChuyen = giamGiaVanChuyen,
+                    GiamGiaVoucher = giamGiaVoucher,
+                    TongThanhToan = tongTienHang + phiVanChuyen + giamGiaVanChuyen - giamGiaVoucher,
+                    DiaChi = diaChi,
+                    SoDienThoai = soDienThoai
+                };
+
+                return viewModel;
+            }
+            catch (Exception ex)
+            {
+                // Ghi log lỗi
+                System.Diagnostics.Debug.WriteLine("Lỗi GetGioHangViewModel: " + ex.Message);
+
+                // Trả về ViewModel rỗng để tránh lỗi
+                return new GioHangViewModel
+                {
+                    CartItems = new List<CartItemViewModel>(),
+                    ShopGroups = new List<ShopCartGroup>(),
+                    TongTienHang = 0,
+                    PhiVanChuyen = 0,
+                    GiamGiaVanChuyen = 0,
+                    GiamGiaVoucher = 0,
+                    TongThanhToan = 0,
+                    DiaChi = "Chưa có địa chỉ",
+                    SoDienThoai = "Chưa có số điện thoại"
+                };
             }
         }
 

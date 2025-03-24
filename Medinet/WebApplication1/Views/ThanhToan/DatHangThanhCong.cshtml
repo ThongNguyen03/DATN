@@ -1,0 +1,278 @@
+﻿@model List<WebApplication1.Models.DonHang>
+@{
+    ViewBag.Title = "Đặt Hàng Thành Công";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .success-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 30px 20px;
+        text-align: center;
+    }
+
+    .success-icon {
+        font-size: 80px;
+        color: #28a745;
+        margin-bottom: 20px;
+    }
+
+    .success-title {
+        font-size: 28px;
+        margin-bottom: 20px;
+        color: #28a745;
+    }
+
+    .order-info {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 30px 0;
+        text-align: left;
+    }
+
+    .order-id {
+        font-weight: bold;
+        color: #007bff;
+    }
+
+    .order-summary {
+        margin-top: 20px;
+        border-top: 1px solid #dee2e6;
+        padding-top: 20px;
+    }
+
+    .order-detail {
+        margin-bottom: 10px;
+    }
+
+    .btn-continue {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        margin-top: 20px;
+    }
+
+    .btn-track {
+        background-color: #6c757d;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        margin-top: 20px;
+        margin-left: 10px;
+    }
+
+    .btn-continue:hover {
+        background-color: #0069d9;
+    }
+
+    .btn-track:hover {
+        background-color: #5a6268;
+    }
+
+    .payment-success {
+        font-weight: bold;
+        color: #28a745;
+    }
+
+    .payment-pending {
+        font-weight: bold;
+        color: #ffc107;
+    }
+
+    .order-items {
+        margin-top: 15px;
+    }
+
+    .order-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        padding: 15px;
+    }
+
+    .order-card-header {
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+        font-weight: bold;
+    }
+
+    .marketplace-info {
+        background-color: #e7f3ff;
+        border-radius: 6px;
+        padding: 15px;
+        margin-top: 20px;
+        text-align: left;
+    }
+
+    .marketplace-title {
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+</style>
+
+<div class="success-container">
+    <div class="success-icon">
+        <i class="fas fa-check-circle"></i>
+    </div>
+    <h1 class="success-title">Đặt Hàng Thành Công!</h1>
+    <p class="lead">Cảm ơn bạn đã mua sắm tại Medinet. Đơn hàng của bạn đang được xử lý.</p>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i> @TempData["Success"]
+        </div>
+    }
+
+    <div class="order-info">
+        <h4>Thông tin đơn hàng</h4>
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="order-summary">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="order-detail">
+                            <strong>Mã đơn hàng:</strong>
+                            @foreach (var order in Model)
+                            {
+                                <span class="order-id">@order.MaDonHang</span>
+                                if (order != Model.Last())
+                                {
+                                    <span>, </span>
+                                }
+                            }
+                        </div>
+                        <div class="order-detail">
+                            <strong>Ngày đặt hàng:</strong> @Model.First().NgayTao.ToString("dd/MM/yyyy HH:mm")
+                        </div>
+                        <div class="order-detail">
+                            <strong>Phương thức thanh toán:</strong>
+                            @if (Model.First().PhuongThucThanhToan == "COD")
+                            {
+                                <span>Thanh toán khi nhận hàng (COD)</span>
+                            }
+                            else if (Model.First().PhuongThucThanhToan == "VNPAY")
+                            {
+                                <span>Thanh toán qua VNPAY</span>
+                            }
+                            else
+                            {
+                                <span>@Model.First().PhuongThucThanhToan</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="order-detail">
+                            <strong>Tổng giá trị:</strong> @string.Format("{0:N0}đ", Model.Sum(m => m.TongSoTien))
+                        </div>
+                        <div class="order-detail">
+                            <strong>Trạng thái:</strong>
+                            @if (Model.First().TrangThaiDonHang == "Đã thanh toán")
+                            {
+                                <span class="payment-success">@Model.First().TrangThaiDonHang</span>
+                            }
+                            else if (Model.First().TrangThaiDonHang == "Chờ xác nhận")
+                            {
+                                <span class="payment-pending">@Model.First().TrangThaiDonHang</span>
+                            }
+                            else
+                            {
+                                <span>@Model.First().TrangThaiDonHang</span>
+                            }
+                        </div>
+                        @if (Model.First().PhuongThucThanhToan == "VNPAY" && Model.First().TrangThaiDonHang != "Đã thanh toán")
+                        {
+                            <div class="order-detail">
+                                <a href="@Url.Action("ThanhToanVNPay", "ThanhToan", new { maDonHang = Model.First().MaDonHang })" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-credit-card"></i> Tiếp tục thanh toán
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                @if (Model.Count > 1)
+                {
+                    <div class="order-items mt-4">
+                        <h5>Chi tiết các đơn hàng:</h5>
+                        @foreach (var order in Model)
+                        {
+                            <div class="order-card">
+                                <div class="order-card-header">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <span>Đơn hàng #@order.MaDonHang</span>
+                                        </div>
+                                        <div class="col-md-6 text-end">
+                                            <span>@string.Format("{0:N0}đ", order.TongSoTien)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div>Cửa hàng: @(order.NguoiBan != null ? order.NguoiBan.TenCuaHang : "Medinet Shop")</div>
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        @if (order.TrangThaiDonHang == "Đã thanh toán")
+                                        {
+                                            <span class="badge bg-success">Đã thanh toán</span>
+                                        }
+                                        else if (order.TrangThaiDonHang == "Chờ xác nhận")
+                                        {
+                                            <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">@order.TrangThaiDonHang</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+
+                <div class="marketplace-info">
+                    <div class="marketplace-title">
+                        <i class="fas fa-info-circle"></i> Thông tin thanh toán Marketplace
+                    </div>
+                    <div>
+                        <ul>
+                            <li>Số tiền thanh toán đã được giữ lại tạm thời.</li>
+                            <li>Sau khi bạn nhận được hàng và xác nhận, số tiền sẽ được chuyển cho người bán.</li>
+                            <li>Vui lòng kiểm tra hàng kỹ trước khi xác nhận.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle"></i> Bạn sẽ nhận được email xác nhận đơn hàng trong thời gian sớm nhất.
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> Không tìm thấy thông tin đơn hàng!
+            </div>
+        }
+    </div>
+
+    <div class="mt-4">
+        <a href="@Url.Action("Index", "Home")" class="btn btn-continue">
+            <i class="fas fa-shopping-cart"></i> Tiếp tục mua sắm
+        </a>
+        <a href="@Url.Action("DonHangCuaToi", "NguoiDungs")" class="btn btn-track">
+            <i class="fas fa-clipboard-list"></i> Theo dõi đơn hàng
+        </a>
+    </div>
+</div>

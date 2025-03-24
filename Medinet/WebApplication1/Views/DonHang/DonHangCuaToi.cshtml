@@ -1,0 +1,323 @@
+﻿@model List<WebApplication1.Models.DonHang>
+@{
+    ViewBag.Title = "Đơn hàng của tôi";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var escrows = ViewBag.Escrows as List<WebApplication1.Models.Escrow>;
+}
+
+<style>
+    .orders-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .orders-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .order-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .order-shop {
+        display: flex;
+        align-items: center;
+    }
+
+    .order-status {
+        font-weight: 500;
+    }
+
+    .status-waiting {
+        color: #856404;
+    }
+
+    .status-processing {
+        color: #004085;
+    }
+
+    .status-delivered {
+        color: #155724;
+    }
+
+    .status-completed {
+        color: #0f5132;
+    }
+
+    .status-cancelled {
+        color: #721c24;
+    }
+
+    .order-body {
+        padding: 15px;
+    }
+
+    .order-product {
+        display: flex;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+    }
+
+        .order-product:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+    .product-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 4px;
+        margin-right: 15px;
+    }
+
+    .product-details {
+        flex-grow: 1;
+    }
+
+    .product-name {
+        font-weight: 500;
+        margin-bottom: 5px;
+    }
+
+    .product-price {
+        color: #dc3545;
+        font-weight: 500;
+    }
+
+    .order-footer {
+        padding: 15px;
+        border-top: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .order-total {
+        font-weight: bold;
+    }
+
+    .total-amount {
+        color: #dc3545;
+        font-size: 18px;
+    }
+
+    .order-actions .btn {
+        margin-left: 10px;
+    }
+
+    .order-date {
+        color: #6c757d;
+        font-size: 14px;
+    }
+
+    .no-orders {
+        text-align: center;
+        padding: 40px 0;
+        color: #6c757d;
+    }
+
+    .escrow-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        margin-right: 10px;
+    }
+
+    .escrow-holding {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    .escrow-released {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+
+    .escrow-refunded {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+</style>
+
+<div class="orders-container">
+    <h2>Đơn hàng của tôi</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i> @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+        </div>
+    }
+
+    <div class="orders-toolbar">
+        <div>
+            <span class="text-muted">Tổng cộng @Model.Count đơn hàng</span>
+        </div>
+        <div>
+            <select class="form-select" id="orderStatusFilter">
+                <option value="all">Tất cả đơn hàng</option>
+                <option value="Đang chờ xử lý">Đang chờ xử lý</option>
+                <option value="Đã vận chuyển">Đang vận chuyển</option>
+                <option value="Đã giao">Đã giao hàng</option>
+                <option value="Đã xác nhận nhận hàng">Đã xác nhận nhận hàng</option>
+                <option value="Đã hoàn thành">Đã hoàn thành</option>
+                <option value="Đã hủy">Đã hủy</option>
+            </select>
+        </div>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="no-orders">
+            <i class="fas fa-shopping-bag fa-3x mb-3"></i>
+            <h4>Bạn chưa có đơn hàng nào</h4>
+            <p>Tiếp tục mua sắm để đặt đơn hàng mới</p>
+            <a href="@Url.Action("Index", "Home")" class="btn btn-primary mt-3">Mua sắm ngay</a>
+        </div>
+    }
+    else
+    {
+        foreach (var order in Model.OrderByDescending(o => o.NgayTao))
+        {
+            var escrow = escrows?.FirstOrDefault(e => e.MaDonHang == order.MaDonHang);
+
+            <div class="order-card order-status-@order.TrangThaiDonHang.Replace(" ", "")">
+                <div class="order-header">
+                    <div class="order-shop">
+                        <i class="fas fa-store me-2"></i>
+                        <span>@(order.NguoiBan != null ? order.NguoiBan.TenCuaHang : "Medinet Shop")</span>
+                    </div>
+                    <div class="order-status
+                        @(order.TrangThaiDonHang == "Đang chờ xử lý" ? "status-waiting" : "")
+                        @(order.TrangThaiDonHang == "Đã vận chuyển" ? "status-processing" : "")
+                        @(order.TrangThaiDonHang == "Đã giao" ? "status-delivered" : "")
+                        @(order.TrangThaiDonHang == "Đã xác nhận nhận hàng" || order.TrangThaiDonHang == "Đã hoàn thành" ? "status-completed" : "")
+                        @(order.TrangThaiDonHang == "Đã hủy" ? "status-cancelled" : "")">
+                        @order.TrangThaiDonHang
+                    </div>
+                </div>
+
+                <div class="order-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div>
+                            <strong>Đơn hàng #@order.MaDonHang</strong>
+                            <span class="ms-3 order-date">
+                                <i class="far fa-calendar-alt"></i> @order.NgayTao.ToString("dd/MM/yyyy HH:mm")
+                            </span>
+                        </div>
+
+                        @if (escrow != null)
+                        {
+                            <div>
+                                <span class="escrow-badge
+                                     @(escrow.TrangThai == "Đang giữ" ? "escrow-holding" : "")
+                                     @(escrow.TrangThai == "Đã giải ngân" ? "escrow-released" : "")
+                                     @(escrow.TrangThai == "Đã hoàn tiền" ? "escrow-refunded" : "")">
+                                    <i class="fas fa-shield-alt"></i> @escrow.TrangThai
+                                </span>
+                            </div>
+                        }
+                    </div>
+
+                    @if (order.ChiTietDonHangs != null && order.ChiTietDonHangs.Any())
+                    {
+                        foreach (var item in order.ChiTietDonHangs.Take(2)) // Chỉ hiển thị 2 sản phẩm đầu tiên
+                        {
+                            <div class="order-product">
+                                @{
+                                    string anhSanPham = "/Content/Images/default-product.jpg";
+                                    if (item.SanPham != null && item.SanPham.DanhSachAnhSanPham != null && item.SanPham.DanhSachAnhSanPham.Any())
+                                    {
+                                        anhSanPham = item.SanPham.DanhSachAnhSanPham.First().DuongDanAnh;
+                                    }
+                                }
+                                <img src="@Url.Content(anhSanPham)" alt="@(item.SanPham?.TenSanPham ?? "Sản phẩm")" class="product-image">
+                                <div class="product-details">
+                                    <div class="product-name">@(item.SanPham?.TenSanPham ?? "Sản phẩm không còn tồn tại")</div>
+                                    <div class="product-quantity">Số lượng: @item.SoLuong</div>
+                                    <div class="product-price">@string.Format("{0:N0}đ", item.Gia)</div>
+                                </div>
+                            </div>
+                        }
+
+                        if (order.ChiTietDonHangs.Count > 2)
+                        {
+                            <div class="text-muted mt-2">
+                                <i class="fas fa-ellipsis-h"></i> Và @(order.ChiTietDonHangs.Count - 2) sản phẩm khác
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-muted">Không có thông tin chi tiết sản phẩm</div>
+                    }
+                </div>
+
+                <div class="order-footer">
+                    <div class="order-total">
+                        Tổng tiền: <span class="total-amount">@string.Format("{0:N0}đ", order.TongSoTien)</span>
+                    </div>
+                    <div class="order-actions">
+                        <a href="@Url.Action("ChiTiet", "DonHang", new { id = order.MaDonHang })" class="btn btn-outline-primary">
+                            <i class="fas fa-info-circle"></i> Chi tiết
+                        </a>
+
+                        @if (order.TrangThaiDonHang == "Đã vận chuyển" || order.TrangThaiDonHang == "Đã giao")
+                        {
+                            <a href="@Url.Action("ChiTiet", "DonHang", new { id = order.MaDonHang })" class="btn btn-success">
+                                <i class="fas fa-check"></i> Xác nhận nhận hàng
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function() {
+            // Lọc đơn hàng theo trạng thái
+            $("#orderStatusFilter").change(function() {
+                var selectedStatus = $(this).val();
+
+                if (selectedStatus === "all") {
+                    $(".order-card").show();
+                } else {
+                    $(".order-card").hide();
+                    $(".order-status-" + selectedStatus.replace(/ /g, "")).show();
+                }
+            });
+        });
+    </script>
+}

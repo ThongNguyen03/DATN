@@ -316,7 +316,7 @@
                     <button type="button" class="add-to-cart-btn" onclick="addToCart(@Model.MaSanPham)">
                         <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
                     </button>
-                    <button type="button" class="buy-now-btn">
+                    <button type="button" class="buy-now-btn" onclick="buyNow(@Model.MaSanPham)">
                         <i class="fas fa-bolt"></i> Mua ngay
                     </button>
                 </div>
@@ -727,4 +727,34 @@
         }
     });
 
+
+
+    // Hàm mua ngay cập nhật
+    function buyNow(maSanPham) {
+        // Lấy số lượng từ input
+        const quantityInput = document.getElementById('product-quantity');
+        const soLuong = parseInt(quantityInput.value) || 1;
+
+        // Gọi AJAX để thêm sản phẩm vào giỏ hàng tạm thời và chuyển đến trang thanh toán
+        $.ajax({
+            url: '@Url.Action("MuaNgay", "ThanhToan")',
+            type: 'POST',
+            data: {
+                maSanPham: maSanPham,
+                soLuong: soLuong
+            },
+            success: function(result) {
+                if (result.success) {
+                    // Chuyển hướng đến trang thanh toán
+                    window.location.href = result.redirectUrl;
+                } else {
+                    // Hiển thị thông báo lỗi
+                    alert(result.message);
+                }
+            },
+            error: function() {
+                alert('Đã xảy ra lỗi khi xử lý. Vui lòng thử lại sau.');
+            }
+        });
+    }
 </script>

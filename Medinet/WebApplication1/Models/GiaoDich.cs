@@ -14,6 +14,8 @@ namespace WebApplication1.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int MaGiaoDich { get; set; }
         public int MaDonHang { get; set; }
+        public string MaGiaoDichVNPay { get; set; }
+        public string ThongTinGiaoDich { get; set; }
         public string TrangThaiGiaoDich { get; set; } // "Đang chờ xử lý", "Đã hoàn thành", "Không thành công"
         public string PhuongThucThanhToan { get; set; } // "COD", "VNPAY"
         public decimal TongTien { get; set; }

@@ -70,6 +70,79 @@
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         transition: all 0.3s ease;
     }
+
+    /* CSS để giới hạn tên sản phẩm thành 2 dòng */
+    .card-title {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        height: 48px; /* Chiều cao cho 2 dòng, điều chỉnh nếu cần */
+        margin-bottom: 10px;
+
+        line-height: 1.5;
+    }
+
+    /* Đảm bảo chiều cao thẻ card đồng nhất */
+    .card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-body {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Đẩy giá xuống dưới và thẻ tiêu đề ở trên */
+    .card-text {
+        margin-top: auto;
+    }
+
+    /* Nếu tên sản phẩm ngắn hơn 2 dòng, vẫn giữ khoảng trống */
+    .card-title {
+        min-height: 48px;
+    }
+
+
+
+
+    /* CSS cho nút thêm vào giỏ */
+    .btn-them-vao-gio {
+        transition: all 0.3s ease;
+        width: 100%;
+        font-weight: bold;
+    }
+
+        .btn-them-vao-gio:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Hiệu ứng khi nhấn nút */
+        .btn-them-vao-gio:active {
+            transform: translateY(1px);
+        }
+
+    /* Đảm bảo card-footer có đủ padding */
+    .card-footer {
+        padding: 0.75rem;
+    }
+
+    /* Tạo không gian giữa thông tin sản phẩm và nút */
+    .card-body {
+        padding-bottom: 0.5rem;
+    }
+
+    /* Cho phép toasts hiển thị đúng vị trí */
+    .toast {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+    }
 </style>
 <div class="container mt-4">
     <!-- Phần hiển thị danh mục sản phẩm -->
@@ -108,8 +181,8 @@
             <h2 class="text-uppercase font-weight-bold">SẢN PHẨM ĐƯỢC ĐỀ XUẤT</h2>
         </div>
         @*<div class="col-2 text-right">
-            <a href="@Url.Action("Index", "SanPham")" class="btn btn-link">Xem thêm</a>
-        </div>*@
+                <a href="@Url.Action("Index", "SanPham")" class="btn btn-link">Xem thêm</a>
+            </div>*@
     </div>
 
     <div class="row">
@@ -117,20 +190,27 @@
         {
             <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
                 <div class="card h-100">
-                    <a href="@Url.Action("ChiTiet", "SanPham", new { id = sanPham.MaSanPham })">
+                    <a href="@Url.Action("ChiTiet", "Home", new { id = sanPham.MaSanPham })">
                         @if (sanPham.DanhSachAnhSanPham != null && sanPham.DanhSachAnhSanPham.Any())
                         {
                             <img class="card-img-top" src="@Url.Content(sanPham.DanhSachAnhSanPham.FirstOrDefault().DuongDanAnh)" alt="@sanPham.TenSanPham" style="height: 200px; object-fit: contain;">
                         }
                         else
                         {
-                            <img class="card-img-top" src="~/Content/Images/no-image.jpeg" alt="@sanPham.TenSanPham" style="height: 200px; object-fit: contain;">
+                            <img class="card-img-top" src="~/Content/images/no-image.jpeg" alt="@sanPham.TenSanPham" style="height: 200px; object-fit: contain;">
                         }
                         <div class="card-body">
                             <h5 class="card-title">@sanPham.TenSanPham</h5>
                             <p class="card-text font-weight-bold text-danger">@String.Format("{0:N0}", sanPham.GiaSanPham) đ</p>
                         </div>
                     </a>
+
+                    <!-- Thêm nút Thêm vào giỏ hàng -->
+                    <div class="card-footer bg-white border-top-0 text-center">
+                        <button class="btn btn-primary btn-sm btn-them-vao-gio" data-id="@sanPham.MaSanPham">
+                            <i class="fas fa-shopping-cart mr-1"></i> Thêm vào giỏ
+                        </button>
+                    </div>
                 </div>
             </div>
         }
@@ -190,3 +270,65 @@
     }
 
 </div>
+
+<!-- JavaScript xử lý sự kiện thêm vào giỏ hàng -->
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Xử lý sự kiện khi nhấn nút "Thêm vào giỏ"
+            $('.btn-them-vao-gio').click(function (e) {
+                e.preventDefault();
+
+                var maSanPham = $(this).data('id');
+                var soLuong = 1; // Mặc định thêm 1 sản phẩm
+                var button = $(this);
+
+                // Disable nút để tránh click nhiều lần
+                button.prop('disabled', true);
+
+                $.ajax({
+                    url: '@Url.Action("ThemVaoGio", "Home")',
+                    type: 'POST',
+                    data: { maSanPham: maSanPham, soLuong: soLuong },
+                    success: function (result) {
+                        if (result.success) {
+                            // Cập nhật số lượng sản phẩm trong giỏ hàng
+                            updateCartBadge(result.cartItemCount);
+
+                            // Hiển thị thông báo thành công
+                            alert(result.message);
+                        } else {
+                            // Hiển thị thông báo lỗi
+                            alert(result.message);
+                        }
+
+                        // Enable lại nút sau khi xử lý xong
+                        button.prop('disabled', false);
+                    },
+                    error: function () {
+                        alert('Đã xảy ra lỗi khi thêm sản phẩm vào giỏ hàng');
+
+                        // Enable lại nút sau khi xử lý xong
+                        button.prop('disabled', false);
+                    }
+                });
+            });
+
+            // Hàm cập nhật số lượng giỏ hàng trên header
+            function updateCartBadge(count) {
+                if (count > 0) {
+                    // Nếu đã có badge, cập nhật số lượng
+                    if ($('.cart-badge').length) {
+                        $('.cart-badge').text(count);
+                    } else {
+                        // Nếu chưa có badge, thêm mới
+                        $('.cart-container .icon-button').after('<span class="cart-badge">' + count + '</span>');
+                    }
+                } else {
+                    // Nếu số lượng = 0, ẩn badge
+                    $('.cart-badge').remove();
+                }
+            }
+        });
+    </script>
+}

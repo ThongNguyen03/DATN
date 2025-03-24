@@ -67,6 +67,7 @@
             background: none;
             border: none;
             color: #888;
+            margin-top: 8px;
         }
 
         .header-icons {
@@ -133,17 +134,24 @@
                 }
             </div>
 
-            <div class="search-container">
-                <form asp-action="Search" asp-controller="Home" method="get" class="search-form">
-                    <input type="text"
-                           name="query"
-                           placeholder="Hôm nay bạn đang tìm gì?"
-                           class="search-input" />
-                    <button type="submit" class="search-button">
-                        <i class="fa fa-search"></i>
-                    </button>
-                </form>
-            </div>
+            <!-- Thay thế phần form tìm kiếm trong _Layout.cshtml -->
+            @{
+                var vaitrotimkiem = Session["VaiTro"];
+                if (vaitrotimkiem != null && vaitrotimkiem.ToString() == "Buyer")
+                {
+                    <div class="search-container">
+                        <form action="@Url.Action("SanPham", "Home")" method="get" class="search-form">
+                            <input type="text"
+                                   name="timKiem"
+                                   placeholder="Hôm nay bạn đang tìm gì?"
+                                   class="search-input" />
+                            <button type="submit" class="search-button">
+                                <i class="fa fa-search"></i>
+                            </button>
+                        </form>
+                    </div>
+                }
+            }
 
             <div class="header-icons">
                 <a href="" class="icon-button">
