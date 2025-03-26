@@ -409,9 +409,9 @@
                                                     string anhHienThi = Url.Content("~/Content/images/no-image.jpeg");
 
                                                     // Kiểm tra và lấy ảnh đầu tiên từ danh sách ảnh sản phẩm nếu có
-                                                    if (item.DanhSachAnhSanPham != null && item.DanhSachAnhSanPham.Any())
+                                                    if (item.AnhSanPhams != null && item.AnhSanPhams.Any())
                                                     {
-                                                        anhHienThi = item.DanhSachAnhSanPham.First().DuongDanAnh;
+                                                        anhHienThi = item.AnhSanPhams.First().DuongDanAnh;
                                                     }
                                                 }
                                                 <img src="@anhHienThi" alt="@item.TenSanPham" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">

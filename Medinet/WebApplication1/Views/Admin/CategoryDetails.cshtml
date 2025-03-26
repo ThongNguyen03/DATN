@@ -280,9 +280,9 @@
                                                     <td>
                                                         @{
                                                             string anhSpHienThi = "~/Content/images/no-image.jpeg";
-                                                            if (item.DanhSachAnhSanPham != null && item.DanhSachAnhSanPham.Any())
+                                                            if (item.AnhSanPhams != null && item.AnhSanPhams.Any())
                                                             {
-                                                                anhSpHienThi = item.DanhSachAnhSanPham.First().DuongDanAnh;
+                                                                anhSpHienThi = item.AnhSanPhams.First().DuongDanAnh;
                                                             }
                                                         }
                                                         <img src="@Url.Content(anhSpHienThi)" alt="@item.TenSanPham" class="product-image">

@@ -8,18 +8,28 @@ using System.Web;
 namespace WebApplication1.Models
 {
     [Table("ThongBao")]
-    public partial class ThongBao
+    public class ThongBao
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int MaThongBao { get; set; }
-        public int MaNguoiDung { get; set; }
-        public string TinNhan { get; set; }
-        public string TrangThai { get; set; } // "Chưa đọc", "Đã đọc"
-        public DateTime NgayTao { get; set; }
 
-        // Quan hệ với Người Dùng
+        [Required]
+        [ForeignKey("NguoiDung")]
+        public int MaNguoiDung { get; set; }
+
+        [Required]
+        public string TinNhan { get; set; }
+
+        [StringLength(10)]
+        public string TrangThai { get; set; } = "Chưa đọc";
+
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime NgayTao { get; set; } = DateTime.Now;
+
+        // Navigation property
         public virtual NguoiDung NguoiDung { get; set; }
     }
+
 
 }

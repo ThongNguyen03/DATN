@@ -1,0 +1,73 @@
+﻿<!-- Partial view hiển thị bộ lọc trạng thái đơn hàng -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h6 class="mb-3">Lọc đơn hàng</h6>
+
+        <form id="orderFilterForm" method="get" action="@Url.Action("DonHangCuaToi", "DonHang")">
+            <div class="row">
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <label for="trangThai" class="form-label">Trạng thái</label>
+                    <select class="form-select" id="trangThai" name="trangThai" onchange="submitFilter()">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="Đang chờ xử lý" @(ViewBag.TrangThai == "Đang chờ xử lý" ? "selected" : "")>Đang chờ xử lý</option>
+                        <option value="Đã vận chuyển" @(ViewBag.TrangThai == "Đã vận chuyển" ? "selected" : "")>Đã vận chuyển</option>
+                        <option value="Đã thanh toán" @(ViewBag.TrangThai == "Đã thanh toán" ? "selected" : "")>Đã thanh toán</option>
+                        
+                        <option value="Đã giao" @(ViewBag.TrangThai == "Đã giao" ? "selected" : "")>Đã giao</option>
+                        <option value="Đã xác nhận nhận hàng" @(ViewBag.TrangThai == "Đã xác nhận nhận hàng" ? "selected" : "")>Đã nhận hàng</option>
+                        <option value="Đã hoàn thành" @(ViewBag.TrangThai == "Đã hoàn thành" ? "selected" : "")>Đã hoàn thành</option>
+                        <option value="Đã hủy" @(ViewBag.TrangThai == "Đã hủy" ? "selected" : "")>Đã hủy</option>
+                    </select>
+                </div>
+
+                @*<div class="col-md-4 mb-3 mb-md-0">
+                    <label for="ngayDat" class="form-label">Khoảng thời gian</label>
+                    <select class="form-select" id="ngayDat" name="ngayDat" onchange="submitFilter()">
+                        <option value="">Tất cả thời gian</option>
+                        <option value="7" @(ViewBag.NgayDat == "7" ? "selected" : "")>7 ngày qua</option>
+                        <option value="30" @(ViewBag.NgayDat == "30" ? "selected" : "")>30 ngày qua</option>
+                        <option value="90" @(ViewBag.NgayDat == "90" ? "selected" : "")>3 tháng qua</option>
+                        <option value="180" @(ViewBag.NgayDat == "180" ? "selected" : "")>6 tháng qua</option>
+                        <option value="365" @(ViewBag.NgayDat == "365" ? "selected" : "")>1 năm qua</option>
+                    </select>
+                </div>*@
+
+                <div class="col-md-4">
+                    <label for="sapXep" class="form-label">Sắp xếp theo</label>
+                    <select class="form-select" id="sapXep" name="sapXep" onchange="submitFilter()">
+                        <option value="moi-nhat" @(ViewBag.SapXep == "moi-nhat" ? "selected" : "")>Mới nhất</option>
+                        <option value="cu-nhat" @(ViewBag.SapXep == "cu-nhat" ? "selected" : "")>Cũ nhất</option>
+                        <option value="gia-cao" @(ViewBag.SapXep == "gia-cao" ? "selected" : "")>Giá cao nhất</option>
+                        <option value="gia-thap" @(ViewBag.SapXep == "gia-thap" ? "selected" : "")>Giá thấp nhất</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-3">
+                <button type="button" class="btn btn-outline-secondary" onclick="resetFilter()">
+                    <i class="bi bi-arrow-counterclockwise"></i> Đặt lại
+                </button>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-filter"></i> Áp dụng
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function submitFilter() {
+        // Chỉ tự động submit khi được cấu hình
+        if (document.getElementById('autoSubmit') && document.getElementById('autoSubmit').checked) {
+            document.getElementById('orderFilterForm').submit();
+        }
+    }
+
+    function resetFilter() {
+        document.getElementById('trangThai').value = '';
+        document.getElementById('ngayDat').value = '';
+        document.getElementById('sapXep').value = 'moi-nhat';
+        document.getElementById('orderFilterForm').submit();
+    }
+</script>

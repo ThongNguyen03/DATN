@@ -132,7 +132,7 @@ namespace WebApplication1.Controllers
             // Lấy thông tin người bán
             var nguoiBan = db.NguoiBans
                 .Include(s => s.NguoiDung)
-                .Include(s => s.DanhSachChungChi)
+                .Include(s => s.AnhChungChis)
                 .FirstOrDefault(s => s.MaNguoiBan == id);
 
             if (nguoiBan == null)
@@ -142,7 +142,7 @@ namespace WebApplication1.Controllers
 
             // Lấy danh sách sản phẩm của người bán
             var sanPhamQuery = db.SanPhams
-                .Include(s => s.DanhSachAnhSanPham)
+                .Include(s => s.AnhSanPhams)
                 .Include(s => s.DanhMucSanPham)
                 .Where(s => s.MaNguoiBan == id && s.TrangThai == "Đã phê duyệt");
 
@@ -175,7 +175,7 @@ namespace WebApplication1.Controllers
             {
                 NguoiDung = nguoiBan.NguoiDung,
                 NguoiBan = nguoiBan,
-                DanhSachChungChi = nguoiBan.DanhSachChungChi.ToList(),
+                DanhSachChungChi = nguoiBan.AnhChungChis.ToList(),
                 DanhSachSanPham = sanPhams
             };
 
@@ -212,7 +212,7 @@ namespace WebApplication1.Controllers
             // Lấy danh sách sản phẩm của người bán kèm theo danh sách ảnh
             var sanPhams = db.SanPhams
                 .Include(s => s.DanhMucSanPham)
-                .Include(s => s.DanhSachAnhSanPham)
+                .Include(s => s.AnhSanPhams)
                 .Where(s => s.MaNguoiBan == id);
 
             // Áp dụng bộ lọc tìm kiếm nếu có
@@ -415,7 +415,7 @@ namespace WebApplication1.Controllers
             // Lấy sản phẩm liên quan (cùng danh mục, không bao gồm sản phẩm hiện tại)
             var sanPhamLienQuan = db.SanPhams
                 .Include(s => s.NguoiBan)
-                .Include(s => s.DanhSachAnhSanPham)
+                .Include(s => s.AnhSanPhams)
                 .Where(s => s.MaDanhMuc == sanPham.MaDanhMuc  && s.TrangThai == "Đã phê duyệt")
                 .Take(4)
                 .ToList();

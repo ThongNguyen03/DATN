@@ -1,0 +1,79 @@
+﻿@model WebApplication1.Models.DonHang
+
+<!-- Modal Hủy đơn hàng -->
+<div class="modal fade" id="huyDonHangModal" tabindex="-1" aria-labelledby="huyDonHangModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="@Url.Action("HuyDonHang", "DonHang", new { id = Model.MaDonHang })" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="huyDonHangModalLabel">Hủy đơn hàng #@Model.MaDonHang</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning mb-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-exclamation-triangle-fill fs-4 me-2 text-warning"></i>
+                            <strong>Lưu ý quan trọng</strong>
+                        </div>
+                        <p class="mb-1">Thao tác hủy đơn hàng không thể hoàn tác sau khi xác nhận.</p>
+                        <p class="mb-0">Nếu đã thanh toán, tiền sẽ được hoàn trả theo chính sách của cửa hàng.</p>
+                    </div>
+
+                    <!-- Thông tin đơn hàng -->
+                    <div class="card mb-3">
+                        <div class="card-body p-3">
+                            <h6 class="card-title">Thông tin đơn hàng</h6>
+                            <div class="row">
+                                <div class="col-6">
+                                    <p class="mb-1 small"><strong>Trạng thái:</strong> @Model.TrangThaiDonHang</p>
+                                    <p class="mb-1 small"><strong>Ngày đặt:</strong> @Model.NgayTao.ToString("dd/MM/yyyy")</p>
+                                </div>
+                                <div class="col-6">
+                                    <p class="mb-1 small"><strong>Tổng tiền:</strong> @String.Format("{0:N0} VNĐ", Model.TongSoTien)</p>
+                                    <p class="mb-1 small"><strong>Thanh toán:</strong> @Model.PhuongThucThanhToan</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="lyDoHuy" class="form-label">Lý do hủy đơn hàng <span class="text-danger">*</span></label>
+                        <select class="form-select mb-2" id="lyDoHuySelect" onchange="updateCancelReason()">
+                            <option value="">-- Chọn lý do --</option>
+                            <option value="Tôi muốn thay đổi địa chỉ giao hàng">Tôi muốn thay đổi địa chỉ giao hàng</option>
+                            <option value="Tôi muốn thay đổi phương thức thanh toán">Tôi muốn thay đổi phương thức thanh toán</option>
+                            <option value="Tôi đặt nhầm sản phẩm">Tôi đặt nhầm sản phẩm</option>
+                            <option value="Tôi muốn thay đổi số lượng">Tôi muốn thay đổi số lượng</option>
+                            <option value="Tôi không còn nhu cầu mua hàng">Tôi không còn nhu cầu mua hàng</option>
+                            <option value="other">Lý do khác</option>
+                        </select>
+                        <textarea class="form-control" id="lyDoHuy" name="lyDoHuy" rows="3"
+                                  placeholder="Vui lòng nhập lý do hủy đơn hàng..." required></textarea>
+                        <div class="form-text">Việc cung cấp lý do chi tiết sẽ giúp chúng tôi cải thiện dịch vụ.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-x-circle"></i> Xác nhận hủy
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateCancelReason() {
+        const select = document.getElementById('lyDoHuySelect');
+        const textarea = document.getElementById('lyDoHuy');
+
+        if (select.value && select.value !== 'other') {
+            textarea.value = select.value;
+        } else if (select.value === 'other') {
+            textarea.value = '';
+            textarea.focus();
+        }
+    }
+</script>

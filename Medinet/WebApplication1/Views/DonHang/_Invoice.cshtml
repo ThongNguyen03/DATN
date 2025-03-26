@@ -1,0 +1,92 @@
+﻿@model WebApplication1.Models.DonHang
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Hóa đơn đơn hàng #@Model.MaDonHang</h5>
+    </div>
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-sm-6">
+                <h6 class="mb-3">Thông tin người mua:</h6>
+                <div>
+                    <strong>Họ tên:</strong> @Model.NguoiDung.TenNguoiDung<br>
+                    <strong>Số điện thoại:</strong> @Model.NguoiDung.SoDienThoai<br>
+                    <strong>Địa chỉ:</strong> @Model.NguoiDung.DiaChi<br>
+                    <strong>Email:</strong> @Model.NguoiDung.Email
+                </div>
+            </div>
+
+            <div class="col-sm-6">
+                <h6 class="mb-3">Thông tin người bán:</h6>
+                <div>
+                    <strong>Tên shop:</strong> @Model.NguoiBan.TenCuaHang<br>
+                    <strong>Số điện thoại:</strong> @Model.NguoiBan.SoDienThoaiCuaHang<br>
+                    <strong>Địa chỉ:</strong> @Model.NguoiBan.DiaChiCuaHang<br>
+                    <strong>Email:</strong> @Model.NguoiBan.NguoiDung.Email
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive-sm">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Sản phẩm</th>
+                        <th class="text-right">Đơn giá</th>
+                        <th class="text-center">Số lượng</th>
+                        <th class="text-right">Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{ int i = 1; }
+                    @foreach (var item in Model.ChiTietDonHangs)
+                    {
+                        <tr>
+                            <td>@i</td>
+                            <td>@item.SanPham.TenSanPham</td>
+                            <td class="text-right">@String.Format("{0:N0} VNĐ", item.Gia)</td>
+                            <td class="text-center">@item.SoLuong</td>
+                            <td class="text-right">@String.Format("{0:N0} VNĐ", item.Gia * item.SoLuong)</td>
+                        </tr>
+                        i++;
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4" class="text-right"><strong>Tổng tiền:</strong></td>
+                        <td class="text-right"><strong>@String.Format("{0:N0} VNĐ", Model.TongSoTien)</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <p class="mb-0"><strong>Ngày đặt hàng:</strong> @Model.NgayTao.ToString("dd/MM/yyyy HH:mm")</p>
+                <p class="mb-0"><strong>Phương thức thanh toán:</strong> @Model.PhuongThucThanhToan</p>
+                <p class="mb-0"><strong>Trạng thái đơn hàng:</strong> @Model.TrangThaiDonHang</p>
+                @if (!string.IsNullOrEmpty(Model.GhiChu))
+                {
+                    <p class="mb-0"><strong>Ghi chú:</strong> @Model.GhiChu</p>
+                }
+            </div>
+            @*<div class="col-lg-4">
+                <div class="text-right mt-4">
+                    <img src="/Content/images/stamp-paid.png" class="img-fluid" style="max-width: 150px; @(Model.TrangThaiDonHang ? "Đã thanh toán" : "display: none;")" alt="Đã thanh toán" />
+                </div>
+            </div>*@
+        </div>
+
+        <hr class="my-4">
+
+        <div class="text-center">
+            <p class="mb-0">Cảm ơn bạn đã mua hàng tại cửa hàng của chúng tôi!</p>
+        </div>
+    </div>
+    <div class="card-footer text-center">
+        <button class="btn btn-primary" onclick="window.print()">
+            <i class="bi bi-printer"></i> In hóa đơn
+        </button>
+    </div>
+</div>

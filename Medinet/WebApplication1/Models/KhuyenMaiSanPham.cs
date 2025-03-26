@@ -7,22 +7,21 @@ using System.Web;
 
 namespace WebApplication1.Models
 {
-    [Table("AnhSanPham")]
-    public class AnhSanPham
+    [Table("KhuyenMaiSanPham")]
+    public class KhuyenMaiSanPham
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int MaAnh { get; set; }
+        [Column(Order = 0)]
+        [ForeignKey("ChuongTrinhKhuyenMai")]
+        public int MaKM { get; set; }
 
+        [Key]
+        [Column(Order = 1)]
         [ForeignKey("SanPham")]
         public int MaSanPham { get; set; }
 
-        [StringLength(500)]
-        public string DuongDanAnh { get; set; }
-
-        // Navigation property
+        // Navigation properties
+        public virtual ChuongTrinhKhuyenMai ChuongTrinhKhuyenMai { get; set; }
         public virtual SanPham SanPham { get; set; }
     }
-
-
 }

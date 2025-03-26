@@ -8,17 +8,27 @@ using System.Web;
 namespace WebApplication1.Models
 {
     [Table("DanhMucSanPham")]
-    public partial class DanhMucSanPham
+    public class DanhMucSanPham
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int MaDanhMuc { get; set; }
-        public string TenDanhMuc { get; set; }
-        public int? MaDanhMucCha { get; set; }
-        public string AnhDanhMucSanPham { get; set; }
-        public DateTime NgayTao { get; set; }
 
+        [Required]
+        [StringLength(255)]
+        public string TenDanhMuc { get; set; }
+
+        [ForeignKey("DanhMucCha")]
+        public int? MaDanhMucCha { get; set; }
+
+        public string AnhDanhMucSanPham { get; set; }
+
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime NgayTao { get; set; } = DateTime.Now;
+
+        // Navigation properties
         public virtual DanhMucSanPham DanhMucCha { get; set; }
+        public virtual ICollection<DanhMucSanPham> DanhMucCons { get; set; }
         public virtual ICollection<SanPham> SanPhams { get; set; }
     }
 

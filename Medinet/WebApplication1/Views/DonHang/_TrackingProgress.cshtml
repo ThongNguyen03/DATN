@@ -1,0 +1,188 @@
+﻿@model WebApplication1.Models.DonHang
+
+<style>
+    .tracking-progress {
+        padding: 20px 0;
+    }
+
+    .tracking-line {
+        position: absolute;
+        height: 3px;
+        background-color: #e9ecef;
+        width: 80%;
+        top: 30px;
+        left: 10%;
+        z-index: 1;
+    }
+
+    .tracking-step {
+        position: relative;
+        z-index: 2;
+        width: 16%;
+    }
+
+    .tracking-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: #f8f9fa;
+        border: 3px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-size: 24px;
+        color: #adb5bd;
+    }
+
+    .tracking-step.active .tracking-icon {
+        background-color: #fff;
+        border-color: #0d6efd;
+        color: #0d6efd;
+    }
+
+    .tracking-step.completed .tracking-icon {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: #fff;
+    }
+
+    .tracking-label {
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .tracking-date {
+        font-size: 12px;
+    }
+</style>
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Theo dõi đơn hàng</h5>
+    </div>
+    <div class="card-body">
+        <div class="tracking-progress">
+            @{
+                var steps = new List<(string Name, string Icon, string Date, bool IsActive, bool IsPast)>
+                    {
+                    ("Đặt hàng", "bi bi-cart-check", Model.NgayTao.ToString("dd/MM/yyyy"), true, true),
+                    ("Xác nhận", "bi bi-check-circle",
+                     Model.NgayCapNhat?.ToString("dd/MM/yyyy") ?? "",
+                      Model.TrangThaiDonHang != "Đã hủy",
+                      Model.TrangThaiDonHang != "Đã hủy"),
+                    ("Đang chuẩn bị", "bi bi-box-seam",
+                     "",
+                     Model.TrangThaiDonHang == "Đang chờ xử lý" || Model.TrangThaiDonHang == "Đã vận chuyển" || Model.TrangThaiDonHang == "Đã giao" || Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" || Model.TrangThaiDonHang == "Đã thanh toán",
+                     Model.TrangThaiDonHang == "Đang chờ xử lý" || Model.TrangThaiDonHang == "Đã vận chuyển" || Model.TrangThaiDonHang == "Đã giao" || Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" || Model.TrangThaiDonHang == "Đã thanh toán"),
+                    ("Vận chuyển", "bi bi-truck",
+                     "",
+                     Model.TrangThaiDonHang == "Đã vận chuyển" || Model.TrangThaiDonHang == "Đã giao" || Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" ,
+                     Model.TrangThaiDonHang == "Đã vận chuyển" || Model.TrangThaiDonHang == "Đã giao" || Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" ),
+                    ("Đã giao", "bi bi-house-check",
+                     "",
+                     Model.TrangThaiDonHang == "Đã giao" || Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" ,
+                     Model.TrangThaiDonHang == "Đã giao" || Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" ),
+                    ("Hoàn thành", "bi bi-trophy",
+                     Model.DaXacNhanNhanHang ? Model.NgayCapNhat?.ToString("dd/MM/yyyy") ?? "" : "",
+                     Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" ,
+                     Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" )
+                };
+
+                if (Model.TrangThaiDonHang == "Đã hủy")
+                {
+                    <div class="text-center p-3">
+                        <div class="canceled-badge">
+                            <i class="bi bi-x-circle fs-1 text-danger"></i>
+                            <h5 class="text-danger mt-2">Đơn hàng đã bị hủy</h5>
+                            @if (Model.NgayHuy != DateTime.MinValue)
+                            {
+                                <text>Vào ngày @Model.NgayHuy.Value.ToString("dd/MM/yyyy HH:mm")</text>
+                            }
+                                        
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="d-flex justify-content-between position-relative">
+                        @for (int i = 0; i < steps.Count; i++)
+                        {
+                            <div class="text-center tracking-step @(steps[i].IsActive ? "active" : "") @(steps[i].IsPast ? "completed" : "")">
+                                <div class="tracking-icon">
+                                    <i class="@steps[i].Icon"></i>
+                                </div>
+                                <div class="tracking-label">@steps[i].Name</div>
+                                @if (!string.IsNullOrEmpty(steps[i].Date))
+                                {
+                                    <div class="tracking-date small text-muted">@steps[i].Date</div>
+                                }
+                            </div>
+                        }
+                        <div class="tracking-line"></div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .tracking-progress {
+        padding: 20px 0;
+    }
+
+    .tracking-line {
+        position: absolute;
+        height: 3px;
+        background-color: #e9ecef;
+        width: 80%;
+        top: 30px;
+        left: 10%;
+        z-index: 1;
+    }
+
+    .tracking-step {
+        position: relative;
+        z-index: 2;
+        width: 16%;
+    }
+
+    .tracking-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: #f8f9fa;
+        border: 3px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-size: 24px;
+        color: #adb5bd;
+    }
+
+    .tracking-step.active .tracking-icon {
+        background-color: #fff;
+        border-color: #0d6efd;
+        color: #0d6efd;
+    }
+
+    .tracking-step.completed .tracking-icon {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: #fff;
+    }
+
+    .tracking-label {
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .tracking-date {
+        font-size: 12px;
+    }
+
+    .canceled-badge {
+        padding: 20px;
+    }
+</style>

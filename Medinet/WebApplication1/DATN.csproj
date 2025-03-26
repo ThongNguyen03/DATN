@@ -143,9 +143,14 @@
     <Compile Include="Models\AnhChungChi.cs" />
     <Compile Include="Models\AnhSanPham.cs" />
     <Compile Include="Models\ChiTietDonHang.cs" />
+    <Compile Include="Models\ChuongTrinhKhuyenMai.cs" />
     <Compile Include="Models\DanhGiaSanPham.cs" />
     <Compile Include="Models\DanhMucSanPham.cs" />
     <Compile Include="Models\Escrow.cs" />
+    <Compile Include="Models\HangDoiHoanTienVNPay.cs" />
+    <Compile Include="Models\KhuyenMaiDonHang.cs" />
+    <Compile Include="Models\KhuyenMaiSanPham.cs" />
+    <Compile Include="Models\LichSuGiaoDichVi.cs" />
     <Compile Include="Models\MedinetDATN.cs" />
     <Compile Include="Models\DonHang.cs" />
     <Compile Include="Models\GiaoDich.cs" />
@@ -157,6 +162,7 @@
     <Compile Include="Models\ThongKeDoanhThuViewModel.cs" />
     <Compile Include="Models\ThongKeNgayViewModel.cs" />
     <Compile Include="Models\ThongKeNguoiBanViewModel.cs" />
+    <Compile Include="Models\ThongTinHoanTien.cs" />
     <Compile Include="Models\VnPayLibrary.cs" />
     <Compile Include="obj\Debug\.NETFramework,Version=v4.7.2.AssemblyAttributes.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -355,6 +361,15 @@
     <Content Include="Views\DonHang\DonHangCuaToi.cshtml" />
     <Content Include="Views\Admin\ChiTietKyQuy.cshtml" />
     <Content Include="Views\Admin\ThongKeDoanhThu.cshtml" />
+    <Content Include="Views\DonHang\_Invoice.cshtml" />
+    <Content Include="Views\DonHang\_TrackingProgress.cshtml" />
+    <Content Include="Views\DonHang\_EmptyOrder.cshtml" />
+    <Content Include="Views\DonHang\_RateOrderModal.cshtml" />
+    <Content Include="Views\DonHang\_CancelOrderModal.cshtml" />
+    <Content Include="Views\DonHang\_OrderSummary.cshtml" />
+    <Content Include="Views\DonHang\_ConfirmReceivedModal.cshtml" />
+    <Content Include="Views\DonHang\_OrderFilter.cshtml" />
+    <Content Include="Views\DonHang\_OrderItems.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

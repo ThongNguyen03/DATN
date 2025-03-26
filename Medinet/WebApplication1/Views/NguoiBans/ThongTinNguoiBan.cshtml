@@ -134,9 +134,9 @@
                                 <div class="col-lg-4 col-md-6 mb-4">
                                     <div class="card h-100 product-card shadow-sm">
                                         <a href="@Url.Action("ChiTiet", "Home", new { id = sanPham.MaSanPham })">
-                                            @if (sanPham.DanhSachAnhSanPham != null && sanPham.DanhSachAnhSanPham.Any())
+                                            @if (sanPham.AnhSanPhams != null && sanPham.AnhSanPhams.Any())
                                             {
-                                                <img class="card-img-top" src="@Url.Content(sanPham.DanhSachAnhSanPham.FirstOrDefault().DuongDanAnh)"
+                                                <img class="card-img-top" src="@Url.Content(sanPham.AnhSanPhams.FirstOrDefault().DuongDanAnh)"
                                                      alt="@sanPham.TenSanPham" style="height: 180px; object-fit: contain; padding: 10px;">
                                             }
                                             else

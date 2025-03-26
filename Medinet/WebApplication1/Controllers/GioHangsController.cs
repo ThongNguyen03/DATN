@@ -344,7 +344,7 @@ namespace WebApplication1.Controllers
                 .Where(g => g.MaNguoiDung == maNguoiDung && selectedIds.Contains(g.MaGioHang))
                 .Include(g => g.SanPham)
                 .Include(g => g.SanPham.NguoiBan)
-                .Include(g => g.SanPham.DanhSachAnhSanPham)
+                .Include(g => g.SanPham.AnhSanPhams)
                 .ToList();
 
             if (cartItems.Count == 0)
@@ -392,7 +392,7 @@ namespace WebApplication1.Controllers
                     .Where(g => g.MaNguoiDung == maNguoiDung)
                     .Include(g => g.SanPham)
                     .Include(g => g.SanPham.NguoiBan)
-                    .Include(g => g.SanPham.DanhSachAnhSanPham)
+                    .Include(g => g.SanPham.AnhSanPhams)
                     .ToList();
 
                 if (cartItems.Count == 0)
@@ -441,7 +441,7 @@ namespace WebApplication1.Controllers
                     .Where(g => g.MaNguoiDung == maNguoiDung)
                     .Include(g => g.SanPham)
                     .Include(g => g.SanPham.NguoiBan)
-                    .Include(g => g.SanPham.DanhSachAnhSanPham)
+                    .Include(g => g.SanPham.AnhSanPhams)
                     .ToList();
 
                 if (cartItems.Count == 0)
@@ -592,7 +592,7 @@ namespace WebApplication1.Controllers
                     .Where(g => g.MaNguoiDung == maNguoiDung)
                     .Include(g => g.SanPham)
                     .Include(g => g.SanPham.NguoiBan)
-                    .Include(g => g.SanPham.DanhSachAnhSanPham)
+                    .Include(g => g.SanPham.AnhSanPhams)
                     .ToList();
 
                 // Debug: Kiểm tra số lượng mục trong giỏ hàng
@@ -611,9 +611,9 @@ namespace WebApplication1.Controllers
 
                     // Lấy đường dẫn ảnh đầu tiên hoặc ảnh mặc định
                     string anhSanPham = "/Content/images/no-image.jpeg";
-                    if (g.SanPham.DanhSachAnhSanPham != null && g.SanPham.DanhSachAnhSanPham.Any())
+                    if (g.SanPham.AnhSanPhams != null && g.SanPham.AnhSanPhams.Any())
                     {
-                        anhSanPham = g.SanPham.DanhSachAnhSanPham.First().DuongDanAnh;
+                        anhSanPham = g.SanPham.AnhSanPhams.First().DuongDanAnh;
                     }
 
                     // Lấy tên cửa hàng

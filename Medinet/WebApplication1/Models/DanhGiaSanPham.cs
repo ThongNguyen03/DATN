@@ -8,20 +8,40 @@ using System.Web;
 namespace WebApplication1.Models
 {
     [Table("DanhGiaSanPham")]
-    public partial class DanhGiaSanPham
+    public class DanhGiaSanPham
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int MaDanhGiaSanPham { get; set; }
-        public int MaNguoiDung { get; set; }
-        public int MaSanPham { get; set; }
-        public int DanhGia { get; set; } // 1 - 5 sao
-        public string BinhLuan { get; set; }
-        public DateTime NgayTao { get; set; }
 
-        // Quan hệ với Người Dùng và Sản Phẩm
+        [Required]
+        [ForeignKey("NguoiDung")]
+        public int MaNguoiDung { get; set; }
+
+        [Required]
+        [ForeignKey("SanPham")]
+        public int MaSanPham { get; set; }
+
+        [ForeignKey("NguoiBan")]
+        public int? MaNguoiBan { get; set; }
+
+        [ForeignKey("DonHang")]
+        public int? MaDonHang { get; set; }
+
+        public int? DanhGia { get; set; }
+
+        public string BinhLuan { get; set; }
+
+        public bool DaDanhGia { get; set; } = false;
+
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime NgayTao { get; set; } = DateTime.Now;
+
+        // Navigation properties
         public virtual NguoiDung NguoiDung { get; set; }
         public virtual SanPham SanPham { get; set; }
+        public virtual NguoiBan NguoiBan { get; set; }
+        public virtual DonHang DonHang { get; set; }
     }
 
 }

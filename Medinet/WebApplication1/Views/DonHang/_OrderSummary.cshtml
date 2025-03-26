@@ -1,0 +1,87 @@
+﻿@model WebApplication1.Models.DonHang
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Thông tin đơn hàng</h5>
+    </div>
+    <div class="card-body">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between px-0">
+                <span>Mã đơn hàng:</span>
+                <span class="fw-bold">#@Model.MaDonHang</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between px-0">
+                <span>Ngày đặt hàng:</span>
+                <span>@Model.NgayTao.ToString("dd/MM/yyyy HH:mm")</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between px-0">
+                <span>Trạng thái:</span>
+                <span>
+                    @switch (Model.TrangThaiDonHang)
+                    {
+                        case "Chờ xác nhận":
+                            <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                            break;
+                        case "Đã xác nhận":
+                            <span class="badge bg-info">Đã xác nhận</span>
+                            break;
+                        case "Đang chuẩn bị":
+                            <span class="badge bg-primary">Đang chuẩn bị</span>
+                            break;
+                        case "Đã vận chuyển":
+                            <span class="badge bg-primary">Đã vận chuyển</span>
+                            break;
+                        case "Đã giao":
+                            <span class="badge bg-info">Đã giao</span>
+                            break;
+                        case "Đã xác nhận nhận hàng":
+                            <span class="badge bg-success">Đã nhận hàng</span>
+                            break;
+                        case "Đã hoàn thành":
+                            <span class="badge bg-success">Hoàn thành</span>
+                            break;
+                        case "Đã thanh toán":
+                            <span class="badge bg-success">Đã thanh toán</span>
+                            break;
+                        case "Đã hủy":
+                            <span class="badge bg-danger">Đã hủy</span>
+                            break;
+                        default:
+                            <span class="badge bg-secondary">@Model.TrangThaiDonHang</span>
+                            break;
+                    }
+                </span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between px-0">
+                <span>Phương thức thanh toán:</span>
+                <span>@Model.PhuongThucThanhToan</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between px-0">
+                <span>Trạng thái thanh toán:</span>
+                <span>
+                    @if (Model.TrangThaiDonHang == "Đã thanh toán")
+                    {
+                        <span class="badge bg-success">Đã thanh toán</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">Chưa thanh toán</span>
+                    }
+                </span>
+            </li>
+            @if (Model.NgayCapNhat.HasValue)
+            {
+                <li class="list-group-item d-flex justify-content-between px-0">
+                    <span>Cập nhật lần cuối:</span>
+                    <span>@Model.NgayCapNhat.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                </li>
+            }
+        </ul>
+    </div>
+    <div class="card-footer">
+        <div class="d-flex justify-content-between align-items-center">
+            <span>Tổng tiền:</span>
+            <span class="fs-5 fw-bold text-primary">@String.Format("{0:N0} VNĐ", Model.TongSoTien)</span>
+        </div>
+    </div>
+</div>

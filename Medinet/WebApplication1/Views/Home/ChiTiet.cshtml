@@ -255,21 +255,21 @@
         <div class="col-md-5 product-images">
             @{
                 string mainImageUrl = "~/Content/Images/default-product.jpg";
-                if (Model.DanhSachAnhSanPham != null && Model.DanhSachAnhSanPham.Any())
+                if (Model.AnhSanPhams != null && Model.AnhSanPhams.Any())
                 {
-                    mainImageUrl = Model.DanhSachAnhSanPham.First().DuongDanAnh;
+                    mainImageUrl = Model.AnhSanPhams.First().DuongDanAnh;
                 }
             }
             <img id="main-product-image" src="@Url.Content(mainImageUrl)" alt="@Model.TenSanPham" class="main-image" />
 
-            @if (Model.DanhSachAnhSanPham != null && Model.DanhSachAnhSanPham.Count() > 1)
+            @if (Model.AnhSanPhams != null && Model.AnhSanPhams.Count() > 1)
             {
                 <div class="thumbnail-container">
-                    @foreach (var anh in Model.DanhSachAnhSanPham)
+                    @foreach (var anh in Model.AnhSanPhams)
                     {
                         <img src="@Url.Content(anh.DuongDanAnh)"
                              alt="@Model.TenSanPham"
-                             class="thumbnail @(anh == Model.DanhSachAnhSanPham.First() ? "active" : "")"
+                             class="thumbnail @(anh == Model.AnhSanPhams.First() ? "active" : "")"
                              onclick="changeMainImage(this)" />
                     }
                 </div>
@@ -463,9 +463,9 @@
                         <div class="related-card">
                             @{
                                 string anhSanPham = "~/Content/Images/default-product.jpg";
-                                if (sanPham.DanhSachAnhSanPham != null && sanPham.DanhSachAnhSanPham.Any())
+                                if (sanPham.AnhSanPhams != null && sanPham.AnhSanPhams.Any())
                                 {
-                                    anhSanPham = sanPham.DanhSachAnhSanPham.First().DuongDanAnh;
+                                    anhSanPham = sanPham.AnhSanPhams.First().DuongDanAnh;
                                 }
                             }
                             <a href="@Url.Action("ChiTiet", "Home", new { id = sanPham.MaSanPham })">

@@ -8,34 +8,63 @@ using System.Web;
 namespace WebApplication1.Models
 {
     [Table("DonHang")]
-    public partial class DonHang
+    public class DonHang
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int MaDonHang { get; set; }
+
+        [Required]
+        [ForeignKey("NguoiDung")]
         public int MaNguoiDung { get; set; }
+
+        [Required]
+        [ForeignKey("NguoiBan")]
         public int MaNguoiBan { get; set; }
+
+        [Required]
+       // [Column(TypeName = "decimal(10,2)")]
         public decimal TongSoTien { get; set; }
+
+        [Required]
+        [StringLength(10)]
         public string PhuongThucThanhToan { get; set; }
-        public string TrangThaiDonHang { get; set; }
-        public string GhiChu { get; set; }
-        public DateTime NgayTao { get; set; }
-        public DateTime NgayGiaoHang { get; set; }
-        public DateTime NgayCapNhat { get; set; }
-        public DateTime NgayHuy { get; set; }
+
+        [StringLength(20)]
+        public string TrangThaiDonHang { get; set; } = "Đang chờ xử lý";
+
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime NgayTao { get; set; } = DateTime.Now;
+
+        public DateTime? NgayGiaoHang { get; set; }
+
+        public DateTime? NgayCapNhat { get; set; }
+
+        public DateTime? NgayHuy { get; set; }
+
         public string LyDoHuy { get; set; }
 
-        // Thêm trường để theo dõi việc buyer đã xác nhận nhận hàng hay chưa
-        public bool DaXacNhanNhanHang { get; set; }
+        public string GhiChu { get; set; }
 
-        // Thêm trường để theo dõi việc đã giải ngân cho seller hay chưa
-        public bool DaGiaiNganChoSeller { get; set; }
+        [Required]
+        public bool DaXacNhanNhanHang { get; set; } = false;
 
+        [Required]
+        public bool DaGiaiNganChoSeller { get; set; } = false;
 
+        public bool DaDanhGia { get; set; } = false;
+
+        // Navigation properties
         public virtual NguoiDung NguoiDung { get; set; }
         public virtual NguoiBan NguoiBan { get; set; }
         public virtual ICollection<ChiTietDonHang> ChiTietDonHangs { get; set; }
-        public virtual ICollection<GiaoDich> GiaoDiches { get; set; }
+        public virtual ICollection<GiaoDich> GiaoDichs { get; set; }
+        public virtual ICollection<KhuyenMaiDonHang> KhuyenMaiDonHangs { get; set; }
+        public virtual ICollection<DanhGiaSanPham> DanhGiaSanPhams { get; set; }
+        public virtual ICollection<Escrow> Escrows { get; set; }
+        public virtual ICollection<LichSuGiaoDichVi> LichSuGiaoDichVis { get; set; }
+        public virtual ICollection<ThongTinHoanTien> ThongTinHoanTiens { get; set; }
+        public virtual ICollection<HangDoiHoanTienVNPay> HangDoiHoanTienVNPays { get; set; }
     }
 
 }

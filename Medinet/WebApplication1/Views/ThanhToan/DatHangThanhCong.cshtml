@@ -86,6 +86,11 @@
         color: #ffc107;
     }
 
+    .payment-waiting {
+        font-weight: bold;
+        color: #17a2b8;
+    }
+
     .order-items {
         margin-top: 15px;
     }
@@ -115,6 +120,70 @@
     .marketplace-title {
         font-weight: bold;
         margin-bottom: 10px;
+    }
+
+    .track-delivery {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+    }
+
+    .track-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+    }
+
+    .step-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
+        font-size: 20px;
+        position: relative;
+    }
+
+        .step-icon.active {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .step-icon.waiting {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+    .step-line {
+        position: absolute;
+        top: 50%;
+        height: 2px;
+        background-color: #dee2e6;
+        width: 100%;
+        right: 50%;
+        z-index: -1;
+    }
+
+    .step-text {
+        font-size: 12px;
+        text-align: center;
+    }
+
+    .step-icon.first .step-line {
+        display: none;
+    }
+
+    .vnpay-action {
+        margin-top: 15px;
+        padding: 10px;
+        background-color: #fff3cd;
+        border-radius: 4px;
     }
 </style>
 
@@ -180,7 +249,11 @@
                             {
                                 <span class="payment-success">@Model.First().TrangThaiDonHang</span>
                             }
-                            else if (Model.First().TrangThaiDonHang == "Chờ xác nhận")
+                            else if (Model.First().TrangThaiDonHang == "Chờ thanh toán")
+                            {
+                                <span class="payment-waiting">@Model.First().TrangThaiDonHang</span>
+                            }
+                            else if (Model.First().TrangThaiDonHang == "Đang chờ xử lý")
                             {
                                 <span class="payment-pending">@Model.First().TrangThaiDonHang</span>
                             }
@@ -189,14 +262,60 @@
                                 <span>@Model.First().TrangThaiDonHang</span>
                             }
                         </div>
-                        @if (Model.First().PhuongThucThanhToan == "VNPAY" && Model.First().TrangThaiDonHang != "Đã thanh toán")
-                        {
-                            <div class="order-detail">
-                                <a href="@Url.Action("ThanhToanVNPay", "ThanhToan", new { maDonHang = Model.First().MaDonHang })" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-credit-card"></i> Tiếp tục thanh toán
-                                </a>
-                            </div>
-                        }
+                    </div>
+                </div>
+
+                @if (Model.First().PhuongThucThanhToan == "VNPAY" && Model.First().TrangThaiDonHang == "Chờ thanh toán")
+                {
+                    <div class="vnpay-action">
+                        <div class="alert alert-warning mb-2">
+                            <i class="fas fa-exclamation-circle"></i> Bạn chưa hoàn tất thanh toán qua VNPAY
+                        </div>
+                        <a href="@Url.Action("ThanhToanVNPay", "ThanhToan", new { maDonHang = Model.First().MaDonHang })" class="btn btn-primary">
+                            <i class="fas fa-credit-card"></i> Tiếp tục thanh toán
+                        </a>
+                    </div>
+                }
+
+                <!-- Trạng thái đơn hàng -->
+                <div class="track-delivery">
+                    <div class="track-step">
+                        <div class="step-icon active first">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="step-text">Đặt hàng</div>
+                    </div>
+
+                    <div class="track-step">
+                        <div class="step-icon @(Model.First().TrangThaiDonHang == "Đã thanh toán" || Model.First().PhuongThucThanhToan == "COD" ? "active" : "waiting")">
+                            <div class="step-line"></div>
+                            <i class="fas @(Model.First().TrangThaiDonHang == "Đã thanh toán" ? "fa-check" : (Model.First().PhuongThucThanhToan == "COD" ? "fa-check" : "fa-clock"))"></i>
+                        </div>
+                        <div class="step-text">@(Model.First().PhuongThucThanhToan == "COD" ? "COD" : "Thanh toán")</div>
+                    </div>
+
+                    <div class="track-step">
+                        <div class="step-icon">
+                            <div class="step-line"></div>
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div class="step-text">Đóng gói</div>
+                    </div>
+
+                    <div class="track-step">
+                        <div class="step-icon">
+                            <div class="step-line"></div>
+                            <i class="fas fa-shipping-fast"></i>
+                        </div>
+                        <div class="step-text">Vận chuyển</div>
+                    </div>
+
+                    <div class="track-step">
+                        <div class="step-icon">
+                            <div class="step-line"></div>
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <div class="step-text">Đã giao</div>
                     </div>
                 </div>
 
@@ -226,9 +345,13 @@
                                         {
                                             <span class="badge bg-success">Đã thanh toán</span>
                                         }
-                                        else if (order.TrangThaiDonHang == "Chờ xác nhận")
+                                        else if (order.TrangThaiDonHang == "Chờ thanh toán")
                                         {
-                                            <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                                            <span class="badge bg-info">Chờ thanh toán</span>
+                                        }
+                                        else if (order.TrangThaiDonHang == "Đang chờ xử lý")
+                                        {
+                                            <span class="badge bg-warning text-dark">Đang chờ xử lý</span>
                                         }
                                         else
                                         {

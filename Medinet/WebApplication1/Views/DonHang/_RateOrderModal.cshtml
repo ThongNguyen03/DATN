@@ -1,0 +1,161 @@
+﻿@model WebApplication1.Models.DonHang
+
+<style>
+    /* Style cho rating */
+    .rating-container {
+        margin: 10px 0;
+    }
+
+    .rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-start;
+    }
+
+        .rating input {
+            display: none;
+        }
+
+        .rating label {
+            cursor: pointer;
+            font-size: 30px;
+            color: #ddd;
+            margin-right: 5px;
+        }
+
+        .rating input:checked ~ label {
+            color: #ffc107;
+        }
+
+        .rating label:hover,
+        .rating label:hover ~ label {
+            color: #ffc107;
+        }
+</style>
+<!-- Modal Đánh giá đơn hàng -->
+<div class="modal fade" id="danhGiaModal" tabindex="-1" aria-labelledby="danhGiaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="@Url.Action("DanhGiaDonHang", "DonHang", new { id = Model.MaDonHang })" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="danhGiaModalLabel">Đánh giá đơn hàng #@Model.MaDonHang</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <label class="form-label d-block">Đánh giá của bạn <span class="text-danger">*</span></label>
+                        <div class="rating-container">
+                            <div class="rating">
+                                <input type="radio" id="star5" name="soDiem" value="5" required />
+                                <label for="star5" title="Xuất sắc"><i class="bi bi-star-fill"></i></label>
+
+                                <input type="radio" id="star4" name="soDiem" value="4" />
+                                <label for="star4" title="Tốt"><i class="bi bi-star-fill"></i></label>
+
+                                <input type="radio" id="star3" name="soDiem" value="3" />
+                                <label for="star3" title="Bình thường"><i class="bi bi-star-fill"></i></label>
+
+                                <input type="radio" id="star2" name="soDiem" value="2" />
+                                <label for="star2" title="Không tốt"><i class="bi bi-star-fill"></i></label>
+
+                                <input type="radio" id="star1" name="soDiem" value="1" />
+                                <label for="star1" title="Rất tệ"><i class="bi bi-star-fill"></i></label>
+                            </div>
+                            <div class="rating-text small text-muted mt-2">Chọn số sao để đánh giá</div>
+                        </div>
+                    </div>
+
+                    <!-- Hiển thị sản phẩm đã mua -->
+                    <div class="mb-4">
+                        <h6>Sản phẩm đã mua:</h6>
+                        <div class="order-products">
+                            @foreach (var item in Model.ChiTietDonHangs)
+                            {
+                                <div class="product-item d-flex align-items-center p-2 border-bottom">
+                                    <img src="@(item.SanPham.AnhSanPhams.FirstOrDefault()?.DuongDanAnh ?? "/Content/images/no-image.png")"
+                                         alt="@item.SanPham.TenSanPham" class="img-thumbnail me-3"
+                                         style="width: 40px; height: 40px; object-fit: cover;" />
+                                    <div>
+                                        <p class="mb-0 small">@item.SanPham.TenSanPham</p>
+                                        <p class="mb-0 text-muted small">SL: @item.SoLuong</p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="noiDungDanhGia" class="form-label">Nội dung đánh giá <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="noiDungDanhGia" name="noiDungDanhGia" rows="4"
+                                  placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm và dịch vụ..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .rating-container {
+        margin: 10px 0;
+    }
+
+    .rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-start;
+    }
+
+        .rating input {
+            display: none;
+        }
+
+        .rating label {
+            cursor: pointer;
+            font-size: 30px;
+            color: #ddd;
+            margin-right: 5px;
+        }
+
+        .rating input:checked ~ label {
+            color: #ffc107;
+        }
+
+        .rating label:hover,
+        .rating label:hover ~ label {
+            color: #ffc107;
+        }
+
+    .order-products {
+        max-height: 150px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Hiển thị text tương ứng với số sao
+        const ratingInputs = document.querySelectorAll('.rating input');
+        const ratingText = document.querySelector('.rating-text');
+        const ratingLabels = {
+            1: 'Rất tệ',
+            2: 'Không tốt',
+            3: 'Bình thường',
+            4: 'Tốt',
+            5: 'Xuất sắc'
+        };
+
+        ratingInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                ratingText.textContent = ratingLabels[this.value];
+            });
+        });
+    });
+</script>

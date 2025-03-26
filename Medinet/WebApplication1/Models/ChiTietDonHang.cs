@@ -8,19 +8,31 @@ using System.Web;
 namespace WebApplication1.Models
 {
     [Table("ChiTietDonHang")]
-    public partial class ChiTietDonHang
+    public class ChiTietDonHang
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int MaChiTietDonHang { get; set; }
+
+        [Required]
+        [ForeignKey("DonHang")]
         public int MaDonHang { get; set; }
+
+        [Required]
+        [ForeignKey("SanPham")]
         public int MaSanPham { get; set; }
+
+        [Required]
         public int SoLuong { get; set; }
+
+        [Required]
+      //  [Column(TypeName = "decimal(10,2)")]
         public decimal Gia { get; set; }
 
-        // Quan hệ với Đơn Hàng và Sản Phẩm
+        // Navigation properties
         public virtual DonHang DonHang { get; set; }
         public virtual SanPham SanPham { get; set; }
     }
+
 
 }

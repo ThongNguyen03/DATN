@@ -1,0 +1,58 @@
+﻿@model WebApplication1.Models.DonHang
+
+<!-- Modal Xác nhận nhận hàng -->
+<div class="modal fade" id="xacNhanNhanHangModal" tabindex="-1" aria-labelledby="xacNhanNhanHangModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="@Url.Action("XacNhanNhanHang", "DonHang", new { id = Model.MaDonHang })" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="xacNhanNhanHangModalLabel">Xác nhận đã nhận hàng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info mb-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-info-circle-fill fs-4 me-2"></i>
+                            <strong>Thông tin quan trọng</strong>
+                        </div>
+                        <p class="mb-1">Khi xác nhận đã nhận hàng, bạn xác nhận rằng đơn hàng đã được giao đến bạn thành công và bạn hài lòng với tình trạng hàng hóa.</p>
+                        <p class="mb-0">Việc xác nhận sẽ giải phóng tiền thanh toán cho người bán.</p>
+                    </div>
+
+                    <!-- Thông tin đơn hàng -->
+                    <div class="card mb-4">
+                        <div class="card-body p-3">
+                            <h6 class="card-title">Thông tin đơn hàng #@Model.MaDonHang</h6>
+                            <div class="row">
+                                <div class="col-6">
+                                    <p class="mb-1 small"><strong>Tổng tiền:</strong> @String.Format("{0:N0} VNĐ", Model.TongSoTien)</p>
+                                    <p class="mb-1 small"><strong>Ngày đặt:</strong> @Model.NgayTao.ToString("dd/MM/yyyy")</p>
+                                </div>
+                                <div class="col-6">
+                                    <p class="mb-1 small"><strong>Người bán:</strong> @Model.NguoiBan.TenCuaHang</p>
+                                    <p class="mb-1 small"><strong>Số sản phẩm:</strong> @Model.ChiTietDonHangs.Count</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="confirmCheck" required>
+                            <label class="form-check-label" for="confirmCheck">
+                                Tôi xác nhận đã nhận được hàng và kiểm tra trong tình trạng tốt.
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Xác nhận đã nhận hàng
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

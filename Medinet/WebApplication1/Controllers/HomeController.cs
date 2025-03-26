@@ -164,7 +164,7 @@ namespace WebApplication1.Controllers
         public ActionResult ChiTiet(int id)
         {
             var sanPham = db.SanPhams
-                .Include(s => s.DanhSachAnhSanPham)
+                .Include(s => s.AnhSanPhams)
                 .Include(s => s.NguoiBan)
                 .Include(s => s.DanhMucSanPham)
                 .FirstOrDefault(s => s.MaSanPham == id && s.TrangThai == "Đã phê duyệt");

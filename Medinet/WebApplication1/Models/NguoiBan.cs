@@ -9,26 +9,41 @@ using System.ComponentModel.DataAnnotations;
 namespace WebApplication1.Models
 {
     [Table("NguoiBan")]
-    public partial class NguoiBan
+    public class NguoiBan
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int MaNguoiBan { get; set; }
+
+        [Required]
+        [ForeignKey("NguoiDung")]
         public int MaNguoiDung { get; set; }
+
+        [Required]
+        [StringLength(255)]
         public string TenCuaHang { get; set; }
+
         public string MoTaCuaHang { get; set; }
+
         public string DiaChiCuaHang { get; set; }
+
+        [StringLength(20)]
         public string SoDienThoaiCuaHang { get; set; }
-        public DateTime NgayTao { get; set; }
 
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime NgayTao { get; set; } = DateTime.Now;
+
+      //  [Column(TypeName = "decimal(10,2)")]
+        public decimal SoDuVi { get; set; } = 0;
+
+        // Navigation properties
         public virtual NguoiDung NguoiDung { get; set; }
-
-        public virtual ICollection<AnhChungChi> DanhSachChungChi { get; set; }
-
-        public NguoiBan()
-        {
-            DanhSachChungChi = new HashSet<AnhChungChi>();
-        }
+        public virtual ICollection<AnhChungChi> AnhChungChis { get; set; }
+        public virtual ICollection<SanPham> SanPhams { get; set; }
+        public virtual ICollection<DonHang> DonHangs { get; set; }
+        public virtual ICollection<ChuongTrinhKhuyenMai> ChuongTrinhKhuyenMais { get; set; }
+        public virtual ICollection<Escrow> Escrows { get; set; }
+        public virtual ICollection<LichSuGiaoDichVi> LichSuGiaoDichVis { get; set; }
     }
 
 }

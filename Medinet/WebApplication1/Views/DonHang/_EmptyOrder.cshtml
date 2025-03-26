@@ -1,0 +1,28 @@
+﻿<!-- Partial view hiển thị khi không có đơn hàng -->
+<div class="text-center py-5">
+    <div class="empty-cart-container">
+        <i class="bi bi-cart-x fs-1 text-muted mb-3"></i>
+        <h4>Bạn chưa có đơn hàng nào</h4>
+        <p class="text-muted">Hãy khám phá và mua sắm những sản phẩm yêu thích.</p>
+        <a href="@Url.Action("Index", "Home")" class="btn btn-primary mt-2">
+            <i class="bi bi-shop"></i> Mua sắm ngay
+        </a>
+    </div>
+</div>
+
+<style>
+    .empty-cart-container {
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+        .empty-cart-container i {
+            font-size: 80px;
+            color: #d3d3d3;
+        }
+
+        .empty-cart-container h4 {
+            margin: 20px 0 10px;
+        }
+</style>

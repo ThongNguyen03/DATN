@@ -1,0 +1,64 @@
+﻿@model WebApplication1.Models.DonHang
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Sản phẩm đã đặt</h5>
+        <span class="badge bg-primary">@Model.ChiTietDonHangs.Count sản phẩm</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th class="text-end">Đơn giá</th>
+                        <th class="text-center">Số lượng</th>
+                        <th class="text-end">Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.ChiTietDonHangs)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="@(item.SanPham.AnhSanPhams.FirstOrDefault()?.DuongDanAnh ?? "/Content/images/no-image.png")"
+                                         alt="@item.SanPham.TenSanPham" class="img-thumbnail me-3" style="width: 60px; height: 60px; object-fit: cover;" />
+                                    <div>
+                                        <a href="@Url.Action("ChiTiet", "SanPham", new { id = item.MaSanPham })" class="text-decoration-none text-dark">
+                                            <h6 class="mb-1">@item.SanPham.TenSanPham</h6>
+                                        </a>
+                                        @*@if (!string.IsNullOrEmpty(item.GhiChu))
+                                        {
+                                            <small class="text-muted">Ghi chú: @item.GhiChu</small>
+                                        }*@
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-end">@String.Format("{0:N0} VNĐ", item.Gia)</td>
+                            <td class="text-center">@item.SoLuong</td>
+                            <td class="text-end">@String.Format("{0:N0} VNĐ", item.Gia * item.SoLuong)</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <td colspan="3" class="text-end fw-bold">Tổng tiền hàng:</td>
+                        <td class="text-end fw-bold">@String.Format("{0:N0} VNĐ", Model.TongSoTien)</td>
+                    </tr>
+                    @*@if (Model.PhiVanChuyen > 0)
+                    {
+                        <tr>
+                            <td colspan="3" class="text-end">Phí vận chuyển:</td>
+                            <td class="text-end">@String.Format("{0:N0} VNĐ", Model.PhiVanChuyen)</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold">Tổng thanh toán:</td>
+                            <td class="text-end fw-bold text-primary">@String.Format("{0:N0} VNĐ", Model.TongTien + Model.PhiVanChuyen)</td>
+                        </tr>
+                    }*@
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>

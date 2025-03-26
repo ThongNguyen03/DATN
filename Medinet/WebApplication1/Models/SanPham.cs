@@ -8,36 +8,75 @@ using System.Web;
 namespace WebApplication1.Models
 {
     [Table("SanPham")]
-    public partial class SanPham
+    public class SanPham
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int MaSanPham { get; set; }
-        public int MaNguoiBan { get; set; }
-        public int MaDanhMuc { get; set; }
-        public string TenSanPham { get; set; }
-        public string MoTaSanPham { get; set; }
-        public decimal GiaSanPham { get; set; }
-        public int SoLuongTonKho { get; set; }
-        public string TrangThai { get; set; }
-        public int SoLuotMua { get; set; }
-        public string ThuongHieu { get; set; }
-        public int SoLuongMoiHop { get; set; }
-        public string ThanhPhan { get; set; }
-        public string DoiTuongSuDung { get; set; }
-        public string HuongDanSuDung { get; set; }
-        public int KhoiLuong { get; set; }
-        public string BaoQuan { get; set; }
-        public DateTime NgayTao { get; set; }
-        public DateTime NgayCapNhat { get; set; }
 
+        [Required]
+        [ForeignKey("NguoiBan")]
+        public int MaNguoiBan { get; set; }
+
+        [Required]
+        [ForeignKey("DanhMucSanPham")]
+        public int MaDanhMuc { get; set; }
+
+        [Required]
+        [StringLength(255)]
+        public string TenSanPham { get; set; }
+
+        public string MoTaSanPham { get; set; }
+
+        [Required]
+       // [Column(TypeName = "decimal(10,2)")]
+        public decimal GiaSanPham { get; set; }
+
+        [Required]
+        public int SoLuongTonKho { get; set; } = 0;
+
+        [StringLength(20)]
+        public string TrangThai { get; set; } = "Đang chờ xử lý";
+
+        [Required]
+        public int SoLuotMua { get; set; } = 0;
+
+        [Required]
+        [StringLength(255)]
+        public string ThuongHieu { get; set; } = "Khác";
+
+        [Required]
+        public int SoLuongMoiHop { get; set; } = 0;
+
+        [Required]
+        public string ThanhPhan { get; set; }
+
+        [Required]
+        public string DoiTuongSuDung { get; set; }
+
+        [Required]
+        public string HuongDanSuDung { get; set; }
+
+        [Required]
+        public int KhoiLuong { get; set; }
+
+        [Required]
+        public string BaoQuan { get; set; }
+
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime NgayTao { get; set; } = DateTime.Now;
+
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime NgayCapNhat { get; set; } = DateTime.Now;
+
+        // Navigation properties
         public virtual NguoiBan NguoiBan { get; set; }
         public virtual DanhMucSanPham DanhMucSanPham { get; set; }
-        public virtual ICollection<AnhSanPham> DanhSachAnhSanPham { get; set; }
-        public SanPham()
-        {
-            DanhSachAnhSanPham = new HashSet<AnhSanPham>();
-        }
+        public virtual ICollection<AnhSanPham> AnhSanPhams { get; set; }
+        public virtual ICollection<GioHang> GioHangs { get; set; }
+        public virtual ICollection<ChiTietDonHang> ChiTietDonHangs { get; set; }
+        public virtual ICollection<DanhGiaSanPham> DanhGiaSanPhams { get; set; }
+        public virtual ICollection<KhuyenMaiSanPham> KhuyenMaiSanPhams { get; set; }
     }
 
 }

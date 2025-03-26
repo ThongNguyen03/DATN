@@ -19,7 +19,7 @@ namespace WebApplication1.Controllers
 
         #region Người Mua
         // GET: DonHang/DonHangCuaToi - Cho người mua
-        public ActionResult DonHangCuaToi()
+        public ActionResult DonHangCuaToi(string trangThai, string ngayDat, string sapXep)
         {
             try
             {
@@ -29,19 +29,65 @@ namespace WebApplication1.Controllers
                     return RedirectToAction("DangNhap", "DangNhap");
                 }
 
+                // Lấy thông tin người dùng để hiển thị trong sidebar
+                var nguoiDung = db.NguoiDungs.Find(maNguoiDung);
+                if (nguoiDung != null)
+                {
+                    ViewBag.HoTen = nguoiDung.TenNguoiDung;
+                    ViewBag.AnhDaiDien = nguoiDung.AnhDaiDien;
+                }
+
                 // Lấy danh sách đơn hàng của người dùng
-                var donHangs = db.DonHangs
+                var query = db.DonHangs
+                    .Where(d => d.MaNguoiDung == maNguoiDung);
+
+                // Lọc theo trạng thái
+                if (!string.IsNullOrEmpty(trangThai))
+                {
+                    query = query.Where(d => d.TrangThaiDonHang == trangThai);
+                    ViewBag.TrangThai = trangThai;
+                }
+
+                // Lọc theo ngày đặt
+                if (!string.IsNullOrEmpty(ngayDat) && int.TryParse(ngayDat, out int soNgay))
+                {
+                    var ngayBatDau = DateTime.Now.AddDays(-soNgay);
+                    query = query.Where(d => d.NgayTao >= ngayBatDau);
+                    ViewBag.NgayDat = ngayDat;
+                }
+
+                // Sắp xếp
+                switch (sapXep)
+                {
+                    case "cu-nhat":
+                        query = query.OrderBy(d => d.NgayTao);
+                        break;
+                    case "gia-cao":
+                        query = query.OrderByDescending(d => d.TongSoTien);
+                        break;
+                    case "gia-thap":
+                        query = query.OrderBy(d => d.TongSoTien);
+                        break;
+                    default: // moi-nhat là mặc định
+                        query = query.OrderByDescending(d => d.NgayTao);
+                        break;
+                }
+                ViewBag.SapXep = string.IsNullOrEmpty(sapXep) ? "moi-nhat" : sapXep;
+
+                // Thực hiện truy vấn và Include các đối tượng liên quan sau khi đã lọc và sắp xếp
+                var donHangs = query
                     .Include(d => d.NguoiBan)
                     .Include(d => d.ChiTietDonHangs)
                     .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham))
-                    .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham.DanhSachAnhSanPham))
-                    .Where(d => d.MaNguoiDung == maNguoiDung)
-                    .OrderByDescending(d => d.NgayTao)
+                    .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham.AnhSanPhams))
                     .ToList();
+
+                // Lấy danh sách mã đơn hàng
+                var maDonHangs = donHangs.Select(d => d.MaDonHang).ToList();
 
                 // Lấy thông tin escrow
                 var escrows = db.Escrows
-                    .Where(e => donHangs.Select(d => d.MaDonHang).Contains(e.MaDonHang))
+                    .Where(e => maDonHangs.Contains(e.MaDonHang))
                     .ToList();
 
                 ViewBag.Escrows = escrows;
@@ -66,7 +112,7 @@ namespace WebApplication1.Controllers
                     .Include(d => d.NguoiDung)
                     .Include(d => d.ChiTietDonHangs)
                     .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham))
-                    .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham.DanhSachAnhSanPham))
+                    .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham.AnhSanPhams))
                     .FirstOrDefault(d => d.MaDonHang == id);
 
                 if (donHang == null)
@@ -241,29 +287,29 @@ namespace WebApplication1.Controllers
                     return RedirectToAction("ChiTiet", new { id = id });
                 }
 
-                //// Kiểm tra xem đã đánh giá trước đó chưa
-                //if (donHang.DaDanhGia)
-                //{
-                //    TempData["Error"] = "Bạn đã đánh giá đơn hàng này rồi!";
-                //    return RedirectToAction("ChiTiet", new { id = id });
-                //}
+                // Kiểm tra xem đã đánh giá trước đó chưa
+                if (donHang.DaDanhGia)
+                {
+                    TempData["Error"] = "Bạn đã đánh giá đơn hàng này rồi!";
+                    return RedirectToAction("ChiTiet", new { id = id });
+                }
 
-                //// Tạo đánh giá mới
-                //var danhGia = new DanhGia
-                //{
-                //    MaDonHang = id,
-                //    MaNguoiDung = maNguoiDung,
-                //    MaNguoiBan = donHang.MaNguoiBan,
-                //    SoDiem = soDiem,
-                //    NoiDung = noiDungDanhGia,
-                //    NgayTao = DateTime.Now
-                //};
+                // Tạo đánh giá mới
+                var danhGia = new DanhGiaSanPham
+                {
+                    MaDonHang = id,
+                    MaNguoiDung = maNguoiDung,
+                    MaNguoiBan = donHang.MaNguoiBan,
+                    DanhGia = soDiem,
+                    BinhLuan = noiDungDanhGia,
+                    NgayTao = DateTime.Now
+                };
 
-                //db.DanhGias.Add(danhGia);
+                db.DanhGiaSanPhams.Add(danhGia);
 
-                //// Cập nhật trạng thái đã đánh giá cho đơn hàng
-                //donHang.DaDanhGia = true;
-                //donHang.NgayCapNhat = DateTime.Now;
+                // Cập nhật trạng thái đã đánh giá cho đơn hàng
+                donHang.DaDanhGia = true;
+                donHang.NgayCapNhat = DateTime.Now;
                 db.Entry(donHang).State = EntityState.Modified;
 
                 db.SaveChanges();
@@ -279,6 +325,8 @@ namespace WebApplication1.Controllers
             }
         }
         #endregion
+
+
 
         #region Người Bán
         // GET: DonHang/DonHangNguoiMua - Cho người bán
@@ -305,7 +353,7 @@ namespace WebApplication1.Controllers
                     .Include(d => d.NguoiDung)
                     .Include(d => d.ChiTietDonHangs)
                     .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham))
-                    .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham.DanhSachAnhSanPham))
+                    .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham.AnhSanPhams))
                     .Where(d => d.MaNguoiBan == nguoiBan.MaNguoiBan)
                     .OrderByDescending(d => d.NgayTao)
                     .ToList();
@@ -350,7 +398,7 @@ namespace WebApplication1.Controllers
                     .Include(d => d.NguoiDung)
                     .Include(d => d.ChiTietDonHangs)
                     .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham))
-                    .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham.DanhSachAnhSanPham))
+                    .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham.AnhSanPhams))
                     .FirstOrDefault(d => d.MaDonHang == id && d.MaNguoiBan == nguoiBan.MaNguoiBan);
 
                 if (donHang == null)
@@ -508,6 +556,9 @@ namespace WebApplication1.Controllers
         }
         #endregion
 
+
+
+
         #region Admin
         // GET: DonHang/QuanLyDonHang - Cho Admin
         [Authorize(Roles = "Admin")]
@@ -603,7 +654,7 @@ namespace WebApplication1.Controllers
                     .Include(d => d.NguoiDung)
                     .Include(d => d.ChiTietDonHangs)
                     .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham))
-                    .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham.DanhSachAnhSanPham))
+                    .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham.AnhSanPhams))
                     .FirstOrDefault(d => d.MaDonHang == id);
 
                 if (donHang == null)

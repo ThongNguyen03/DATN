@@ -7,41 +7,46 @@ using System.Web;
 
 namespace WebApplication1.Models
 {
-    // Thêm mô hình Escrow (ký quỹ) vào Models
-
+    [Table("Escrow")]
     public class Escrow
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int MaKyQuy { get; set; }
 
         [Required]
+        [ForeignKey("DonHang")]
         public int MaDonHang { get; set; }
 
         [Required]
+        [ForeignKey("NguoiBan")]
         public int MaNguoiBan { get; set; }
 
         [Required]
+        //[Column(TypeName = "decimal(10,2)")]
         public decimal TongTien { get; set; }
 
         [Required]
-        public decimal PhiNenTang { get; set; } // Phí nền tảng (10%)
+        //[Column(TypeName = "decimal(10,2)")]
+        public decimal PhiNenTang { get; set; }
 
         [Required]
-        public decimal TienChuyenChoNguoiBan { get; set; } // Số tiền sau khi trừ phí
+        //[Column(TypeName = "decimal(10,2)")]
+        public decimal TienChuyenChoNguoiBan { get; set; }
 
         [Required]
-        [StringLength(50)]
-        public string TrangThai { get; set; } // "Đang giữ", "Đã giải ngân", "Đã hoàn tiền"
+        [StringLength(20)]
+        public string TrangThai { get; set; }
 
-        public DateTime NgayTao { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime NgayTao { get; set; } = DateTime.Now;
 
         public DateTime? NgayGiaiNgan { get; set; }
 
-        // Khóa ngoại
-        [ForeignKey("MaDonHang")]
+        // Navigation properties
         public virtual DonHang DonHang { get; set; }
-
-        [ForeignKey("MaNguoiBan")]
         public virtual NguoiBan NguoiBan { get; set; }
     }
+
+
 }

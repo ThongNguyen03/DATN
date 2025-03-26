@@ -2,410 +2,237 @@
 @{
     ViewBag.Title = "Chi tiết đơn hàng #" + Model.MaDonHang;
     Layout = "~/Views/Shared/_Layout.cshtml";
-
     var escrow = ViewBag.Escrow as WebApplication1.Models.Escrow;
 }
 
-<style>
-    .order-container {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 20px;
-    }
-
-    .order-section {
-        background-color: #fff;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-
-    .order-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-bottom: 15px;
-        border-bottom: 1px solid #eee;
-        margin-bottom: 15px;
-    }
-
-    .order-id {
-        font-size: 20px;
-        font-weight: bold;
-    }
-
-    .order-status {
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-weight: bold;
-    }
-
-    .status-waiting {
-        background-color: #fff3cd;
-        color: #856404;
-    }
-
-    .status-processing {
-        background-color: #cce5ff;
-        color: #004085;
-    }
-
-    .status-delivered {
-        background-color: #d4edda;
-        color: #155724;
-    }
-
-    .status-completed {
-        background-color: #d1e7dd;
-        color: #0f5132;
-    }
-
-    .status-cancelled {
-        background-color: #f8d7da;
-        color: #721c24;
-    }
-
-    .order-info-row {
-        margin-bottom: 10px;
-    }
-
-    .order-info-label {
-        font-weight: bold;
-        color: #555;
-    }
-
-    .order-items {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-        .order-items th {
-            background-color: #f8f9fa;
-            text-align: left;
-            padding: 12px;
-        }
-
-        .order-items td {
-            padding: 12px;
-            border-top: 1px solid #dee2e6;
-        }
-
-    .product-image {
-        width: 70px;
-        height: 70px;
-        object-fit: cover;
-        border-radius: 4px;
-    }
-
-    .product-name {
-        font-weight: 500;
-    }
-
-    .order-total {
-        margin-top: 20px;
-        border-top: 1px solid #dee2e6;
-        padding-top: 15px;
-    }
-
-    .total-row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 8px;
-    }
-
-    .final-total {
-        font-weight: bold;
-        font-size: 18px;
-        color: #dc3545;
-    }
-
-    .action-buttons {
-        margin-top: 20px;
-        display: flex;
-        justify-content: flex-end;
-    }
-
-    .btn-confirm-received {
-        background-color: #28a745;
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-        .btn-confirm-received:hover {
-            background-color: #218838;
-        }
-
-    .escrow-info {
-        background-color: #e7f3ff;
-        border-radius: 8px;
-        padding: 15px;
-        margin-top: 20px;
-    }
-
-    .escrow-title {
-        font-weight: bold;
-        margin-bottom: 10px;
-    }
-
-    .escrow-detail {
-        margin-bottom: 10px;
-    }
-
-    .escrow-status {
-        display: inline-block;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 14px;
-    }
-
-    .escrow-holding {
-        background-color: #fff3cd;
-        color: #856404;
-    }
-
-    .escrow-released {
-        background-color: #d1e7dd;
-        color: #0f5132;
-    }
-
-    .escrow-refunded {
-        background-color: #f8d7da;
-        color: #721c24;
-    }
-
-    .marketplace-notice {
-        background-color: #f8f9fa;
-        border-left: 4px solid #007bff;
-        padding: 10px 15px;
-        margin-top: 15px;
-    }
-</style>
-
-<div class="order-container">
-    <h2 class="mb-4">Chi tiết đơn hàng</h2>
+<div class="container mt-4">
+    <div class="mb-3">
+        <a href="@Url.Action("DonHangCuaToi")" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Quay lại
+        </a>
+    </div>
 
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success">
-            <i class="fas fa-check-circle"></i> @TempData["Success"]
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger">
-            <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
     @if (TempData["Warning"] != null)
     {
-        <div class="alert alert-warning">
-            <i class="fas fa-exclamation-triangle"></i> @TempData["Warning"]
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            @TempData["Warning"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
-    <div class="order-section">
-        <div class="order-header">
-            <div class="order-id">Đơn hàng #@Model.MaDonHang</div>
-            <div class="order-status
-                @(Model.TrangThaiDonHang == "Đang chờ xử lý" ? "status-waiting" : "")
-                @(Model.TrangThaiDonHang == "Đã vận chuyển" ? "status-processing" : "")
-                @(Model.TrangThaiDonHang == "Đã giao" ? "status-delivered" : "")
-                @(Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" ? "status-completed" : "")
-                @(Model.TrangThaiDonHang == "Đã hủy" ? "status-cancelled" : "")">
-                @Model.TrangThaiDonHang
+    <!-- Hiển thị tiến trình đơn hàng -->
+    @Html.Partial("_TrackingProgress", Model)
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Hiển thị danh sách sản phẩm trong đơn hàng -->
+            @Html.Partial("_OrderItems", Model)
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Thông tin người nhận</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Họ tên:</span>
+                                    <span class="fw-bold">@Model.NguoiDung.TenNguoiDung</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Số điện thoại:</span>
+                                    <span>@Model.NguoiDung.SoDienThoai</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Địa chỉ:</span>
+                                    <span>@Model.NguoiDung.DiaChi</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Ghi chú:</span>
+                                    <span>@(string.IsNullOrEmpty(Model.GhiChu) ? "Không có" : Model.GhiChu)</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            @if (!string.IsNullOrEmpty(Model.LyDoHuy))
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">Lý do hủy đơn hàng</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">@Model.LyDoHuy</p>
+                        <text class="text-muted small mb-0">Vào ngày @Model.NgayHuy.Value.ToString("dd/MM/yyyy HH:mm")</text>
+                    </div>
+                </div>
+            }
         </div>
 
-        <div class="row">
-            <div class="col-md-6">
-                <div class="order-info-row">
-                    <div class="order-info-label">Ngày đặt hàng:</div>
-                    <div>@Model.NgayTao.ToString("dd/MM/yyyy HH:mm")</div>
+        <div class="col-md-4">
+            <!-- Hiển thị tóm tắt đơn hàng -->
+            @Html.Partial("_OrderSummary", Model)
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Thông tin người bán</h5>
                 </div>
-                <div class="order-info-row">
-                    <div class="order-info-label">Cửa hàng:</div>
-                    <div>@(Model.NguoiBan != null ? Model.NguoiBan.TenCuaHang : "Medinet Shop")</div>
-                </div>
-                <div class="order-info-row">
-                    <div class="order-info-label">Phương thức thanh toán:</div>
-                    <div>
-                        @if (Model.PhuongThucThanhToan == "COD")
-                        {
-                            <span>Thanh toán khi nhận hàng (COD)</span>
-                        }
-                        else if (Model.PhuongThucThanhToan == "VNPAY")
-                        {
-                            <span>Thanh toán qua VNPAY</span>
-                        }
-                        else
-                        {
-                            <span>@Model.PhuongThucThanhToan</span>
-                        }
-                    </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between px-0">
+                            <span>Tên shop:</span>
+                            <span>@Model.NguoiBan.TenCuaHang</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0">
+                            <span>Email:</span>
+                            <span>@Model.NguoiBan.NguoiDung.Email</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0">
+                            <span>Số điện thoại:</span>
+                            <span>@Model.NguoiBan.SoDienThoaiCuaHang</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0">
+                            <span>Địa chỉ:</span>
+                            <span>@Model.NguoiBan.DiaChiCuaHang</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
-            <div class="col-md-6">
-                @if (Model.NguoiDung != null)
-                {
-                    <div class="order-info-row">
-                        <div class="order-info-label">Người đặt hàng:</div>
-                        <div>@Model.NguoiDung.TenNguoiDung</div>
-                    </div>
-                    <div class="order-info-row">
-                        <div class="order-info-label">Địa chỉ giao hàng:</div>
-                        <div>@Model.NguoiDung.DiaChi</div>
-                    </div>
-                    <div class="order-info-row">
-                        <div class="order-info-label">Số điện thoại:</div>
-                        <div>@Model.NguoiDung.SoDienThoai</div>
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-
-    <div class="order-section">
-        <h4>Sản phẩm</h4>
-        <table class="order-items">
-            <thead>
-                <tr>
-                    <th width="80px">Ảnh</th>
-                    <th>Sản phẩm</th>
-                    <th class="text-center">Số lượng</th>
-                    <th class="text-end">Đơn giá</th>
-                    <th class="text-end">Thành tiền</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model.ChiTietDonHangs != null && Model.ChiTietDonHangs.Any())
-                {
-                    foreach (var item in Model.ChiTietDonHangs)
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Thao tác</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.TrangThaiDonHang == "Đang chờ xử lý" )
                     {
-                        <tr>
-                            <td>
-                                @{
-                                    string anhSanPham = "/Content/Images/default-product.jpg";
-                                    if (item.SanPham != null && item.SanPham.DanhSachAnhSanPham != null && item.SanPham.DanhSachAnhSanPham.Any())
-                                    {
-                                        anhSanPham = item.SanPham.DanhSachAnhSanPham.First().DuongDanAnh;
-                                    }
-                                }
-                                <img src="@Url.Content(anhSanPham)" alt="@(item.SanPham?.TenSanPham ?? "Sản phẩm")" class="product-image">
-                            </td>
-                            <td>
-                                <div class="product-name">@(item.SanPham?.TenSanPham ?? "Sản phẩm không còn tồn tại")</div>
-                            </td>
-                            <td class="text-center">@item.SoLuong</td>
-                            <td class="text-end">@string.Format("{0:N0}đ", item.Gia)</td>
-                            <td class="text-end">@string.Format("{0:N0}đ", item.SoLuong * item.Gia)</td>
-                        </tr>
-                    }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="5" class="text-center">Không có thông tin chi tiết sản phẩm</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-
-        <div class="order-total">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="marketplace-notice">
-                        <i class="fas fa-info-circle"></i> <strong>Lưu ý:</strong> Khi bạn nhận được hàng và kiểm tra hàng đúng như mô tả, vui lòng xác nhận đã nhận hàng để hoàn tất đơn hàng và giải ngân thanh toán cho người bán.
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="total-row">
-                        <div>Tổng tiền hàng:</div>
-                        <div>@string.Format("{0:N0}đ", Model.TongSoTien)</div>
-                    </div>
-                    <div class="total-row">
-                        <div>Phí vận chuyển:</div>
-                        <div>0đ</div>
-                    </div>
-                    <div class="total-row final-total">
-                        <div>Tổng thanh toán:</div>
-                        <div>@string.Format("{0:N0}đ", Model.TongSoTien)</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Thông tin Escrow (nếu có) -->
-        @if (escrow != null)
-        {
-            <div class="escrow-info">
-                <div class="escrow-title">
-                    <i class="fas fa-shield-alt"></i> Thông tin bảo vệ thanh toán
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="escrow-detail">
-                            <strong>Trạng thái:</strong>
-                            <span class="escrow-status
-                                 @(escrow.TrangThai == "Đang giữ" ? "escrow-holding" : "")
-                                 @(escrow.TrangThai == "Đã giải ngân" ? "escrow-released" : "")
-                                 @(escrow.TrangThai == "Đã hoàn tiền" ? "escrow-refunded" : "")">
-                                @escrow.TrangThai
-                            </span>
-                        </div>
-                        <div class="escrow-detail">
-                            <strong>Số tiền:</strong> @string.Format("{0:N0}đ", escrow.TongTien)
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="escrow-detail">
-                            <strong>Ngày tạo:</strong> @escrow.NgayTao.ToString("dd/MM/yyyy HH:mm")
-                        </div>
-                        @if (escrow.NgayGiaiNgan.HasValue)
-                        {
-                            <div class="escrow-detail">
-                                <strong>Ngày giải ngân:</strong> @escrow.NgayGiaiNgan.Value.ToString("dd/MM/yyyy HH:mm")
-                            </div>
-                        }
-                    </div>
-                </div>
-            </div>
-        }
-    </div>
-
-    <!-- Hành động -->
-    <div class="order-section">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <a href="@Url.Action("DonHangCuaToi", "NguoiDungs")" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left"></i> Quay lại danh sách đơn hàng
-                </a>
-            </div>
-
-            <div class="action-buttons">
-                @if (Model.TrangThaiDonHang == "Đã vận chuyển" || Model.TrangThaiDonHang == "Đã giao")
-                {
-                    using (Html.BeginForm("XacNhanNhanHang", "DonHang", new { id = Model.MaDonHang }, FormMethod.Post))
-                    {
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-confirm-received" onclick="return confirm('Bạn xác nhận đã nhận được hàng?');">
-                            <i class="fas fa-check"></i> Xác nhận đã nhận hàng
+                        <button type="button" class="btn btn-danger w-100 mb-3" data-bs-toggle="modal" data-bs-target="#huyDonHangModal">
+                            <i class="bi bi-x-circle"></i> Hủy đơn hàng
                         </button>
                     }
-                }
-                else if (Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành")
-                {
-                    <div class="text-success">
-                        <i class="fas fa-check-circle"></i> Đơn hàng đã được xác nhận nhận hàng
-                    </div>
-                }
+
+                    @if (Model.TrangThaiDonHang == "Đã giao" || Model.TrangThaiDonHang == "Đã vận chuyển")
+                    {
+                        <button type="button" class="btn btn-success w-100 mb-3" data-bs-toggle="modal" data-bs-target="#xacNhanNhanHangModal">
+                            <i class="bi bi-check-circle"></i> Xác nhận đã nhận hàng
+                        </button>
+                    }
+
+                    @if ((Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" ||
+                          Model.TrangThaiDonHang == "Đã hoàn thành") &&
+                          !Model.DaDanhGia)
+                    {
+                        <button type="button" class="btn btn-primary w-100 mb-3" data-bs-toggle="modal" data-bs-target="#danhGiaModal">
+                            <i class="bi bi-star"></i> Đánh giá đơn hàng
+                        </button>
+                    }
+
+                    @if (Model.DaDanhGia)
+                    {
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-check-circle"></i> Bạn đã đánh giá đơn hàng này.
+                        </div>
+                    }
+
+                    <a href="#" class="btn btn-outline-primary w-100 mt-2" onclick="printInvoice(); return false;">
+                        <i class="bi bi-printer"></i> In hóa đơn
+                    </a>
+                </div>
             </div>
+
+            @*@if (escrow != null)
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Thông tin escrow</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span>Mã escrow:</span>
+                                <span>@escrow.MaKyQuy</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span>Trạng thái:</span>
+                                <span>@escrow.TrangThai</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span>Số tiền:</span>
+                                <span>@String.Format("{0:N0} VNĐ", escrow.TongTien)</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span>Ngày tạo:</span>
+                                <span>@escrow.NgayTao.ToString("dd/MM/yyyy HH:mm")</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            }*@
         </div>
     </div>
 </div>
+
+<!-- Thêm các modal -->
+@Html.Partial("_CancelOrderModal", Model)
+@Html.Partial("_ConfirmReceivedModal", Model)
+@Html.Partial("_RateOrderModal", Model)
+
+<!-- Phần hóa đơn in ẩn -->
+<div id="invoiceContainer" style="display: none;">
+    @Html.Partial("_Invoice", Model)
+</div>
+
+<script>
+    function printInvoice() {
+        var printContent = document.getElementById("invoiceContainer").innerHTML;
+        var originalContent = document.body.innerHTML;
+
+        document.body.innerHTML = printContent;
+        window.print();
+        document.body.innerHTML = originalContent;
+
+        // Khởi tạo lại các thành phần JavaScript sau khi in
+        initializeComponents();
+    }
+
+    function initializeComponents() {
+        // Kích hoạt các tooltip
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+
+        // Khởi tạo lại các modal nếu cần
+        var modalElements = document.querySelectorAll('.modal');
+        modalElements.forEach(function (modalEl) {
+            new bootstrap.Modal(modalEl);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        initializeComponents();
+    });
+</script>

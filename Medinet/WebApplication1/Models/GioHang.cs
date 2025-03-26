@@ -9,18 +9,30 @@ using System.ComponentModel.DataAnnotations;
 namespace WebApplication1.Models
 {
     [Table("GioHang")]
-    public partial class GioHang
+    public class GioHang
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int MaGioHang { get; set; }
-        public int MaNguoiDung { get; set; }
-        public int MaSanPham { get; set; }
-        public int SoLuong { get; set; }
-        public DateTime NgayTao { get; set; }
 
+        [Required]
+        [ForeignKey("NguoiDung")]
+        public int MaNguoiDung { get; set; }
+
+        [Required]
+        [ForeignKey("SanPham")]
+        public int MaSanPham { get; set; }
+
+        [Required]
+        public int SoLuong { get; set; }
+
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime NgayTao { get; set; } = DateTime.Now;
+
+        // Navigation properties
         public virtual NguoiDung NguoiDung { get; set; }
         public virtual SanPham SanPham { get; set; }
     }
+
 
 }
