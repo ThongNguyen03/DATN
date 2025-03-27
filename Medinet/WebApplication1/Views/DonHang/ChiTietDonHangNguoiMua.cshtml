@@ -1,0 +1,532 @@
+﻿@model WebApplication1.Models.DonHang
+@{
+    ViewBag.Title = "Chi tiết đơn hàng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Custom styles for tabs and sidebar */
+    .seller-sidebar {
+        background-color: #ffffff;
+        border: 1px solid #e9ecef;
+    }
+
+        .seller-sidebar .card-header {
+            background-color: #f8f9fa;
+            color: #212529;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .seller-sidebar .list-group-item {
+            background-color: transparent;
+            color: #212529;
+            border-color: #e9ecef;
+        }
+
+            .seller-sidebar .list-group-item:hover {
+                background-color: #f8f9fa;
+            }
+
+            .seller-sidebar .list-group-item.active {
+                background-color: #007bff;
+                border-color: #007bff;
+                color: #ffffff;
+            }
+
+    /* Status badges styling */
+    .badge-success {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .badge-warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
+
+    .badge-danger {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .badge-info {
+        background-color: #17a2b8;
+        color: white;
+    }
+
+    .badge-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .badge-primary {
+        background-color: #007bff;
+        color: white;
+    }
+
+    /* Order details styling */
+    .order-header {
+        background-color: #f8f9fa;
+        border-radius: 0.25rem;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid #e9ecef;
+    }
+
+    .order-timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+
+        .order-timeline:before {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background-color: #dee2e6;
+        }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+        .timeline-item:before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #007bff;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 2px #007bff;
+        }
+
+        .timeline-item.active:before {
+            background-color: #28a745;
+            box-shadow: 0 0 0 2px #28a745;
+        }
+
+        .timeline-item.incomplete:before {
+            background-color: #f8f9fa;
+            box-shadow: 0 0 0 2px #6c757d;
+        }
+
+    .timeline-date {
+        color: #6c757d;
+        font-size: 0.85rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .timeline-content {
+        padding-bottom: 0.5rem;
+    }
+
+    .product-img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+
+    .table-order-items th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+
+    .status-badge {
+        padding: 0.5rem 0.75rem;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    /* Đơn giá và thành tiền align right */
+    .price-cell {
+        text-align: right;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card seller-sidebar">
+                <div class="card-header text-black">
+                    <h5 class="mb-0">Trang người bán</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="@Url.Action("EditSellerProfile", "NguoiDungs")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-store mr-2"></i> Thông tin cửa hàng
+                    </a>
+                    <a href="@Url.Action("QuanLySanPham", "NguoiBans", new { id = ViewBag.MaNguoiBan })" class="list-group-item list-group-item-action">
+                        <i class="fas fa-box mr-2"></i> Sản phẩm
+                    </a>
+                    <a href="@Url.Action("DonHangNguoiMua", "DonHang")" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-shopping-cart mr-2"></i> Đơn hàng
+                    </a>
+                    <a href="@Url.Action("SellerStatistics", "NguoiDungs")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-line mr-2"></i> Thống kê
+                    </a>
+                    <a href="@Url.Action("DangXuat", "DangNhap")" class="list-group-item list-group-item-action text-danger">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Đăng xuất
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="col-md-9">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Chi tiết đơn hàng #@Model.MaDonHang</h5>
+                    <div>
+                        <a href="@Url.Action("DonHangNguoiMua", "DonHang")" class="btn btn-sm btn-outline-secondary mr-2">
+                            <i class="fas fa-arrow-left mr-1"></i> Quay lại
+                        </a>
+                        <a href="@Url.Action("XuatHoaDonPdf", "DonHang", new { maDonHang = Model.MaDonHang })" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-print mr-1"></i> In hóa đơn
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Trạng thái đơn hàng -->
+                    <div class="order-header d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h5 class="mb-1">Đơn hàng #@Model.MaDonHang</h5>
+                            <p class="mb-0 text-muted">Ngày đặt: @Model.NgayTao.ToString("dd/MM/yyyy HH:mm")</p>
+                        </div>
+                        <div class="text-right">
+                            @if (Model.TrangThaiDonHang == "Đang chờ xử lý")
+                            {
+                                <span class="badge badge-warning status-badge">Đang chờ xử lý</span>
+                            }
+                            else if (Model.TrangThaiDonHang == "Đã vận chuyển")
+                            {
+                                <span class="badge badge-info status-badge">Đã vận chuyển</span>
+                            }
+                            else if (Model.TrangThaiDonHang == "Đã giao")
+                            {
+                                <span class="badge badge-primary status-badge">Đã giao</span>
+                            }
+                            else if (Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" || Model.TrangThaiDonHang == "Đã thanh toán")
+                            {
+                                <span class="badge badge-success status-badge">@Model.TrangThaiDonHang</span>
+                            }
+                            else if (Model.TrangThaiDonHang == "Đã hủy")
+                            {
+                                <span class="badge badge-danger status-badge">Đã hủy</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary status-badge">@Model.TrangThaiDonHang</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Thông tin đơn hàng -->
+                        <div class="col-md-7">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Thông tin đơn hàng</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <p class="mb-1 text-muted small">Phương thức thanh toán</p>
+                                            <p class="mb-0 font-weight-medium">@Model.PhuongThucThanhToan</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="mb-1 text-muted small">Tổng tiền</p>
+                                            <p class="mb-0 font-weight-medium">@String.Format("{0:N0} VNĐ", Model.TongSoTien)</p>
+                                        </div>
+                                    </div>
+
+                                    @if (ViewBag.Escrow != null)
+                                    {
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <p class="mb-1 text-muted small">Mã ký quỹ</p>
+                                                <p class="mb-0 font-weight-medium">@ViewBag.Escrow.MaKyQuy</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p class="mb-1 text-muted small">Trạng thái thanh toán</p>
+                                                <p class="mb-0 font-weight-medium">
+                                                    @if (ViewBag.Escrow.TrangThai == "Đã giải ngân")
+                                                    {
+                                                        <span class="text-success">Đã thanh toán</span>
+                                                    }
+                                                    else if (ViewBag.Escrow.TrangThai == "Đang giữ")
+                                                    {
+                                                        <span class="text-warning">Đang chờ xử lý</span>
+                                                    }
+                                                    else if (ViewBag.Escrow.TrangThai == "Đã hoàn tiền")
+                                                    {
+                                                        <span class="text-danger">Đã hoàn tiền</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>@ViewBag.Escrow.TrangThai</span>
+                                                    }
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Thêm thông tin chi tiết về ký quỹ -->
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <p class="mb-1 text-muted small">Tổng tiền</p>
+                                                <p class="mb-0 font-weight-medium">@String.Format("{0:N0} VNĐ", ViewBag.Escrow.TongTien)</p>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <p class="mb-1 text-muted small">Phí nền tảng</p>
+                                                <p class="mb-0 font-weight-medium">@String.Format("{0:N0} VNĐ", ViewBag.Escrow.PhiNenTang)</p>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <p class="mb-1 text-muted small">Tiền nhận được</p>
+                                                <p class="mb-0 font-weight-medium">@String.Format("{0:N0} VNĐ", ViewBag.Escrow.TienChuyenChoNguoiBan)</p>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Thông tin người mua -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Thông tin người mua</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <p class="mb-1 text-muted small">Tên khách hàng</p>
+                                        <p class="mb-0 font-weight-medium">@Model.NguoiDung.TenNguoiDung</p>
+                                    </div>
+                                    <div class="mb-3">
+                                        <p class="mb-1 text-muted small">Số điện thoại</p>
+                                        <p class="mb-0 font-weight-medium">@Model.NguoiDung.SoDienThoai</p>
+                                    </div>
+                                    <div class="mb-0">
+                                        <p class="mb-1 text-muted small">Địa chỉ giao hàng</p>
+                                        <p class="mb-0 font-weight-medium">@Model.NguoiDung.DiaChi</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Timeline trạng thái đơn hàng -->
+                        <div class="col-md-5">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Trạng thái đơn hàng</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="order-timeline">
+                                        <div class="timeline-item @(Model.TrangThaiDonHang != "Đã hủy" ? "active" : "")">
+                                            <div class="timeline-date">@Model.NgayTao.ToString("dd/MM/yyyy HH:mm")</div>
+                                            <div class="timeline-content">
+                                                <h6 class="mb-0">Đơn hàng đã được tạo</h6>
+                                                <p class="text-muted small mb-0">Đơn hàng đã được tạo thành công</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="timeline-item @(Model.TrangThaiDonHang != "Đang chờ xử lý" && Model.TrangThaiDonHang != "Đã hủy" ? "active" : Model.TrangThaiDonHang == "Đã hủy" ? "incomplete" : "")">
+                                            <div class="timeline-date">
+                                                @if (Model.TrangThaiDonHang != "Đang chờ xử lý" && Model.TrangThaiDonHang != "Đã hủy")
+                                                {
+                                                    @(Model.NgayCapNhat.HasValue ? Model.NgayCapNhat.Value.ToString("dd/MM/yyyy HH:mm") : "-")
+                                                }
+                                                else
+                                                {
+                                                    <span>Đang chờ xử lý</span>
+                                                }
+                                            </div>
+                                            <div class="timeline-content">
+                                                <h6 class="mb-0">Đã vận chuyển</h6>
+                                                <p class="text-muted small mb-0">Đơn hàng đã được giao cho đơn vị vận chuyển</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="timeline-item @(Model.TrangThaiDonHang == "Đã giao" || Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" || Model.TrangThaiDonHang == "Đã thanh toán" ? "active" : "incomplete")">
+                                            <div class="timeline-date">
+                                                @if (Model.TrangThaiDonHang == "Đã giao" || Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" || Model.TrangThaiDonHang == "Đã thanh toán")
+                                                {
+                                                    @(Model.NgayGiaoHang.HasValue ? Model.NgayGiaoHang.Value.ToString("dd/MM/yyyy HH:mm") : (Model.NgayCapNhat.HasValue ? Model.NgayCapNhat.Value.ToString("dd/MM/yyyy HH:mm") : "-"))
+                                                }
+                                                else
+                                                {
+                                                    <span>Đang vận chuyển</span>
+                                                }
+                                            </div>
+                                            <div class="timeline-content">
+                                                <h6 class="mb-0">Đã giao hàng</h6>
+                                                <p class="text-muted small mb-0">Đơn hàng đã được giao đến người mua</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="timeline-item @(Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" || Model.TrangThaiDonHang == "Đã thanh toán" ? "active" : "incomplete")">
+                                            <div class="timeline-date">
+                                                @if (Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" || Model.TrangThaiDonHang == "Đã thanh toán")
+                                                {
+                                                    @(Model.NgayCapNhat.HasValue ? Model.NgayCapNhat.Value.ToString("dd/MM/yyyy HH:mm") : "-")
+                                                }
+                                                else
+                                                {
+                                                    <span>Chờ xác nhận</span>
+                                                }
+                                            </div>
+                                            <div class="timeline-content">
+                                                <h6 class="mb-0">Đã xác nhận nhận hàng</h6>
+                                                <p class="text-muted small mb-0">Người mua đã xác nhận nhận hàng thành công</p>
+                                            </div>
+                                        </div>
+
+                                        @if (Model.TrangThaiDonHang == "Đã hủy")
+                                        {
+                                            <div class="timeline-item active">
+                                                <div class="timeline-date">
+                                                    @(Model.NgayHuy.HasValue ? Model.NgayHuy.Value.ToString("dd/MM/yyyy HH:mm") : (Model.NgayCapNhat.HasValue ? Model.NgayCapNhat.Value.ToString("dd/MM/yyyy HH:mm") : "-"))
+                                                </div>
+                                                <div class="timeline-content">
+                                                    <h6 class="mb-0 text-danger">Đơn hàng đã bị hủy</h6>
+                                                    <p class="text-muted small mb-0">Lý do: @Model.LyDoHuy</p>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Danh sách sản phẩm -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">Sản phẩm trong đơn hàng</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-order-items">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 100px">Hình ảnh</th>
+                                            <th>Sản phẩm</th>
+                                            <th class="text-center" style="width: 100px">Số lượng</th>
+                                            <th class="price-cell" style="width: 150px">Đơn giá</th>
+                                            <th class="price-cell" style="width: 150px">Thành tiền</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in Model.ChiTietDonHangs)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    @{
+                                                        string anhHienThi = Url.Content("~/Content/images/no-image.jpeg");
+
+                                                        // Kiểm tra và lấy ảnh đầu tiên từ danh sách ảnh sản phẩm nếu có
+                                                        if (item.SanPham.AnhSanPhams != null && item.SanPham.AnhSanPhams.Any())
+                                                        {
+                                                            anhHienThi = item.SanPham.AnhSanPhams.First().DuongDanAnh;
+                                                        }
+                                                    }
+                                                    <img src="@anhHienThi" alt="@item.SanPham.TenSanPham" class="product-img">
+                                                </td>
+                                                <td>
+                                                    <h6 class="mb-1">@item.SanPham.TenSanPham</h6>
+                                                    <p class="text-muted mb-0 small">Mã SP: #@item.SanPham.MaSanPham</p>
+                                                </td>
+                                                <td class="text-center">@item.SoLuong</td>
+                                                <td class="price-cell">@String.Format("{0:N0} VNĐ", item.Gia)</td>
+                                                <td class="price-cell">@String.Format("{0:N0} VNĐ", item.Gia * item.SoLuong)</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="4" class="text-right font-weight-bold">Tổng tiền:</td>
+                                            <td class="price-cell font-weight-bold">@String.Format("{0:N0} VNĐ", Model.TongSoTien)</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thao tác với đơn hàng -->
+                    <div class="mt-4 text-right">
+                        @if (Model.TrangThaiDonHang == "Đang chờ xử lý")
+                        {
+                            using (Html.BeginForm("CapNhatTrangThaiDonHang", "DonHang", FormMethod.Post, new { style = "display: inline-block; margin-right: 10px;" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.MaDonHang" />
+                                <input type="hidden" name="trangThai" value="Đã vận chuyển" />
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-truck mr-1"></i> Xác nhận đã vận chuyển
+                                </button>
+                            }
+
+                            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#cancelOrderModal">
+                                <i class="fas fa-times mr-1"></i> Hủy đơn hàng
+                            </button>
+                        }
+                        else if (Model.TrangThaiDonHang == "Đã vận chuyển")
+                        {
+                            using (Html.BeginForm("CapNhatTrangThaiDonHang", "DonHang", FormMethod.Post, new { style = "display: inline-block;" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.MaDonHang" />
+                                <input type="hidden" name="trangThai" value="Đã giao" />
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-check mr-1"></i> Xác nhận đã giao hàng
+                                </button>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for order cancellation -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Hủy đơn hàng</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            @using (Html.BeginForm("HuyDonHangNguoiBan", "DonHang", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" name="id" value="@Model.MaDonHang" />
+                    <div class="form-group">
+                        <label for="lyDoHuy">Lý do hủy đơn hàng <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="lyDoHuy" name="lyDoHuy" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Initialize tooltips
+            $('[data-toggle="tooltip"]').tooltip();
+        });
+    </script>
+}

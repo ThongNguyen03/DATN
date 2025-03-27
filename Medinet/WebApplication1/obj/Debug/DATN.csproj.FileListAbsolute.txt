@@ -54,3 +54,8 @@ D:\IT\DATN\Medinet-DATN\Medinet\WebApplication1\obj\Debug\DATN.csproj.CoreCompil
 D:\IT\DATN\Medinet-DATN\Medinet\WebApplication1\obj\Debug\DATN.csproj.Up2Date
 D:\IT\DATN\Medinet-DATN\Medinet\WebApplication1\obj\Debug\WebApplication1.dll
 D:\IT\DATN\Medinet-DATN\Medinet\WebApplication1\obj\Debug\WebApplication1.pdb
+D:\IT\DATN\Medinet-DATN\Medinet\WebApplication1\bin\BouncyCastle.Cryptography.dll
+D:\IT\DATN\Medinet-DATN\Medinet\WebApplication1\bin\itextsharp.dll
+D:\IT\DATN\Medinet-DATN\Medinet\WebApplication1\bin\itextsharp.xmlworker.dll
+D:\IT\DATN\Medinet-DATN\Medinet\WebApplication1\bin\BouncyCastle.Cryptography.xml
+D:\IT\DATN\Medinet-DATN\Medinet\WebApplication1\bin\itextsharp.xml

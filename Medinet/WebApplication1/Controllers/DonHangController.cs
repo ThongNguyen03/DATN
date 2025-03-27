@@ -1,11 +1,15 @@
-﻿using System;
+﻿using iTextSharp.text.pdf;
+using iTextSharp.text;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Web;
+using System.Web.Hosting;
 using System.Web.Mvc;
 using WebApplication1.Models;
 using WebApplication1.Services;
@@ -324,6 +328,219 @@ namespace WebApplication1.Controllers
                 return RedirectToAction("ChiTiet", new { id = id });
             }
         }
+
+        public FileResult XuatHoaDonPdf(int maDonHang)
+        {
+            try
+            {
+                // Lấy thông tin đơn hàng
+                var donHang = db.DonHangs
+                    .Include(d => d.NguoiDung)
+                    .Include(d => d.NguoiBan)
+                    .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham))
+                    .FirstOrDefault(d => d.MaDonHang == maDonHang);
+
+                if (donHang == null)
+                {
+                    // Xử lý trường hợp không tìm thấy đơn hàng
+                    return null;
+                }
+
+                // Kiểm tra quyền truy cập
+                int currentUserId = GetCurrentUserId();
+                if (donHang.MaNguoiDung != currentUserId)
+                {
+                    // Người dùng không có quyền truy cập đơn hàng này
+                    return null;
+                }
+
+                // Tạo file PDF
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    // Tạo document
+                    Document document = new Document(PageSize.A4, 25, 25, 25, 25);
+                    PdfWriter writer = PdfWriter.GetInstance(document, ms);
+                    document.Open();
+
+                    // Thêm font chữ tiếng Việt
+                    string fontPath = HostingEnvironment.MapPath("~/fonts/arial.ttf");
+                    if (fontPath == null)
+                    {
+                        // Nếu không tìm thấy font, sử dụng font mặc định
+                        fontPath = HostingEnvironment.MapPath("~/Content/fonts/arial.ttf");
+                    }
+
+                    // Nếu vẫn không tìm thấy, sử dụng font Times-Roman mặc định
+                    BaseFont baseFont;
+                    try
+                    {
+                        baseFont = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                    }
+                    catch
+                    {
+                        baseFont = BaseFont.CreateFont(BaseFont.TIMES_ROMAN, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+                    }
+
+                    // Tạo các font
+                    Font fontTitle = new Font(baseFont, 16, Font.BOLD);
+                    Font fontHeader = new Font(baseFont, 12, Font.BOLD);
+                    Font fontNormal = new Font(baseFont, 10, Font.NORMAL);
+                    Font fontBold = new Font(baseFont, 10, Font.BOLD);
+
+                    // Thêm tiêu đề
+                    Paragraph title = new Paragraph("HÓA ĐƠN CHI TIẾT", fontTitle);
+                    title.Alignment = Element.ALIGN_CENTER;
+                    title.SpacingAfter = 20;
+                    document.Add(title);
+
+                    // Thêm thông tin đơn hàng
+                    PdfPTable infoTable = new PdfPTable(2);
+                    infoTable.WidthPercentage = 100;
+                    infoTable.SetWidths(new float[] { 1f, 2f });
+                    infoTable.SpacingAfter = 20;
+
+                    infoTable.AddCell(CreateCell("Mã đơn hàng:", fontBold, Element.ALIGN_LEFT));
+                    infoTable.AddCell(CreateCell(donHang.MaDonHang.ToString(), fontNormal, Element.ALIGN_LEFT));
+
+                    infoTable.AddCell(CreateCell("Ngày đặt hàng:", fontBold, Element.ALIGN_LEFT));
+                    infoTable.AddCell(CreateCell(donHang.NgayTao.ToString("dd/MM/yyyy HH:mm"), fontNormal, Element.ALIGN_LEFT));
+
+                    infoTable.AddCell(CreateCell("Trạng thái:", fontBold, Element.ALIGN_LEFT));
+                    infoTable.AddCell(CreateCell(donHang.TrangThaiDonHang, fontNormal, Element.ALIGN_LEFT));
+
+                    infoTable.AddCell(CreateCell("Phương thức thanh toán:", fontBold, Element.ALIGN_LEFT));
+                    infoTable.AddCell(CreateCell(donHang.PhuongThucThanhToan, fontNormal, Element.ALIGN_LEFT));
+
+                    document.Add(infoTable);
+
+                    // Thông tin người mua và người bán
+                    PdfPTable contactTable = new PdfPTable(2);
+                    contactTable.WidthPercentage = 100;
+                    contactTable.SpacingAfter = 20;
+
+                    // Thông tin người mua
+                    PdfPCell buyerCell = new PdfPCell();
+                    buyerCell.Border = Rectangle.BOX;
+                    buyerCell.Padding = 10;
+
+                    Paragraph buyerHeader = new Paragraph("Thông tin người mua", fontHeader);
+                    buyerHeader.SpacingAfter = 10;
+                    buyerCell.AddElement(buyerHeader);
+
+                    Paragraph buyerName = new Paragraph("Họ tên: " + donHang.NguoiDung.TenNguoiDung, fontNormal);
+                    buyerCell.AddElement(buyerName);
+
+                    Paragraph buyerPhone = new Paragraph("Số điện thoại: " + donHang.NguoiDung.SoDienThoai, fontNormal);
+                    buyerCell.AddElement(buyerPhone);
+
+                    Paragraph buyerAddress = new Paragraph("Địa chỉ: " + donHang.NguoiDung.DiaChi, fontNormal);
+                    buyerCell.AddElement(buyerAddress);
+
+                    contactTable.AddCell(buyerCell);
+
+                    // Thông tin người bán
+                    PdfPCell sellerCell = new PdfPCell();
+                    sellerCell.Border = Rectangle.BOX;
+                    sellerCell.Padding = 10;
+
+                    Paragraph sellerHeader = new Paragraph("Thông tin người bán", fontHeader);
+                    sellerHeader.SpacingAfter = 10;
+                    sellerCell.AddElement(sellerHeader);
+
+                    Paragraph sellerName = new Paragraph("Tên cửa hàng: " + donHang.NguoiBan.TenCuaHang, fontNormal);
+                    sellerCell.AddElement(sellerName);
+
+                    Paragraph sellerPhone = new Paragraph("Số điện thoại: " + donHang.NguoiBan.SoDienThoaiCuaHang, fontNormal);
+                    sellerCell.AddElement(sellerPhone);
+
+                    Paragraph sellerAddress = new Paragraph("Địa chỉ: " + donHang.NguoiBan.DiaChiCuaHang, fontNormal);
+                    sellerCell.AddElement(sellerAddress);
+
+                    contactTable.AddCell(sellerCell);
+                    document.Add(contactTable);
+
+                    // Bảng chi tiết sản phẩm
+                    Paragraph productHeader = new Paragraph("Chi tiết sản phẩm", fontHeader);
+                    productHeader.SpacingAfter = 10;
+                    document.Add(productHeader);
+
+                    PdfPTable productTable = new PdfPTable(5);
+                    productTable.WidthPercentage = 100;
+                    productTable.SetWidths(new float[] { 0.5f, 2f, 0.7f, 1f, 1f });
+                    productTable.SpacingAfter = 20;
+
+                    // Thêm header cho bảng sản phẩm
+                    productTable.AddCell(CreateCell("STT", fontBold, Element.ALIGN_CENTER));
+                    productTable.AddCell(CreateCell("Tên sản phẩm", fontBold, Element.ALIGN_CENTER));
+                    productTable.AddCell(CreateCell("Số lượng", fontBold, Element.ALIGN_CENTER));
+                    productTable.AddCell(CreateCell("Đơn giá", fontBold, Element.ALIGN_CENTER));
+                    productTable.AddCell(CreateCell("Thành tiền", fontBold, Element.ALIGN_CENTER));
+
+                    // Thêm chi tiết sản phẩm
+                    int stt = 1;
+                    foreach (var item in donHang.ChiTietDonHangs)
+                    {
+                        productTable.AddCell(CreateCell(stt.ToString(), fontNormal, Element.ALIGN_CENTER));
+                        productTable.AddCell(CreateCell(item.SanPham.TenSanPham, fontNormal, Element.ALIGN_LEFT));
+                        productTable.AddCell(CreateCell(item.SoLuong.ToString(), fontNormal, Element.ALIGN_CENTER));
+                        productTable.AddCell(CreateCell(String.Format("{0:N0} VNĐ", item.Gia), fontNormal, Element.ALIGN_RIGHT));
+                        productTable.AddCell(CreateCell(String.Format("{0:N0} VNĐ", item.SoLuong * item.Gia), fontNormal, Element.ALIGN_RIGHT));
+                        stt++;
+                    }
+
+                    document.Add(productTable);
+
+                    // Bảng tổng tiền
+                    PdfPTable totalTable = new PdfPTable(2);
+                    totalTable.WidthPercentage = 100;
+                    totalTable.SetWidths(new float[] { 4f, 1f });
+
+                    totalTable.AddCell(CreateCell("Tổng tiền hàng:", fontBold, Element.ALIGN_RIGHT));
+                    totalTable.AddCell(CreateCell(String.Format("{0:N0} VNĐ", donHang.TongSoTien), fontBold, Element.ALIGN_RIGHT));
+
+                    document.Add(totalTable);
+
+                    // Thêm chữ ký số và ghi chú
+                    Paragraph note = new Paragraph("\nGhi chú: Hóa đơn này đã được xuất tự động từ hệ thống Medinet.", fontNormal);
+                    note.Alignment = Element.ALIGN_LEFT;
+                    document.Add(note);
+
+                    // Thêm thời gian xuất
+                    Paragraph exportDate = new Paragraph("\nNgày xuất hóa đơn: " + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"), fontNormal);
+                    exportDate.Alignment = Element.ALIGN_RIGHT;
+                    document.Add(exportDate);
+
+                    document.Close();
+                    writer.Close();
+
+                    // Trả về file PDF
+                    return File(ms.ToArray(), "application/pdf", "HoaDon_" + donHang.MaDonHang + ".pdf");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log lỗi
+                System.Diagnostics.Debug.WriteLine("Lỗi xuất PDF: " + ex.Message);
+                if (ex.InnerException != null)
+                {
+                    System.Diagnostics.Debug.WriteLine("Inner exception: " + ex.InnerException.Message);
+                }
+
+                // Chuyển hướng về trang chi tiết với thông báo lỗi
+                TempData["Error"] = "Đã xảy ra lỗi khi xuất hóa đơn!";
+                return null;
+            }
+        }
+
+        // Phương thức hỗ trợ tạo cell trong PDF
+        private PdfPCell CreateCell(string text, Font font, int alignment)
+        {
+            PdfPCell cell = new PdfPCell(new Phrase(text, font));
+            cell.HorizontalAlignment = alignment;
+            cell.Padding = 5;
+            return cell;
+        }
+
         #endregion
 
 
@@ -348,24 +565,47 @@ namespace WebApplication1.Controllers
                     return RedirectToAction("Index", "Home");
                 }
 
-                // Lấy danh sách đơn hàng của các người mua đặt từ người bán này
+                ViewBag.MaNguoiBan = nguoiBan.MaNguoiBan;
+
+                // Lấy danh sách đơn hàng của các người mua đặt từ người bán này - phương pháp tối ưu hóa
+                var maNguoiBan = nguoiBan.MaNguoiBan;
                 var donHangs = db.DonHangs
-                    .Include(d => d.NguoiDung)
-                    .Include(d => d.ChiTietDonHangs)
-                    .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham))
-                    .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham.AnhSanPhams))
-                    .Where(d => d.MaNguoiBan == nguoiBan.MaNguoiBan)
-                    .OrderByDescending(d => d.NgayTao)
+                    .Where(d => d.MaNguoiBan == maNguoiBan)
                     .ToList();
 
-                // Lấy thông tin escrow của các đơn hàng
-                var escrows = db.Escrows
-                    .Where(e => donHangs.Select(d => d.MaDonHang).Contains(e.MaDonHang))
-                    .ToList();
+                // Sau khi có danh sách đơn hàng cơ bản, mới lấy thêm thông tin chi tiết
+                if (donHangs.Any())
+                {
+                    // Lấy danh sách ID đơn hàng
+                    var donHangIds = donHangs.Select(d => d.MaDonHang).ToList();
 
-                ViewBag.Escrows = escrows;
+                    // Lấy thông tin người dùng
+                    var nguoiDungIds = donHangs.Select(d => d.MaNguoiDung).Distinct().ToList();
+                    var nguoiDungs = db.NguoiDungs.Where(n => nguoiDungIds.Contains(n.MaNguoiDung)).ToList();
 
-                return View(donHangs);
+                    // Lấy chi tiết đơn hàng
+                    var chiTietDonHangs = db.ChiTietDonHangs
+                        .Where(c => donHangIds.Contains(c.MaDonHang))
+                        .Include(c => c.SanPham)
+                        .Include(c => c.SanPham.AnhSanPhams)
+                        .ToList();
+
+                    // Lấy thông tin escrow
+                    var escrows = db.Escrows
+                        .Where(e => donHangIds.Contains(e.MaDonHang))
+                        .ToList();
+
+                    ViewBag.Escrows = escrows;
+
+                    // Gán các đối tượng liên quan vào đơn hàng
+                    foreach (var donHang in donHangs)
+                    {
+                        donHang.NguoiDung = nguoiDungs.FirstOrDefault(n => n.MaNguoiDung == donHang.MaNguoiDung);
+                        donHang.ChiTietDonHangs = chiTietDonHangs.Where(c => c.MaDonHang == donHang.MaDonHang).ToList();
+                    }
+                }
+
+                return View(donHangs.OrderByDescending(d => d.NgayTao).ToList());
             }
             catch (Exception ex)
             {
@@ -394,16 +634,34 @@ namespace WebApplication1.Controllers
                     return RedirectToAction("Index", "Home");
                 }
 
-                var donHang = db.DonHangs
-                    .Include(d => d.NguoiDung)
-                    .Include(d => d.ChiTietDonHangs)
-                    .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham))
-                    .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham.AnhSanPhams))
-                    .FirstOrDefault(d => d.MaDonHang == id && d.MaNguoiBan == nguoiBan.MaNguoiBan);
+                ViewBag.MaNguoiBan = nguoiBan.MaNguoiBan;
+
+                // Lấy thông tin đơn hàng cơ bản
+                var donHang = db.DonHangs.FirstOrDefault(d => d.MaDonHang == id && d.MaNguoiBan == nguoiBan.MaNguoiBan);
 
                 if (donHang == null)
                 {
                     return HttpNotFound();
+                }
+
+                // Lấy thông tin người dùng
+                donHang.NguoiDung = db.NguoiDungs.FirstOrDefault(n => n.MaNguoiDung == donHang.MaNguoiDung);
+
+                // Lấy chi tiết đơn hàng
+                donHang.ChiTietDonHangs = db.ChiTietDonHangs
+                    .Where(c => c.MaDonHang == id)
+                    .ToList();
+
+                // Lấy thông tin sản phẩm và ảnh sản phẩm
+                foreach (var chiTiet in donHang.ChiTietDonHangs)
+                {
+                    chiTiet.SanPham = db.SanPhams.FirstOrDefault(s => s.MaSanPham == chiTiet.MaSanPham);
+                    if (chiTiet.SanPham != null)
+                    {
+                        chiTiet.SanPham.AnhSanPhams = db.AnhSanPhams
+                            .Where(a => a.MaSanPham == chiTiet.MaSanPham)
+                            .ToList();
+                    }
                 }
 
                 // Lấy thông tin escrow nếu có
@@ -413,13 +671,13 @@ namespace WebApplication1.Controllers
                 // Danh sách trạng thái đơn hàng để hiển thị trong dropdown
                 ViewBag.DanhSachTrangThai = new SelectList(
                     new List<string> {
-                        "Đang chờ xử lý",
-                        "Đã vận chuyển",
-                        "Đã giao",
-                        "Đã xác nhận nhận hàng",
-                        "Đã hoàn thành",
-                        "Đã hủy",
-                        "Đã thanh toán"
+                "Đang chờ xử lý",
+                "Đã vận chuyển",
+                "Đã giao",
+                "Đã xác nhận nhận hàng",
+                "Đã hoàn thành",
+                "Đã hủy",
+                "Đã thanh toán"
                     },
                     donHang.TrangThaiDonHang);
 

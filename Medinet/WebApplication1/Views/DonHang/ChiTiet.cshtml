@@ -127,7 +127,7 @@
                     <h5 class="mb-0">Thao tác</h5>
                 </div>
                 <div class="card-body">
-                    @if (Model.TrangThaiDonHang == "Đang chờ xử lý" )
+                    @if (Model.TrangThaiDonHang == "Đang chờ xử lý")
                     {
                         <button type="button" class="btn btn-danger w-100 mb-3" data-bs-toggle="modal" data-bs-target="#huyDonHangModal">
                             <i class="bi bi-x-circle"></i> Hủy đơn hàng
@@ -159,6 +159,11 @@
 
                     <a href="#" class="btn btn-outline-primary w-100 mt-2" onclick="printInvoice(); return false;">
                         <i class="bi bi-printer"></i> In hóa đơn
+                    </a>
+
+                    <!-- Thêm nút xuất PDF -->
+                    <a href="@Url.Action("XuatHoaDonPdf", "DonHang", new { maDonHang = Model.MaDonHang })" class="btn btn-outline-danger w-100 mt-2">
+                        <i class="bi bi-file-pdf"></i> Xuất PDF
                     </a>
                 </div>
             </div>

@@ -177,7 +177,7 @@ namespace WebApplication1.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> XacNhanDatHang(ThanhToanViewModel model)
+        public ActionResult XacNhanDatHang(ThanhToanViewModel model)
         {
             using (var dbTransaction = db.Database.BeginTransaction())
             {
@@ -634,11 +634,12 @@ namespace WebApplication1.Controllers
                                         // Sau khi xử lý tất cả đơn hàng thành công, chạy tạo ký quỹ bất đồng bộ
                                         System.Diagnostics.Debug.WriteLine($"Bắt đầu quá trình tạo kí quỹ bất đồng bộ cho các đơn hàng VNPAY");
 
+
                                         // Tạo ký quỹ trong một task riêng biệt mà không đợi kết quả
                                         foreach (var orderID in maDonHangList)  // Đổi tên biến từ maDonHang thành orderID
                                         {
                                             int currentOrderID = orderID;  // Tạo biến cục bộ để tránh xung đột
-                                            Task.Run(async () => {
+                                            var _ = Task.Run(async () => {
                                                 try
                                                 {
                                                     System.Diagnostics.Debug.WriteLine($"Task bắt đầu tạo kí quỹ cho đơn hàng VNPAY {currentOrderID}");
@@ -661,11 +662,14 @@ namespace WebApplication1.Controllers
                                                 }
                                             });
 
+
                                             // Delay nhỏ giữa các lần tạo task để tránh quá tải
                                             await Task.Delay(200);
                                         }
 
+
                                     }
+
 
                                     // Commit transaction for this order
                                     dbTransaction.Commit();
