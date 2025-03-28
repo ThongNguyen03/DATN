@@ -14,6 +14,47 @@ namespace WebApplication1.Services
     {
         private MedinetDATN db = new MedinetDATN();
 
+        // Đặt tỷ lệ đặt cọc là 10% tổng giá trị đơn hàng
+        private const decimal DEPOSIT_RATE = 0.1m;
+        // Đặt tỷ lệ phí nền tảng là 10% tổng giá trị đơn hàng
+        private const decimal PLATFORM_FEE_RATE = 0.1m;
+
+        // Phương thức kiểm tra người bán có đủ tiền đặt cọc và phí nền tảng không
+        public async Task<bool> CheckSellerBalanceAsync(int maNguoiBan, decimal orderAmount)
+        {
+            using (var db = new MedinetDATN())
+            {
+                var nguoiBan = await db.NguoiBans.FindAsync(maNguoiBan);
+                if (nguoiBan == null)
+                    return false;
+
+                // Số tiền đặt cọc cần thiết cho đơn hàng
+                decimal requiredDeposit = CalculateRequiredDeposit(orderAmount);
+
+                // Phí nền tảng cần trừ trước
+                decimal platformFee = orderAmount * PLATFORM_FEE_RATE;
+
+                // Tổng số tiền cần có = tiền đặt cọc + phí nền tảng
+                decimal totalRequired = requiredDeposit + platformFee;
+
+                // Kiểm tra số dư ví của người bán
+                return nguoiBan.SoDuVi >= totalRequired;
+            }
+        }
+
+        // Tính số tiền đặt cọc cần thiết dựa trên tổng giá trị đơn hàng
+        public decimal CalculateRequiredDeposit(decimal orderAmount)
+        {
+            return orderAmount * DEPOSIT_RATE;
+        }
+
+        // Tính tổng số tiền cần có trong ví (đặt cọc + phí nền tảng)
+        public decimal CalculateTotalRequiredAmount(decimal orderAmount)
+        {
+            decimal depositAmount = CalculateRequiredDeposit(orderAmount);
+            decimal platformFee = orderAmount * PLATFORM_FEE_RATE;
+            return depositAmount + platformFee;
+        }
 
         public async Task<List<Escrow>> CreateMultipleEscrowsAsync(List<int> maDonHangList)
         {
@@ -49,15 +90,70 @@ namespace WebApplication1.Services
                             continue;
                         }
 
-                        // Tính phí nền tảng
-                        decimal marketplaceFeePercent = 10;
-                        decimal.TryParse(ConfigurationManager.AppSettings["MarketplaceFeePercent"], out marketplaceFeePercent);
+                        // Lấy thông tin người bán
+                        var nguoiBan = await db.NguoiBans.FindAsync(donHang.MaNguoiBan);
+                        if (nguoiBan == null)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Không tìm thấy người bán với mã {donHang.MaNguoiBan}");
+                            continue;
+                        }
 
-                        decimal phiNenTang = Math.Round(donHang.TongSoTien * (marketplaceFeePercent / 100), 0);
+                        // Kiểm tra số dư và trừ tiền nếu là đơn hàng COD
+                        if (donHang.PhuongThucThanhToan == "COD")
+                        {
+                            // Số tiền đặt cọc cần thiết
+                            decimal requiredDeposit = CalculateRequiredDeposit(donHang.TongSoTien);
+
+                            // Phí nền tảng cần trừ trước
+                            decimal platformFee = donHang.TongSoTien * PLATFORM_FEE_RATE;
+
+                            // Tổng số tiền cần trừ = tiền đặt cọc + phí nền tảng
+                            decimal totalAmount = requiredDeposit + platformFee;
+
+                            // Kiểm tra số dư ví của người bán
+                            if (nguoiBan.SoDuVi < totalAmount)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"Số dư ví không đủ để đặt cọc và trả phí nền tảng. Cần {totalAmount:N0} VNĐ, hiện có {nguoiBan.SoDuVi:N0} VNĐ");
+                                continue;
+                            }
+
+                            // Trừ tiền đặt cọc và phí từ ví của người bán
+                            nguoiBan.SoDuVi -= totalAmount;
+                            db.Entry(nguoiBan).State = EntityState.Modified;
+
+                            // Tạo ghi chép ví cho tiền đặt cọc
+                            var ghiChepCoc = new GhiChepVi
+                            {
+                                MaNguoiBan = nguoiBan.MaNguoiBan,
+                                MaDonHang = maDonHang,
+                                SoTien = -requiredDeposit,
+                                LoaiGiaoDich = "Đặt cọc",
+                                MoTa = $"Đặt cọc cho đơn hàng #{maDonHang}",
+                                NgayGiaoDich = DateTime.Now,
+                                TrangThai = "Thành công"
+                            };
+                            db.GhiChepVis.Add(ghiChepCoc);
+
+                            // Tạo ghi chép ví cho phí nền tảng
+                            var ghiChepPhi = new GhiChepVi
+                            {
+                                MaNguoiBan = nguoiBan.MaNguoiBan,
+                                MaDonHang = maDonHang,
+                                SoTien = -platformFee,
+                                LoaiGiaoDich = "Phí nền tảng",
+                                MoTa = $"Phí nền tảng cho đơn hàng #{maDonHang} (10%)",
+                                NgayGiaoDich = DateTime.Now,
+                                TrangThai = "Thành công"
+                            };
+                            db.GhiChepVis.Add(ghiChepPhi);
+                        }
+
+                        // Tính phí nền tảng (vẫn cần dù đã trừ trực tiếp ở COD)
+                        decimal phiNenTang = Math.Round(donHang.TongSoTien * PLATFORM_FEE_RATE, 0);
                         decimal tienChuyenChoNguoiBan = donHang.TongSoTien - phiNenTang;
 
                         // Tạo escrow
-                        var newEscrow = new Escrow  // Đổi tên biến từ escrow thành newEscrow
+                        var newEscrow = new Escrow
                         {
                             MaDonHang = maDonHang,
                             MaNguoiBan = donHang.MaNguoiBan,
@@ -92,7 +188,6 @@ namespace WebApplication1.Services
             return escrows;
         }
 
-
         public async Task<Escrow> CreateEscrowAsync(int maDonHang)
         {
             using (var db = new MedinetDATN())
@@ -102,14 +197,13 @@ namespace WebApplication1.Services
 
                 try
                 {
-                    // Kiểm tra và cải thiện kết nối database - THÊM ĐOẠN NÀY
+                    // Kiểm tra và cải thiện kết nối database
                     if (db.Database.Connection.State != ConnectionState.Open)
                     {
                         System.Diagnostics.Debug.WriteLine($"Kết nối đang ở trạng thái {db.Database.Connection.State}, đang mở kết nối...");
                         await db.Database.Connection.OpenAsync();
                     }
                     System.Diagnostics.Debug.WriteLine($"Trạng thái kết nối DB: {db.Database.Connection.State}");
-
 
                     System.Diagnostics.Debug.WriteLine($"===== Bắt đầu tạo ký quỹ cho đơn hàng {maDonHang} =====");
 
@@ -127,7 +221,6 @@ namespace WebApplication1.Services
                     // Lấy thông tin đơn hàng - không cần Include các bảng liên quan nếu không sử dụng
                     var donHang = await db.DonHangs
                         .Where(d => d.MaDonHang == maDonHang)
-                        .Select(d => new { d.MaDonHang, d.MaNguoiBan, d.TongSoTien })
                         .FirstOrDefaultAsync();
 
                     if (donHang == null)
@@ -139,12 +232,67 @@ namespace WebApplication1.Services
 
                     System.Diagnostics.Debug.WriteLine($"Đã tìm thấy đơn hàng {maDonHang}, tổng tiền: {donHang.TongSoTien}");
 
-                    // Tính phí nền tảng
-                    decimal marketplaceFeePercent = 10;
-                    decimal.TryParse(ConfigurationManager.AppSettings["MarketplaceFeePercent"], out marketplaceFeePercent);
+                    // Lấy thông tin người bán
+                    var nguoiBan = await db.NguoiBans.FindAsync(donHang.MaNguoiBan);
+                    if (nguoiBan == null)
+                    {
+                        throw new Exception($"Không tìm thấy người bán với mã {donHang.MaNguoiBan}");
+                    }
 
-                    decimal phiNenTang = Math.Round(donHang.TongSoTien * (marketplaceFeePercent / 100), 0);
+                    // Kiểm tra số dư và trừ tiền nếu là đơn hàng COD
+                    if (donHang.PhuongThucThanhToan == "COD")
+                    {
+                        // Số tiền đặt cọc cần thiết
+                        decimal requiredDeposit = CalculateRequiredDeposit(donHang.TongSoTien);
+
+                        // Phí nền tảng cần trừ trước
+                        decimal platformFee = donHang.TongSoTien * PLATFORM_FEE_RATE;
+
+                        // Tổng số tiền cần trừ = tiền đặt cọc + phí nền tảng
+                        decimal totalAmount = requiredDeposit + platformFee;
+
+                        // Kiểm tra số dư ví của người bán
+                        if (nguoiBan.SoDuVi < totalAmount)
+                        {
+                            throw new Exception($"Số dư ví không đủ để đặt cọc và trả phí nền tảng. Cần {totalAmount:N0} VNĐ, hiện có {nguoiBan.SoDuVi:N0} VNĐ");
+                        }
+
+                        // Trừ tiền đặt cọc và phí từ ví của người bán
+                        nguoiBan.SoDuVi -= totalAmount;
+                        db.Entry(nguoiBan).State = EntityState.Modified;
+
+                        // Tạo ghi chép ví cho tiền đặt cọc
+                        var ghiChepCoc = new GhiChepVi
+                        {
+                            MaNguoiBan = nguoiBan.MaNguoiBan,
+                            MaDonHang = maDonHang,
+                            SoTien = -requiredDeposit,
+                            LoaiGiaoDich = "Đặt cọc",
+                            MoTa = $"Đặt cọc cho đơn hàng #{maDonHang}",
+                            NgayGiaoDich = DateTime.Now,
+                            TrangThai = "Thành công"
+                        };
+                        db.GhiChepVis.Add(ghiChepCoc);
+
+                        // Tạo ghi chép ví cho phí nền tảng
+                        var ghiChepPhi = new GhiChepVi
+                        {
+                            MaNguoiBan = nguoiBan.MaNguoiBan,
+                            MaDonHang = maDonHang,
+                            SoTien = -platformFee,
+                            LoaiGiaoDich = "Phí nền tảng",
+                            MoTa = $"Phí nền tảng cho đơn hàng #{maDonHang} (10%)",
+                            NgayGiaoDich = DateTime.Now,
+                            TrangThai = "Thành công"
+                        };
+                        db.GhiChepVis.Add(ghiChepPhi);
+                    }
+
+                    // Tính phí nền tảng cho Escrow
+                    decimal phiNenTang = Math.Round(donHang.TongSoTien * PLATFORM_FEE_RATE, 0);
                     decimal tienChuyenChoNguoiBan = donHang.TongSoTien - phiNenTang;
+
+                    System.Diagnostics.Debug.WriteLine($"Phí nền tảng: {phiNenTang:N0}đ, Tiền chuyển cho người bán: {tienChuyenChoNguoiBan:N0}đ");
 
                     // Tạo bản ghi ký quỹ mới
                     var escrow = new Escrow
@@ -201,92 +349,6 @@ namespace WebApplication1.Services
         }
 
         /// <summary>
-        /// Tạo ký quỹ mới khi thanh toán thành công
-        /// </summary>
-        /// <param name="maDonHang">Mã đơn hàng cần tạo ký quỹ</param>
-        /// <returns>Đối tượng ký quỹ đã tạo</returns>
-        //public async Task<Escrow> CreateEscrow(int maDonHang)
-        //{
-        //    // Tạo một context mới cho mỗi lần gọi
-        //    // Tạo một context mới cho mỗi lần gọi
-        //    using (var db = new MedinetDATN())
-        //    {
-        //        try
-        //        {
-        //            // Thêm debug log
-        //            System.Diagnostics.Debug.WriteLine($"===== Bắt đầu tạo ký quỹ cho đơn hàng {maDonHang} =====");
-
-        //            // Kiểm tra nếu đã có ký quỹ cho đơn hàng này
-        //            var existingEscrow = await db.Escrows.FirstOrDefaultAsync(e => e.MaDonHang == maDonHang);
-        //            if (existingEscrow != null)
-        //            {
-        //                System.Diagnostics.Debug.WriteLine($"Đã tồn tại ký quỹ cho đơn hàng {maDonHang}, mã ký quỹ: {existingEscrow.MaKyQuy}");
-        //                return existingEscrow;
-        //            }
-
-        //            // Lấy thông tin đơn hàng
-        //            var donHang = await db.DonHangs
-        //                .Include(d => d.NguoiBan)
-        //                .FirstOrDefaultAsync(d => d.MaDonHang == maDonHang);
-
-        //            if (donHang == null)
-        //            {
-        //                throw new Exception($"Không tìm thấy đơn hàng {maDonHang}");
-        //            }
-
-        //            System.Diagnostics.Debug.WriteLine($"Đã tìm thấy đơn hàng {maDonHang}, tổng tiền: {donHang.TongSoTien}");
-
-        //            // Tính phí nền tảng
-        //            decimal marketplaceFeePercent = 10;
-        //            decimal.TryParse(ConfigurationManager.AppSettings["MarketplaceFeePercent"], out marketplaceFeePercent);
-
-        //            decimal phiNenTang = Math.Round(donHang.TongSoTien * (marketplaceFeePercent / 100), 0);
-        //            decimal tienChuyenChoNguoiBan = donHang.TongSoTien - phiNenTang;
-
-        //            // Tạo bản ghi ký quỹ mới
-        //            var escrow = new Escrow
-        //            {
-        //                MaDonHang = maDonHang,
-        //                MaNguoiBan = donHang.MaNguoiBan,
-        //                TongTien = donHang.TongSoTien,
-        //                PhiNenTang = phiNenTang,
-        //                TienChuyenChoNguoiBan = tienChuyenChoNguoiBan,
-        //                TrangThai = "Đang giữ",
-        //                NgayTao = DateTime.Now
-        //            };
-
-        //            System.Diagnostics.Debug.WriteLine($"Đã tạo đối tượng escrow, chuẩn bị lưu vào DB");
-
-        //            db.Escrows.Add(escrow);
-        //            await db.SaveChangesAsync();
-
-        //            System.Diagnostics.Debug.WriteLine($"Đã lưu escrow vào DB thành công, ID: {escrow.MaKyQuy}");
-        //            System.Diagnostics.Debug.WriteLine($"Đã tạo ký quỹ cho đơn hàng {maDonHang}:");
-        //            System.Diagnostics.Debug.WriteLine($"- Tổng tiền: {donHang.TongSoTien:N0}đ");
-        //            System.Diagnostics.Debug.WriteLine($"- Phí nền tảng ({marketplaceFeePercent}%): {phiNenTang:N0}đ");
-        //            System.Diagnostics.Debug.WriteLine($"- Tiền chuyển cho người bán: {tienChuyenChoNguoiBan:N0}đ");
-        //            System.Diagnostics.Debug.WriteLine($"===== Kết thúc tạo ký quỹ cho đơn hàng {maDonHang} =====");
-
-        //            return escrow;
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            System.Diagnostics.Debug.WriteLine($"===== LỖI tạo ký quỹ cho đơn hàng {maDonHang}: {ex.Message} =====");
-        //            if (ex.InnerException != null)
-        //            {
-        //                System.Diagnostics.Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
-        //            }
-
-        //            // QUAN TRỌNG: Log ra stack trace
-        //            System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-
-        //            throw; // Re-throw để caller biết có lỗi
-        //        }
-        //    }
-
-        //}
-
-        /// <summary>
         /// Giải ngân tiền cho người bán sau khi người mua xác nhận nhận hàng
         /// </summary>
         /// <param name="maDonHang">Mã đơn hàng cần giải ngân</param>
@@ -320,52 +382,73 @@ namespace WebApplication1.Services
                     donHang.TrangThaiDonHang = "Đã hoàn thành";
                     db.Entry(donHang).State = EntityState.Modified;
 
-                    // Cập nhật ví tiền của người bán (nếu có)
-                    try
+                    // Cập nhật ví tiền của người bán
+                    var nguoiBan = escrow.NguoiBan;
+                    if (nguoiBan != null)
                     {
-                        var nguoiBan = escrow.NguoiBan;
-                        if (nguoiBan != null)
+                        // Xác định số tiền cần hoàn trả/thanh toán
+                        decimal depositAmount = 0;
+                        if (donHang.PhuongThucThanhToan == "COD")
                         {
-                            // Nếu chưa có SoDuVi, khởi tạo = 0
-                            nguoiBan.SoDuVi = nguoiBan.SoDuVi;
+                            // Đối với COD, hoàn trả tiền đặt cọc + thanh toán tiền đơn hàng
+                            depositAmount = CalculateRequiredDeposit(donHang.TongSoTien);
 
-                            // Cập nhật số dư ví
+                            // Hoàn trả tiền đặt cọc + thanh toán tiền đơn hàng
+                            decimal totalPayment = depositAmount + donHang.TongSoTien;
+                            nguoiBan.SoDuVi += totalPayment;
+                            db.Entry(nguoiBan).State = EntityState.Modified;
+
+                            System.Diagnostics.Debug.WriteLine($"COD - Hoàn trả đặt cọc: {depositAmount:N0}đ, Thanh toán đơn hàng: {donHang.TongSoTien:N0}đ");
+
+                            // Tạo ghi chép hoàn trả đặt cọc
+                            var ghiChepCoc = new GhiChepVi
+                            {
+                                MaNguoiBan = nguoiBan.MaNguoiBan,
+                                MaDonHang = maDonHang,
+                                SoTien = depositAmount,
+                                LoaiGiaoDich = "Hoàn trả đặt cọc",
+                                MoTa = $"Hoàn trả tiền đặt cọc cho đơn hàng #{maDonHang}",
+                                NgayGiaoDich = DateTime.Now,
+                                TrangThai = "Thành công"
+                            };
+                            db.GhiChepVis.Add(ghiChepCoc);
+
+                            // Tạo ghi chép thanh toán đơn hàng
+                            var ghiChepThanhToan = new GhiChepVi
+                            {
+                                MaNguoiBan = nguoiBan.MaNguoiBan,
+                                MaDonHang = maDonHang,
+                                SoTien = donHang.TongSoTien,
+                                LoaiGiaoDich = "Thanh toán đơn hàng",
+                                MoTa = $"Thanh toán tiền đơn hàng #{maDonHang}",
+                                NgayGiaoDich = DateTime.Now,
+                                TrangThai = "Thành công"
+                            };
+                            db.GhiChepVis.Add(ghiChepThanhToan);
+                        }
+                        else
+                        {
+                            // Đối với VNPAY, chỉ thanh toán tiền sau khi trừ phí
                             nguoiBan.SoDuVi += escrow.TienChuyenChoNguoiBan;
                             db.Entry(nguoiBan).State = EntityState.Modified;
 
-                            System.Diagnostics.Debug.WriteLine($"Đã cập nhật số dư ví người bán ID {nguoiBan.MaNguoiBan}: " +
-                                $"Cũ={nguoiBan.SoDuVi - escrow.TienChuyenChoNguoiBan:N0}đ, " +
-                                $"Thêm={escrow.TienChuyenChoNguoiBan:N0}đ, " +
-                                $"Mới={nguoiBan.SoDuVi:N0}đ");
+                            System.Diagnostics.Debug.WriteLine($"VNPAY - Thanh toán sau khi trừ phí: {escrow.TienChuyenChoNguoiBan:N0}đ");
+
+                            // Tạo ghi chép thanh toán
+                            var ghiChep = new GhiChepVi
+                            {
+                                MaNguoiBan = nguoiBan.MaNguoiBan,
+                                MaDonHang = maDonHang,
+                                SoTien = escrow.TienChuyenChoNguoiBan,
+                                LoaiGiaoDich = "Thanh toán đơn hàng",
+                                MoTa = $"Thanh toán tiền đơn hàng #{maDonHang} (đã trừ phí nền tảng)",
+                                NgayGiaoDich = DateTime.Now,
+                                TrangThai = "Thành công"
+                            };
+                            db.GhiChepVis.Add(ghiChep);
                         }
-                    }
-                    catch (Exception walletEx)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Lỗi cập nhật ví người bán: {walletEx.Message}");
-                        // Tiếp tục xử lý, không dừng giải ngân
-                    }
 
-                    // Ghi lịch sử giao dịch ví
-                    try
-                    {
-                        var lichSuGiaoDich = new LichSuGiaoDichVi
-                        {
-                            MaNguoiBan = escrow.MaNguoiBan,
-                            MaDonHang = escrow.MaDonHang,
-                            SoTien = escrow.TienChuyenChoNguoiBan,
-                            LoaiGiaoDich = "Nhận tiền từ đơn hàng",
-                            TrangThai = "Thành công",
-                            NoiDung = $"Nhận tiền từ đơn hàng #{escrow.MaDonHang} sau khi trừ phí nền tảng",
-                            NgayGiaoDich = DateTime.Now
-                        };
-
-                        db.LichSuGiaoDichVis.Add(lichSuGiaoDich);
-                        System.Diagnostics.Debug.WriteLine($"Đã thêm lịch sử giao dịch ví cho người bán {escrow.MaNguoiBan}");
-                    }
-                    catch (Exception historyEx)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Lỗi ghi lịch sử giao dịch: {historyEx.Message}");
-                        // Tiếp tục xử lý, không dừng giải ngân
+                        System.Diagnostics.Debug.WriteLine($"Đã cập nhật số dư ví người bán ID {nguoiBan.MaNguoiBan}: {nguoiBan.SoDuVi:N0}đ");
                     }
 
                     // Lưu tất cả thay đổi
@@ -374,7 +457,7 @@ namespace WebApplication1.Services
                     // Commit transaction
                     dbTransaction.Commit();
 
-                    System.Diagnostics.Debug.WriteLine($"Đã giải ngân {escrow.TienChuyenChoNguoiBan:N0}đ cho người bán ID {escrow.MaNguoiBan} từ đơn hàng {maDonHang}");
+                    System.Diagnostics.Debug.WriteLine($"Đã giải ngân thành công cho đơn hàng {maDonHang}");
                     return true;
                 }
                 catch (Exception ex)
@@ -388,6 +471,165 @@ namespace WebApplication1.Services
                         System.Diagnostics.Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
                     }
                     throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Xử lý hoàn thành đơn hàng và giải ngân ký quỹ
+        /// </summary>
+        /// <param name="maDonHang">Mã đơn hàng cần xử lý</param>
+        /// <returns>Kết quả xử lý (true/false)</returns>
+        public async Task<bool> ProcessOrderCompletionAsync(int maDonHang)
+        {
+            using (var db = new MedinetDATN())
+            {
+                using (var dbTransaction = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        // Lấy thông tin đơn hàng
+                        var donHang = await db.DonHangs.FindAsync(maDonHang);
+                        if (donHang == null)
+                            throw new Exception($"Không tìm thấy đơn hàng với mã {maDonHang}");
+
+                        // Lấy thông tin ký quỹ
+                        var escrow = await db.Escrows
+                            .FirstOrDefaultAsync(e => e.MaDonHang == maDonHang);
+
+                        if (escrow == null)
+                            throw new Exception($"Không tìm thấy ký quỹ cho đơn hàng {maDonHang}");
+
+                        // Chỉ xử lý khi ký quỹ đang ở trạng thái "Đang giữ"
+                        if (escrow.TrangThai != "Đang giữ")
+                            throw new Exception($"Ký quỹ đã được xử lý trước đó, trạng thái hiện tại: {escrow.TrangThai}");
+
+                        // Cập nhật trạng thái đơn hàng
+                        donHang.TrangThaiDonHang = "Đã xác nhận nhận hàng";
+                        donHang.DaXacNhanNhanHang = true;
+                        donHang.NgayCapNhat = DateTime.Now;
+                        db.Entry(donHang).State = EntityState.Modified;
+                        await db.SaveChangesAsync();
+
+                        // Gọi phương thức giải ngân có sẵn
+                        bool result = await ReleaseEscrow(maDonHang);
+
+                        if (!result)
+                            throw new Exception("Không thể giải ngân ký quỹ");
+
+                        System.Diagnostics.Debug.WriteLine($"Đã xử lý hoàn thành đơn hàng {maDonHang} thành công");
+
+                        // Commit transaction
+                        dbTransaction.Commit();
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        dbTransaction.Rollback();
+                        System.Diagnostics.Debug.WriteLine($"Lỗi khi xử lý hoàn thành đơn hàng: {ex.Message}");
+                        if (ex.InnerException != null)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                        }
+                        throw;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Hoàn tiền cho người mua nếu hủy đơn hàng và hoàn trả tiền đặt cọc cho người bán
+        /// </summary>
+        /// <param name="maDonHang">Mã đơn hàng cần hoàn tiền</param>
+        /// <param name="lyDoHuy">Lý do hủy đơn hàng</param>
+        /// <returns>Kết quả hoàn tiền (true/false)</returns>
+        public async Task<bool> ProcessOrderCancellationAsync(int maDonHang, string lyDoHuy)
+        {
+            using (var db = new MedinetDATN())
+            {
+                using (var dbTransaction = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        // Lấy thông tin đơn hàng
+                        var donHang = await db.DonHangs.FindAsync(maDonHang);
+                        if (donHang == null)
+                            throw new Exception($"Không tìm thấy đơn hàng với mã {maDonHang}");
+
+                        // Lấy thông tin ký quỹ
+                        var escrow = await db.Escrows
+                            .FirstOrDefaultAsync(e => e.MaDonHang == maDonHang);
+
+                        if (escrow == null)
+                        {
+                            // Nếu không có ký quỹ (có thể đơn hàng chưa được xử lý), vẫn tiếp tục xử lý hủy đơn hàng
+                            System.Diagnostics.Debug.WriteLine($"Không tìm thấy ký quỹ cho đơn hàng {maDonHang}, tiếp tục xử lý hủy");
+                        }
+                        else if (escrow.TrangThai != "Đang giữ")
+                        {
+                            // Nếu ký quỹ đã được xử lý, cảnh báo nhưng vẫn tiếp tục
+                            System.Diagnostics.Debug.WriteLine($"Ký quỹ đã được xử lý trước đó, trạng thái hiện tại: {escrow.TrangThai}");
+                        }
+                        else
+                        {
+                            // Cập nhật trạng thái ký quỹ
+                            escrow.TrangThai = "Đã hoàn tiền";
+                            escrow.NgayGiaiNgan = DateTime.Now;
+                            db.Entry(escrow).State = EntityState.Modified;
+
+                            // Nếu là COD, hoàn trả tiền đặt cọc cho người bán
+                            if (donHang.PhuongThucThanhToan == "COD")
+                            {
+                                var nguoiBan = await db.NguoiBans.FindAsync(donHang.MaNguoiBan);
+                                if (nguoiBan != null)
+                                {
+                                    decimal depositAmount = CalculateRequiredDeposit(donHang.TongSoTien);
+
+                                    // Hoàn trả tiền đặt cọc
+                                    nguoiBan.SoDuVi += depositAmount;
+                                    db.Entry(nguoiBan).State = EntityState.Modified;
+
+                                    // Tạo ghi chép ví
+                                    var ghiChep = new GhiChepVi
+                                    {
+                                        MaNguoiBan = nguoiBan.MaNguoiBan,
+                                        MaDonHang = maDonHang,
+                                        SoTien = depositAmount,
+                                        LoaiGiaoDich = "Hoàn trả đặt cọc",
+                                        MoTa = $"Hoàn trả tiền đặt cọc cho đơn hàng #{maDonHang} (đã hủy)",
+                                        NgayGiaoDich = DateTime.Now,
+                                        TrangThai = "Thành công"
+                                    };
+                                    db.GhiChepVis.Add(ghiChep);
+
+                                    System.Diagnostics.Debug.WriteLine($"Đã hoàn trả tiền đặt cọc {depositAmount:N0}đ cho người bán ID {nguoiBan.MaNguoiBan}");
+                                }
+                            }
+                            // Nếu là VNPAY, thêm vào hàng đợi hoàn tiền cho người mua
+                            else if (donHang.PhuongThucThanhToan == "VNPAY")
+                            {
+                                await RefundEscrow(maDonHang);
+                            }
+                        }
+
+                        // Cập nhật trạng thái đơn hàng
+                        donHang.TrangThaiDonHang = "Đã hủy";
+                        donHang.NgayHuy = DateTime.Now;
+                        donHang.LyDoHuy = lyDoHuy;
+                        donHang.NgayCapNhat = DateTime.Now;
+
+                        // Lưu thay đổi
+                        await db.SaveChangesAsync();
+                        dbTransaction.Commit();
+
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        dbTransaction.Rollback();
+                        System.Diagnostics.Debug.WriteLine($"Lỗi khi xử lý hủy đơn hàng: {ex.Message}");
+                        throw;
+                    }
                 }
             }
         }

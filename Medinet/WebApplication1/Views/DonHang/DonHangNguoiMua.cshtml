@@ -245,11 +245,12 @@
                                                 }
                                             </td>
                                             <td>
+                                                <!-- Cập nhật các nút hành động dựa trên trạng thái -->
                                                 <div class="btn-group">
                                                     <a href="@Url.Action("ChiTietDonHangNguoiMua", "DonHang", new { id = item.MaDonHang })" class="btn btn-sm btn-outline-info" title="Xem chi tiết" data-toggle="tooltip">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    @if (item.TrangThaiDonHang == "Đang chờ xử lý")
+                                                    @if (item.TrangThaiDonHang == "Đang chờ xử lý" || item.TrangThaiDonHang == "Đã thanh toán")
                                                     {
                                                         <button type="button" class="btn btn-sm btn-outline-primary update-status-btn"
                                                                 data-id="@item.MaDonHang"
@@ -275,13 +276,8 @@
                                                             <i class="fas fa-check"></i>
                                                         </button>
                                                     }
-                                                    <button type="button" class="btn btn-sm btn-outline-secondary print-invoice-btn"
-                                                            data-id="@item.MaDonHang"
-                                                            title="In hóa đơn"
-                                                            data-toggle="tooltip">
-                                                        <i class="fas fa-print"></i>
-                                                    </button>
                                                 </div>
+
                                             </td>
                                         </tr>
                                         stt++;
@@ -394,7 +390,7 @@
             });
 
             // Update status button click
-            $('.update-status-btn').click(function() {
+            $('.update-status-btn').click(function () {
                 var orderId = $(this).data('id');
                 var newStatus = $(this).data('status');
                 $('#updateOrderId').val(orderId);
@@ -530,6 +526,7 @@
                     counter++;
                 });
             }
+
         });
     </script>
 }

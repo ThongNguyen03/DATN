@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -175,9 +176,10 @@ namespace WebApplication1.Controllers
             return paymentUrl;
         }
 
+        // Sửa lại phương thức để tránh khai báo trùng biến sanPhamTheoNguoiBan
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult XacNhanDatHang(ThanhToanViewModel model)
+        public async Task<ActionResult> XacNhanDatHang(ThanhToanViewModel model)
         {
             using (var dbTransaction = db.Database.BeginTransaction())
             {
@@ -200,8 +202,39 @@ namespace WebApplication1.Controllers
                         return RedirectToAction("Index", "GioHangs");
                     }
 
+                    // Group products by seller - định nghĩa một lần và sử dụng lại ở dưới
+                    var sanPhamTheoNguoiBan = cartItems
+                        .GroupBy(c => c.SanPham.MaNguoiBan)
+                        .ToDictionary(g => g.Key, g => g.ToList());
+
+                    // Kiểm tra số dư của người bán nếu thanh toán COD
+                    if (model.PhuongThucThanhToan == "COD")
+                    {
+                        foreach (var nguoiBan in sanPhamTheoNguoiBan)
+                        {
+                            decimal tongTien = nguoiBan.Value.Sum(c => c.SoLuong * c.SanPham.GiaSanPham);
+
+                            // Kiểm tra số dư của người bán
+                            var maNguoiBan = nguoiBan.Key;
+                            var escrowService = new EscrowService();
+                            bool duSoDu = await escrowService.CheckSellerBalanceAsync(maNguoiBan, tongTien);
+
+                            if (!duSoDu)
+                            {
+                                // Tính số tiền cần thiết
+                                decimal requiredAmount = escrowService.CalculateTotalRequiredAmount(tongTien);
+
+                                // Lấy thông tin người bán
+                                var nguoiBanInfo = await db.NguoiBans.FindAsync(maNguoiBan);
+
+                                TempData["Error"] = $"Người bán {nguoiBanInfo.TenCuaHang} không đủ số dư để đặt cọc. Vui lòng chọn phương thức thanh toán khác hoặc liên hệ người bán.";
+                                return RedirectToAction("Index");
+                            }
+                        }
+                    }
+
                     // Check shipping address
-                    var nguoiDung = db.NguoiDungs.Find(maNguoiDung);
+                    var nguoiDung = await db.NguoiDungs.FindAsync(maNguoiDung);
                     if (nguoiDung == null || string.IsNullOrEmpty(nguoiDung.DiaChi) || string.IsNullOrEmpty(nguoiDung.SoDienThoai))
                     {
                         TempData["Error"] = "Vui lòng cập nhật địa chỉ giao hàng và số điện thoại!";
@@ -210,11 +243,6 @@ namespace WebApplication1.Controllers
 
                     // Create order list by store
                     var danhSachDonHang = new List<DonHang>();
-
-                    // Group products by seller
-                    var sanPhamTheoNguoiBan = cartItems
-                        .GroupBy(c => c.SanPham.MaNguoiBan)
-                        .ToDictionary(g => g.Key, g => g.ToList());
 
                     // Create order for each seller
                     foreach (var nguoiBan in sanPhamTheoNguoiBan)
@@ -230,7 +258,7 @@ namespace WebApplication1.Controllers
                             TongSoTien = tongTien,
                             PhuongThucThanhToan = model.PhuongThucThanhToan,
                             // For COD, keep default status. For VNPAY, set to waiting for payment
-                            TrangThaiDonHang = "Đang chờ xử lý" ,
+                            TrangThaiDonHang = "Đang chờ xử lý",
                             NgayTao = DateTime.Now,
                             GhiChu = model.GhiChu,
                             ChiTietDonHangs = new List<ChiTietDonHang>()
@@ -240,7 +268,7 @@ namespace WebApplication1.Controllers
                         foreach (var cartItem in nguoiBan.Value)
                         {
                             // Check stock
-                            var sanPham = db.SanPhams.Find(cartItem.MaSanPham);
+                            var sanPham = await db.SanPhams.FindAsync(cartItem.MaSanPham);
                             if (sanPham == null || sanPham.SoLuongTonKho < cartItem.SoLuong)
                             {
                                 TempData["Error"] = $"Sản phẩm {sanPham?.TenSanPham ?? "không xác định"} không đủ số lượng tồn kho!";
@@ -264,12 +292,15 @@ namespace WebApplication1.Controllers
                         danhSachDonHang.Add(donHang);
                         db.DonHangs.Add(donHang);
                     }
+
                     System.Diagnostics.Debug.WriteLine("trước khi save");
                     // Save orders and update stock
-                    db.SaveChanges();
+                    await db.SaveChangesAsync();
                     System.Diagnostics.Debug.WriteLine("sau khi save");
+
                     // Sau đó tạo giao dịch với MaDonHang đã có
                     System.Diagnostics.Debug.WriteLine("bắt đầu tạo giao dịch");
+
                     // Create transaction for each order
                     foreach (var donHang in danhSachDonHang)
                     {
@@ -277,7 +308,7 @@ namespace WebApplication1.Controllers
                         var giaoDich = new GiaoDich
                         {
                             MaDonHang = donHang.MaDonHang,
-                            TrangThaiGiaoDich = "Đang chờ xử lý" ,
+                            TrangThaiGiaoDich = "Đang chờ xử lý",
                             PhuongThucThanhToan = model.PhuongThucThanhToan,
                             TongTien = donHang.TongSoTien,
                             NgayGiaoDich = DateTime.Now
@@ -288,27 +319,8 @@ namespace WebApplication1.Controllers
 
                     System.Diagnostics.Debug.WriteLine("trước khi save don hang");
                     // Save orders and update stock
-                    db.SaveChanges();
+                    await db.SaveChangesAsync();
                     System.Diagnostics.Debug.WriteLine("sau khi save don hang");
-
-                    //// Tạo ký quỹ cho các đơn hàng
-                    //if (model.PhuongThucThanhToan == "COD")
-                    //{
-                    //    try
-                    //    {
-                    //        // Tạo ký quỹ bất đồng bộ
-                    //        var maDonHangList = danhSachDonHang.Select(d => d.MaDonHang).ToList();
-                    //        var escrows = await escrowService.CreateMultipleEscrowsAsync(maDonHangList);
-
-                    //        System.Diagnostics.Debug.WriteLine($"Đã tạo {escrows.Count} ký quỹ cho các đơn hàng");
-                    //    }
-                    //    catch (Exception ex)
-                    //    {
-                    //        System.Diagnostics.Debug.WriteLine($"Lỗi khi tạo ký quỹ: {ex.Message}");
-                    //        // Ghi log lỗi nhưng vẫn tiếp tục
-                    //    }
-                    //}
-
 
                     // Clear session
                     Session.Remove("CartItems");
@@ -316,8 +328,8 @@ namespace WebApplication1.Controllers
                     Session.Remove("AppliedVoucher");
                     Session.Remove("VoucherDiscount");
                     Session.Remove("IsMuaNgay");
-                    System.Diagnostics.Debug.WriteLine("trươc khi commit");
 
+                    System.Diagnostics.Debug.WriteLine("trươc khi commit");
                     // Commit transaction only once here
                     dbTransaction.Commit();
                     System.Diagnostics.Debug.WriteLine("sau khi commit");
@@ -330,9 +342,10 @@ namespace WebApplication1.Controllers
                             var maDonHangList = danhSachDonHang.Select(d => d.MaDonHang).ToList();
 
                             // Chạy bất đồng bộ nhưng không đợi kết quả để tránh ảnh hưởng đến thanh toán
-                            Task.Run(async () => {
+                            var _=Task.Run(async () => {
                                 try
                                 {
+                                    var escrowService = new EscrowService();
                                     var result = await escrowService.CreateMultipleEscrowsAsync(maDonHangList);
                                     System.Diagnostics.Debug.WriteLine($"Đã tạo {result.Count} ký quỹ bất đồng bộ");
                                 }
@@ -353,11 +366,9 @@ namespace WebApplication1.Controllers
                     // Check payment method
                     if (model.PhuongThucThanhToan == "VNPAY")
                     {
-                       
                         // Save data to session for use on VNPAY payment page
                         if (danhSachDonHang.Any())
                         {
-                           
                             int firstOrderId = danhSachDonHang.First().MaDonHang;
                             Session["MaDonHangVNPAY"] = firstOrderId;
                             Session["DanhSachMaDonHang"] = string.Join(",", danhSachDonHang.Select(d => d.MaDonHang));
@@ -401,6 +412,251 @@ namespace WebApplication1.Controllers
             }
         }
 
+        // Thêm phương thức nạp tiền qua VNPAY vào ThanhToanController.cs
+        [HttpGet]
+        public ActionResult TaoThanhToanVNPayNapTien(int maNguoiBan, decimal soTien)
+        {
+            try
+            {
+                // Kiểm tra quyền truy cập
+                int maNguoiDung = GetCurrentUserId();
+                var nguoiBan = db.NguoiBans.Find(maNguoiBan);
+                if (nguoiBan == null || nguoiBan.MaNguoiDung != maNguoiDung)
+                {
+                    return new HttpStatusCodeResult(HttpStatusCode.Forbidden);
+                }
+
+                // Kiểm tra số tiền
+                if (soTien < 10000)
+                {
+                    TempData["Error"] = "Số tiền nạp tối thiểu là 10,000 VNĐ!";
+                    return RedirectToAction("QuanLyTaiKhoan", "NguoiBans", new { id = maNguoiBan });
+                }
+
+                // Lấy thông tin cấu hình từ Web.config
+                string vnp_Returnurl = ConfigurationManager.AppSettings["vnp_Returnurl_NapTien"];
+                string vnp_Url = ConfigurationManager.AppSettings["vnp_Url"];
+                string vnp_TmnCode = ConfigurationManager.AppSettings["vnp_TmnCode"];
+                string vnp_HashSecret = ConfigurationManager.AppSettings["vnp_HashSecret"];
+
+                // Ghi log cấu hình
+                System.Diagnostics.Debug.WriteLine($"Cấu hình VNPAY: URL={vnp_Url}, ReturnURL={vnp_Returnurl}, TmnCode={vnp_TmnCode}");
+
+                // Kiểm tra cấu hình VNPAY
+                if (string.IsNullOrEmpty(vnp_Url) || string.IsNullOrEmpty(vnp_TmnCode) ||
+                    string.IsNullOrEmpty(vnp_HashSecret) || string.IsNullOrEmpty(vnp_Returnurl))
+                {
+                    System.Diagnostics.Debug.WriteLine("Thiếu cấu hình VNPAY!");
+                    TempData["Error"] = "Cấu hình thanh toán VNPAY chưa đầy đủ!";
+                    return RedirectToAction("QuanLyTaiKhoan", "NguoiBans", new { id = maNguoiBan });
+                }
+
+                // Tạo mã giao dịch nạp tiền
+                string maNapTien = "NT" + DateTime.Now.ToString("yyyyMMddHHmmss") + maNguoiBan;
+
+                // Lưu thông tin nạp tiền vào session để xử lý sau khi nhận kết quả
+                Session["MaNapTien"] = maNapTien;
+                Session["MaNguoiBanNapTien"] = maNguoiBan;
+                Session["SoTienNap"] = soTien;
+
+                // Tạo đối tượng VnPayLibrary
+                VnPayLibrary vnpay = new VnPayLibrary();
+
+                // Tạo thời gian hiện tại theo định dạng yyyyMMddHHmmss
+                string createDate = DateTime.Now.ToString("yyyyMMddHHmmss");
+
+                // Cấu hình thông tin thanh toán
+                vnpay.AddRequestData("vnp_Version", "2.1.0");
+                vnpay.AddRequestData("vnp_Command", "pay");
+                vnpay.AddRequestData("vnp_TmnCode", vnp_TmnCode);
+
+                // Đảm bảo số tiền là số nguyên và nhân 100 (đơn vị VND)
+                long amount = (long)(soTien * 100);
+                vnpay.AddRequestData("vnp_Amount", amount.ToString());
+                System.Diagnostics.Debug.WriteLine($"Số tiền nạp: {soTien} -> {amount}");
+
+                // Thiết lập thêm thông tin
+                string ipAddress = "127.0.0.1"; // Địa chỉ localhost cố định
+                vnpay.AddRequestData("vnp_CreateDate", createDate);
+                vnpay.AddRequestData("vnp_CurrCode", "VND");
+                vnpay.AddRequestData("vnp_IpAddr", ipAddress);
+                vnpay.AddRequestData("vnp_Locale", "vn");
+                vnpay.AddRequestData("vnp_OrderInfo", "Nap tien vao vi Medinet: " + maNapTien);
+                vnpay.AddRequestData("vnp_OrderType", "billpayment");
+                vnpay.AddRequestData("vnp_ReturnUrl", vnp_Returnurl);
+                vnpay.AddRequestData("vnp_TxnRef", maNapTien);
+
+                // Tạo URL thanh toán
+                string paymentUrl = vnpay.CreateRequestUrl(vnp_Url, vnp_HashSecret);
+                System.Diagnostics.Debug.WriteLine("URL thanh toán VNPAY: " + paymentUrl);
+
+                // Chuyển hướng đến trang thanh toán VNPay
+                System.Diagnostics.Debug.WriteLine("Chuyển hướng đến trang thanh toán VNPAY để nạp tiền");
+                return Redirect(paymentUrl);
+            }
+            catch (Exception ex)
+            {
+                // Ghi log chi tiết lỗi
+                System.Diagnostics.Debug.WriteLine("Lỗi tạo thanh toán VNPAY để nạp tiền: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("Stack trace: " + ex.StackTrace);
+
+                if (ex.InnerException != null)
+                {
+                    System.Diagnostics.Debug.WriteLine("Inner exception: " + ex.InnerException.Message);
+                }
+
+                TempData["Error"] = "Đã xảy ra lỗi khi tạo thanh toán: " + ex.Message;
+                return RedirectToAction("QuanLyTaiKhoan", "NguoiBans", new { id = maNguoiBan });
+            }
+        }
+
+        // Thêm phương thức xử lý kết quả thanh toán nạp tiền từ VNPAY
+        public async Task<ActionResult> KetQuaThanhToanNapTien()
+        {
+            try
+            {
+                // Debug log
+                System.Diagnostics.Debug.WriteLine("Nhận kết quả từ VNPAY cho nạp tiền");
+
+                // Get parameters from VNPAY
+                string vnp_ResponseCode = Request.QueryString["vnp_ResponseCode"];
+                string vnp_TxnRef = Request.QueryString["vnp_TxnRef"]; // Mã nạp tiền
+                string vnp_Amount = Request.QueryString["vnp_Amount"];
+                string vnp_TransactionNo = Request.QueryString["vnp_TransactionNo"]; // VNPAY transaction ID
+                string vnp_PayDate = Request.QueryString["vnp_PayDate"]; // Payment time
+                string vnp_BankCode = Request.QueryString["vnp_BankCode"]; // Bank code
+                string vnp_CardType = Request.QueryString["vnp_CardType"]; // Card type
+                string vnp_SecureHash = Request.QueryString["vnp_SecureHash"];
+
+                // Log received parameters
+                System.Diagnostics.Debug.WriteLine("ResponseCode: " + vnp_ResponseCode);
+                System.Diagnostics.Debug.WriteLine("TxnRef (Mã nạp tiền): " + vnp_TxnRef);
+                System.Diagnostics.Debug.WriteLine("Amount: " + vnp_Amount);
+                System.Diagnostics.Debug.WriteLine("VNPAY transaction ID: " + vnp_TransactionNo);
+
+                // Get VNPAY configuration
+                string vnp_HashSecret = ConfigurationManager.AppSettings["vnp_HashSecret"];
+
+                // Verify signature
+                VnPayLibrary vnpay = new VnPayLibrary();
+                foreach (string s in Request.QueryString)
+                {
+                    // Skip hash for verification
+                    if (!s.StartsWith("vnp_SecureHash"))
+                    {
+                        vnpay.AddResponseData(s, Request.QueryString[s]);
+                    }
+                }
+
+                bool isValidSignature = vnpay.ValidateSignature(vnp_SecureHash, vnp_HashSecret);
+
+                // Check payment result
+                bool paymentSuccess = isValidSignature && (vnp_ResponseCode == "00");
+
+                // Lấy thông tin từ session
+                int maNguoiBan = (int)Session["MaNguoiBanNapTien"];
+                decimal soTienNap = (decimal)Session["SoTienNap"];
+
+                if (paymentSuccess)
+                {
+                    // Use separate try-catch for DB updates
+                    try
+                    {
+                        using (var dbTransaction = db.Database.BeginTransaction())
+                        {
+                            try
+                            {
+                                // Tìm người bán
+                                var nguoiBan = db.NguoiBans.Find(maNguoiBan);
+                                if (nguoiBan == null)
+                                {
+                                    TempData["Error"] = "Không tìm thấy thông tin người bán!";
+                                    return RedirectToAction("Index", "Home");
+                                }
+
+                                // Tạo ghi chép ví
+                                var ghiChep = new GhiChepVi
+                                {
+                                    MaNguoiBan = maNguoiBan,
+                                    SoTien = soTienNap,
+                                    LoaiGiaoDich = "Nạp tiền",
+                                    MoTa = $"Nạp tiền qua VNPAY (Mã GD: {vnp_TransactionNo})",
+                                    NgayGiaoDich = DateTime.Now,
+                                    TrangThai = "Thành công",
+                                    MaGiaoDichNgoai = vnp_TransactionNo
+                                };
+                                db.GhiChepVis.Add(ghiChep);
+
+                                // Cập nhật số dư ví
+                                nguoiBan.SoDuVi += soTienNap;
+                                db.Entry(nguoiBan).State = EntityState.Modified;
+
+                                // Lưu thay đổi
+                                db.SaveChanges();
+
+                                // Commit transaction
+                                dbTransaction.Commit();
+
+                                // Xóa thông tin nạp tiền khỏi session
+                                Session.Remove("MaNapTien");
+                                Session.Remove("MaNguoiBanNapTien");
+                                Session.Remove("SoTienNap");
+
+                                TempData["Success"] = $"Nạp tiền thành công! Số tiền {soTienNap:N0} VNĐ đã được cộng vào ví của bạn.";
+                                return RedirectToAction("QuanLyTaiKhoan", "NguoiBans", new { id = maNguoiBan });
+                            }
+                            catch (Exception ex)
+                            {
+                                // Rollback transaction if error for this order
+                                dbTransaction.Rollback();
+                                // Log chi tiết lỗi
+                                System.Diagnostics.Debug.WriteLine("DbUpdateException: " + ex.Message);
+
+                                if (ex.InnerException != null)
+                                {
+                                    System.Diagnostics.Debug.WriteLine("Inner Exception: " + ex.InnerException.Message);
+                                }
+
+                                TempData["Error"] = "Đã xảy ra lỗi khi cập nhật số dư ví! Vui lòng liên hệ quản trị viên.";
+                                return RedirectToAction("QuanLyTaiKhoan", "NguoiBans", new { id = maNguoiBan });
+                            }
+                        }
+                    }
+                    catch (Exception dbEx)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Overall error processing DB: " + dbEx.Message);
+                        if (dbEx.InnerException != null)
+                        {
+                            System.Diagnostics.Debug.WriteLine("Inner exception: " + dbEx.InnerException.Message);
+                        }
+
+                        TempData["Error"] = "Đã xảy ra lỗi khi cập nhật số dư ví! Vui lòng liên hệ quản trị viên.";
+                        return RedirectToAction("QuanLyTaiKhoan", "NguoiBans", new { id = maNguoiBan });
+                    }
+                }
+                else
+                {
+                    // Payment failed
+                    System.Diagnostics.Debug.WriteLine("Nạp tiền thất bại! Error code: " + vnp_ResponseCode);
+                    TempData["Error"] = "Nạp tiền không thành công! Mã lỗi: " + vnp_ResponseCode;
+                    return RedirectToAction("QuanLyTaiKhoan", "NguoiBans", new { id = maNguoiBan });
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                System.Diagnostics.Debug.WriteLine("Error processing VNPAY callback for deposit: " + ex.Message);
+                if (ex.InnerException != null)
+                {
+                    System.Diagnostics.Debug.WriteLine("Inner exception: " + ex.InnerException.Message);
+                }
+
+                TempData["Error"] = "Đã xảy ra lỗi khi xử lý kết quả thanh toán!";
+                return RedirectToAction("Index", "Home");
+            }
+        }
+
+        //27/03/2025
         // GET: ThanhToan/DatHangThanhCong
         public ActionResult DatHangThanhCong(string maDonHang)
         {

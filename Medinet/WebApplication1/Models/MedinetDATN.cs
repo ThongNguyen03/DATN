@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity;
+using System.Data.Entity.Infrastructure.Annotations;
 using System.Data.Entity.ModelConfiguration.Conventions;
 using System.Linq;
 using System.Web;
@@ -33,7 +35,8 @@ namespace WebApplication1.Models
         public virtual DbSet<LichSuGiaoDichVi> LichSuGiaoDichVis { get; set; }
         public virtual DbSet<ThongTinHoanTien> ThongTinHoanTiens { get; set; }
         public virtual DbSet<HangDoiHoanTienVNPay> HangDoiHoanTienVNPays { get; set; }
-
+        //27/3/2025
+        public DbSet<GhiChepVi> GhiChepVis { get; set; }
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             // 1. KHÓA CHÍNH COMPOSITE
@@ -54,18 +57,6 @@ namespace WebApplication1.Models
             modelBuilder.Entity<NguoiBan>()
                 .Property(nb => nb.MaNguoiDung)
                 .IsRequired();
-
-            //// Thiết lập mối quan hệ một-một
-            //modelBuilder.Entity<NguoiDung>()
-            //    .HasOptional(nd => nd.NguoiBan)
-            //    .WithRequired(nb => nb.NguoiDung);
-
-            //// Bổ sung thiết lập cascade delete nếu cần
-            //modelBuilder.Entity<NguoiDung>()
-            //    .HasMany<AnhChungChi>(nd => null)
-            //    .WithOptional()
-            //    .HasForeignKey(a => a.MaNguoiBan)
-            //    .WillCascadeOnDelete(true);
 
             // 3. MỐI QUAN HỆ TỰ THAM CHIẾU DanhMucSanPham (cha-con)
             modelBuilder.Entity<DanhMucSanPham>()
@@ -324,8 +315,110 @@ namespace WebApplication1.Models
             modelBuilder.Entity<HangDoiHoanTienVNPay>()
                 .Property(hd => hd.SoTienHoan)
                 .HasPrecision(10, 2);
+
+
+
+
+            //27/3/2025
+            // Thiết lập cơ bản
+            modelBuilder.Entity<GhiChepVi>()
+                .ToTable("GhiChepVi");
+
+            // Cấu hình primary key
+            modelBuilder.Entity<GhiChepVi>()
+                .HasKey(g => g.MaGhiChep)
+                .Property(g => g.MaGhiChep)
+                .HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+
+            // Cấu hình precision và scale cho các trường decimal
+            modelBuilder.Entity<GhiChepVi>()
+                .Property(g => g.SoTien)
+                .HasPrecision(10, 2)
+                .IsRequired();
+
+            // Cấu hình các trường required
+            modelBuilder.Entity<GhiChepVi>()
+                .Property(g => g.MaNguoiBan)
+                .IsRequired();
+
+            modelBuilder.Entity<GhiChepVi>()
+                .Property(g => g.LoaiGiaoDich)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            modelBuilder.Entity<GhiChepVi>()
+                .Property(g => g.NgayGiaoDich)
+                .IsRequired();
+
+            modelBuilder.Entity<GhiChepVi>()
+                .Property(g => g.TrangThai)
+                .IsRequired()
+                .HasMaxLength(20);
+
+            // Cấu hình các trường tùy chọn
+            modelBuilder.Entity<GhiChepVi>()
+                .Property(g => g.MoTa)
+                .HasMaxLength(255)
+                .IsOptional();
+
+            modelBuilder.Entity<GhiChepVi>()
+                .Property(g => g.MaGiaoDichNgoai)
+                .HasMaxLength(50)
+                .IsOptional();
+
+            modelBuilder.Entity<GhiChepVi>()
+                .Property(g => g.IP)
+                .HasMaxLength(100)
+                .IsOptional();
+
+            modelBuilder.Entity<GhiChepVi>()
+                .Property(g => g.MaDonHang)
+                .IsOptional();
+
+            // Cấu hình mối quan hệ giữa GhiChepVi và NguoiBan
+            modelBuilder.Entity<GhiChepVi>()
+                .HasRequired(g => g.NguoiBan)
+                .WithMany(n => n.GhiChepVis)
+                .HasForeignKey(g => g.MaNguoiBan)
+                .WillCascadeOnDelete(false);
+
+            // Cấu hình mối quan hệ giữa GhiChepVi và DonHang (nếu có)
+            modelBuilder.Entity<GhiChepVi>()
+                .HasOptional(g => g.DonHang)
+                .WithMany()
+                .HasForeignKey(g => g.MaDonHang)
+                .WillCascadeOnDelete(false);
+
+            // Index để tối ưu hiệu suất truy vấn
+            modelBuilder.Entity<GhiChepVi>()
+                .Property(g => g.MaNguoiBan)
+                .HasColumnAnnotation("Index", new IndexAnnotation(new IndexAttribute("IX_GhiChepVi_MaNguoiBan")));
+
+            modelBuilder.Entity<GhiChepVi>()
+                .Property(g => g.NgayGiaoDich)
+                .HasColumnAnnotation("Index", new IndexAnnotation(new IndexAttribute("IX_GhiChepVi_NgayGiaoDich")));
+
+            modelBuilder.Entity<GhiChepVi>()
+                .Property(g => g.MaDonHang)
+                .HasColumnAnnotation("Index", new IndexAnnotation(new IndexAttribute("IX_GhiChepVi_MaDonHang")));
+
+            modelBuilder.Entity<GhiChepVi>()
+                .Property(g => g.LoaiGiaoDich)
+                .HasColumnAnnotation("Index", new IndexAnnotation(new IndexAttribute("IX_GhiChepVi_LoaiGiaoDich")));
+
+            // Index tổng hợp cho báo cáo
+            modelBuilder.Entity<GhiChepVi>()
+                .Property(g => g.MaNguoiBan)
+                .HasColumnAnnotation("Index", new IndexAnnotation(new IndexAttribute("IX_GhiChepVi_MaNguoiBan_NgayGiaoDich", 1) { IsUnique = false }));
+
+            modelBuilder.Entity<GhiChepVi>()
+                .Property(g => g.NgayGiaoDich)
+                .HasColumnAnnotation("Index", new IndexAnnotation(new IndexAttribute("IX_GhiChepVi_MaNguoiBan_NgayGiaoDich", 2) { IsUnique = false }));
+
             // Tắt quy ước cascade delete mặc định để tránh xung đột
             modelBuilder.Conventions.Remove<OneToManyCascadeDeleteConvention>();
+
+
 
             base.OnModelCreating(modelBuilder);
         }

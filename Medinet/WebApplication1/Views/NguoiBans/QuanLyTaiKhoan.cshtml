@@ -1,0 +1,620 @@
+﻿```html
+@model WebApplication1.Models.NguoiBan
+@{
+    ViewBag.Title = "Quản lý doanh thu";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Custom styles for tabs and sidebar */
+    .seller-sidebar {
+        background-color: #ffffff; /* White background for seller sidebar */
+        border: 1px solid #e9ecef;
+    }
+
+        .seller-sidebar .card-header {
+            background-color: #f8f9fa; /* Light gray header */
+            color: #212529; /* Dark text */
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .seller-sidebar .list-group-item {
+            background-color: transparent;
+            color: #212529; /* Dark text */
+            border-color: #e9ecef;
+        }
+
+            .seller-sidebar .list-group-item:hover {
+                background-color: #f8f9fa;
+            }
+
+            .seller-sidebar .list-group-item.active {
+                background-color: #007bff;
+                border-color: #007bff;
+                color: #ffffff; /* White text for active item */
+            }
+
+    /* Card styling */
+    .stats-card {
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s;
+        height: 100%;
+    }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .stats-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        margin-bottom: 15px;
+    }
+
+    .stats-title {
+        color: #6c757d;
+        font-size: 14px;
+        margin-bottom: 5px;
+    }
+
+    .stats-value {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 0;
+    }
+
+    /* Order status cards */
+    .order-status-card {
+        border-radius: 8px;
+        border-top: 3px solid;
+        transition: transform 0.3s;
+    }
+
+        .order-status-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .delivered {
+        border-top-color: #28a745;
+    }
+
+    .shipped {
+        border-top-color: #17a2b8;
+    }
+
+    .processing {
+        border-top-color: #ffc107;
+    }
+
+    .cancelled {
+        border-top-color: #dc3545;
+    }
+
+    .order-status-value {
+        font-size: 22px;
+        font-weight: 700;
+    }
+
+    .order-status-title {
+        font-size: 14px;
+        color: #6c757d;
+    }
+
+    /* Chart container */
+    .chart-container {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+    }
+
+    /* Transaction history table */
+    .transaction-table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+
+    .transaction-table td, .transaction-table th {
+        vertical-align: middle;
+    }
+
+    .badge-deposit {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .badge-withdrawal {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .badge-escrow {
+        background-color: #17a2b8;
+        color: white;
+    }
+
+    .badge-platform-fee {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .badge-refund {
+        background-color: #ffc107;
+        color: #212529;
+    }
+
+    .badge-payment {
+        background-color: #007bff;
+        color: white;
+    }
+
+    /* Product sales table */
+    .product-table img {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+
+    /* Wallet card */
+    .wallet-card {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .wallet-balance {
+        font-size: 28px;
+        font-weight: 700;
+        color: #28a745;
+    }
+
+    .wallet-button {
+        border-radius: 50px;
+        padding: 8px 20px;
+        font-weight: 500;
+    }
+
+    /* Modal styling */
+    .modal-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .modal-footer {
+        background-color: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+    }
+
+    /* Deposit info card */
+    .deposit-info-card {
+        background-color: #f8f9fa;
+        border-left: 4px solid #17a2b8;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card seller-sidebar">
+                <div class="card-header text-black">
+                    <h5 class="mb-0">Trang người bán</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="@Url.Action("EditSellerProfile", "NguoiDungs")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-store mr-2"></i> Thông tin cửa hàng
+                    </a>
+                    <a href="@Url.Action("QuanLySanPham", "NguoiBans", new { id = Model.MaNguoiBan })" class="list-group-item list-group-item-action">
+                        <i class="fas fa-box mr-2"></i> Sản phẩm
+                    </a>
+                    <a href="@Url.Action("DonHangNguoiMua", "DonHang")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shopping-cart mr-2"></i> Đơn hàng
+                    </a>
+                    <a href="@Url.Action("QuanLyTaiKhoan", "NguoiBans", new { id = Model.MaNguoiBan })" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-wallet mr-2"></i> Quản lý doanh thu
+                    </a>
+                    <a href="@Url.Action("SellerStatistics", "NguoiDungs")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-line mr-2"></i> Thống kê
+                    </a>
+                    <a href="@Url.Action("DangXuat", "DangNhap")" class="list-group-item list-group-item-action text-danger">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Đăng xuất
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="col-md-9">
+            <!-- Ví điện tử & Tóm tắt doanh thu -->
+            <div class="row mb-4">
+                <!-- Ví điện tử -->
+                <div class="col-md-5">
+                    <div class="card wallet-card p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0">Ví điện tử</h5>
+                            <i class="fas fa-wallet fa-2x text-primary"></i>
+                        </div>
+                        <div class="wallet-balance mb-3">@String.Format("{0:N0} VNĐ", Model.SoDuVi)</div>
+                        <p class="text-muted mb-3">Cập nhật: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</p>
+
+                        <div class="deposit-info-card p-3 mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-info-circle text-info mr-2"></i>
+                                <div>
+                                    <p class="mb-1"><strong>Thông tin kí quỹ</strong></p>
+                                    <p class="mb-1 small">- Tỷ lệ đặt cọc cho đơn hàng COD: @ViewBag.TyLeDatCoc%</p>
+                                    <p class="mb-1 small">- Phí nền tảng: @ViewBag.TyLePhiNenTang%</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-primary wallet-button" data-toggle="modal" data-target="#depositModal">
+                                <i class="fas fa-plus-circle mr-1"></i> Nạp tiền
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary wallet-button" data-toggle="modal" data-target="#withdrawModal">
+                                <i class="fas fa-money-bill-wave mr-1"></i> Rút tiền
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tóm tắt doanh thu -->
+                <div class="col-md-7">
+                    <div class="row h-100">
+                        <div class="col-md-6 mb-3">
+                            <div class="card stats-card bg-white p-3">
+                                <div class="stats-icon bg-danger-soft text-danger">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="stats-title">Lợi nhuận</div>
+                                <div class="stats-value text-danger">@String.Format("{0:N0} đ", ViewBag.TongLoiNhuan)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card stats-card bg-white p-3">
+                                <div class="stats-icon bg-primary-soft text-primary">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </div>
+                                <div class="stats-title">Tổng doanh thu</div>
+                                <div class="stats-value text-primary">@String.Format("{0:N0} đ", ViewBag.TongDoanhThu)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card stats-card bg-white p-3">
+                                <div class="stats-icon bg-success-soft text-success">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <div class="stats-title">Tổng đơn hàng</div>
+                                <div class="stats-value text-success">@ViewBag.TongDonHang</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card stats-card bg-white p-3">
+                                <div class="stats-icon bg-warning-soft text-warning">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                                <div class="stats-title">Số lượng sản phẩm</div>
+                                <div class="stats-value text-warning">@ViewBag.TongSanPham</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tổng số đơn hàng theo trạng thái -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3">Tổng số đơn hàng</h5>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card order-status-card delivered p-3">
+                        <div class="order-status-value">@ViewBag.DonHangDaGiao</div>
+                        <div class="order-status-title">Đã giao</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card order-status-card shipped p-3">
+                        <div class="order-status-value">@ViewBag.DonHangDangVanChuyen</div>
+                        <div class="order-status-title">Đã vận chuyển</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card order-status-card processing p-3">
+                        <div class="order-status-value">@ViewBag.DonHangChoXuLy</div>
+                        <div class="order-status-title">Đang chờ xử lý</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card order-status-card cancelled p-3">
+                        <div class="order-status-value">@ViewBag.DonHangDaHuy</div>
+                        <div class="order-status-title">Đã hủy</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Biểu đồ doanh thu -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="chart-container">
+                        <h5 class="mb-4">Biểu đồ doanh thu</h5>
+                        <canvas id="revenueChart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lịch sử giao dịch và Sản phẩm bán chạy -->
+            <div class="row">
+                <!-- Lịch sử giao dịch -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Lịch sử giao dịch</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover transaction-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Ngày</th>
+                                            <th>Loại</th>
+                                            <th>Số tiền</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var giaoDich in ViewBag.GhiChepVis)
+                                        {
+                                            <tr>
+                                                <td>@giaoDich.NgayGiaoDich.ToString("dd/MM/yyyy")</td>
+                                                <td>
+                                                    @if (giaoDich.LoaiGiaoDich == "Nạp tiền")
+                                                    {
+                                                        <span class="badge badge-deposit">Nạp tiền</span>
+                                                    }
+                                                    else if (giaoDich.LoaiGiaoDich == "Rút tiền")
+                                                    {
+                                                        <span class="badge badge-withdrawal">Rút tiền</span>
+                                                    }
+                                                    else if (giaoDich.LoaiGiaoDich == "Đặt cọc")
+                                                    {
+                                                        <span class="badge badge-escrow">Đặt cọc</span>
+                                                    }
+                                                    else if (giaoDich.LoaiGiaoDich == "Phí nền tảng")
+                                                    {
+                                                        <span class="badge badge-platform-fee">Phí nền tảng</span>
+                                                    }
+                                                    else if (giaoDich.LoaiGiaoDich == "Hoàn trả đặt cọc")
+                                                    {
+                                                        <span class="badge badge-refund">Hoàn trả</span>
+                                                    }
+                                                    else if (giaoDich.LoaiGiaoDich == "Thanh toán đơn hàng")
+                                                    {
+                                                        <span class="badge badge-payment">Thanh toán</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge badge-secondary">@giaoDich.LoaiGiaoDich</span>
+                                                    }
+                                                </td>
+                                                <td class="@(giaoDich.SoTien > 0 ? "text-success" : "text-danger")">
+                                                    @(giaoDich.SoTien > 0 ? "+" : "")@String.Format("{0:N0} đ", giaoDich.SoTien)
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="card-footer text-center">
+                                <a href="#" class="btn btn-link">Xem tất cả giao dịch</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sản phẩm bán chạy -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Sản phẩm bán chạy nhất</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover product-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Sản phẩm</th>
+                                            <th>Số lượng</th>
+                                            <th>Tổng tiền</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var sanPham in ViewBag.SanPhamBanChay)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <img src="@sanPham.AnhDaiDien" alt="@sanPham.TenSanPham" class="mr-2">
+                                                        <span>@sanPham.TenSanPham</span>
+                                                    </div>
+                                                </td>
+                                                <td>@sanPham.SoLuongBan</td>
+                                                <td>@String.Format("{0:N0} đ", sanPham.TongTien)</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="card-footer text-center">
+                                <a href="#" class="btn btn-link">Xem tất cả sản phẩm</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nạp tiền -->
+<div class="modal fade" id="depositModal" tabindex="-1" role="dialog" aria-labelledby="depositModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="depositModalLabel">Nạp tiền vào ví</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="@Url.Action("NapTienVi", "NguoiBans")" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="maNguoiBan" value="@Model.MaNguoiBan" />
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="soTien">Số tiền nạp</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="soTien" name="soTien" min="10000" step="10000" required>
+                            <div class="input-group-append">
+                                <span class="input-group-text">VNĐ</span>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">Số tiền tối thiểu là 10,000 VNĐ</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="phuongThucThanhToan">Phương thức thanh toán</label>
+                        <select class="form-control" id="phuongThucThanhToan" name="phuongThucThanhToan" required>
+                            <option value="VNPAY">VNPAY</option>
+                            <option value="Chuyển khoản">Chuyển khoản ngân hàng</option>
+                            <option value="Momo">Ví Momo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Nạp tiền</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Rút tiền -->
+<div class="modal fade" id="withdrawModal" tabindex="-1" role="dialog" aria-labelledby="withdrawModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="withdrawModalLabel">Rút tiền từ ví</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="@Url.Action("RutTienVi", "NguoiBans")" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="maNguoiBan" value="@Model.MaNguoiBan" />
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle mr-1"></i> Số dư khả dụng: <strong>@String.Format("{0:N0} VNĐ", Model.SoDuVi)</strong>
+                    </div>
+                    <div class="form-group">
+                        <label for="soTienRut">Số tiền rút</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="soTienRut" name="soTien" min="50000" max="@Model.SoDuVi" step="10000" required>
+                            <div class="input-group-append">
+                                <span class="input-group-text">VNĐ</span>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">Số tiền tối thiểu là 50,000 VNĐ</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="thongTinTaiKhoan">Thông tin tài khoản nhận tiền</label>
+                        <textarea class="form-control" id="thongTinTaiKhoan" name="thongTinTaiKhoan" rows="3" required placeholder="Nhập thông tin tài khoản nhận tiền (Số tài khoản, tên ngân hàng, chủ tài khoản)"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Rút tiền</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Biểu đồ doanh thu
+            var ctx = document.getElementById('revenueChart').getContext('2d');
+            var revenueChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: @Html.Raw(Json.Encode(ViewBag.ThangDoanhThu)),
+                    datasets: [{
+                        label: 'Doanh thu (VNĐ)',
+                        data: @Html.Raw(Json.Encode(ViewBag.DoanhThu)),
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(54, 162, 235, 1)',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString('vi-VN') + ' đ';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Validate form rút tiền
+            $('#withdrawModal form').on('submit', function(e) {
+                var soTienRut = parseFloat($('#soTienRut').val());
+                var soDuVi = parseFloat('@Model.SoDuVi');
+
+                if (soTienRut > soDuVi) {
+                    e.preventDefault();
+                    alert('Số tiền rút không được vượt quá số dư ví!');
+                    return false;
+                }
+
+                return true;
+            });
+        });
+    </script>
+}
+```

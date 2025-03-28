@@ -874,6 +874,259 @@ namespace WebApplication1.Controllers
             }
         }
 
+        //27/03/2025
+        // Thêm phương thức quản lý tài khoản vào NguoiBansController.cs
+        public ActionResult QuanLyTaiKhoan(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+
+            // Lấy thông tin người bán
+            var nguoiBan = db.NguoiBans.Find(id);
+            if (nguoiBan == null)
+            {
+                return HttpNotFound();
+            }
+
+            // Kiểm tra quyền truy cập
+            int maNguoiDung = GetCurrentUserId();
+            if (nguoiBan.MaNguoiDung != maNguoiDung)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.Forbidden);
+            }
+
+            // Lấy danh sách ghi chép ví
+            var ghiChepVis = db.GhiChepVis
+                .Where(g => g.MaNguoiBan == id)
+                .OrderByDescending(g => g.NgayGiaoDich)
+                .Take(10)
+                .ToList();
+
+            // Lấy thông tin đơn hàng
+            var donHangs = db.DonHangs
+                .Where(d => d.MaNguoiBan == id)
+                .ToList();
+
+            // Lấy thông tin sản phẩm
+            var sanPhams = db.SanPhams
+                .Where(s => s.MaNguoiBan == id)
+                .ToList();
+
+            // Lấy thông tin sản phẩm bán chạy
+            var sanPhamBanChay = (from ct in db.ChiTietDonHangs
+                                  join sp in db.SanPhams on ct.MaSanPham equals sp.MaSanPham
+                                  join dh in db.DonHangs on ct.MaDonHang equals dh.MaDonHang
+                                  where sp.MaNguoiBan == id &&
+                                        (dh.TrangThaiDonHang == "Đã xác nhận nhận hàng" ||
+                                         dh.TrangThaiDonHang == "Đã hoàn thành" ||
+                                         dh.TrangThaiDonHang == "Đã thanh toán")
+                                  group ct by new { sp.MaSanPham, sp.TenSanPham } into g
+                                  select new
+                                  {
+                                      MaSanPham = g.Key.MaSanPham,
+                                      TenSanPham = g.Key.TenSanPham,
+                                      SoLuongBan = g.Sum(x => x.SoLuong),
+                                      TongTien = g.Sum(x => x.SoLuong * x.Gia),
+                                      AnhDaiDien = db.AnhSanPhams
+                                         .Where(a => a.MaSanPham == g.Key.MaSanPham)
+                                         .Select(a => a.DuongDanAnh)
+                                         .FirstOrDefault() ?? "/Content/images/no-image.jpeg"
+                                  })
+                                 .OrderByDescending(x => x.SoLuongBan)
+                                 .Take(5)
+                                 .ToList();
+
+            // Tính toán các thống kê
+            var tongDoanhThu = donHangs
+                .Where(d => d.TrangThaiDonHang == "Đã xác nhận nhận hàng" ||
+                           d.TrangThaiDonHang == "Đã hoàn thành" ||
+                           d.TrangThaiDonHang == "Đã thanh toán")
+                .Sum(d => d.TongSoTien);
+
+            var tongLoiNhuan = tongDoanhThu - (tongDoanhThu * 0.1m); // Lợi nhuận sau khi trừ phí 10%
+
+            var tongSanPham = sanPhams.Count;
+            var tongDonHang = donHangs.Count;
+            var donHangDaGiao = donHangs.Count(d => d.TrangThaiDonHang == "Đã giao");
+            var donHangDangVanChuyen = donHangs.Count(d => d.TrangThaiDonHang == "Đã vận chuyển");
+            var donHangChoXuLy = donHangs.Count(d => d.TrangThaiDonHang == "Đang chờ xử lý");
+            var donHangDaHuy = donHangs.Count(d => d.TrangThaiDonHang == "Đã hủy");
+
+            // Thống kê doanh thu theo tháng trong năm hiện tại
+            var namHienTai = DateTime.Now.Year;
+            var doanhThuTheoThang = new decimal[12];
+            var thangDoanhThu = new string[12];
+
+            for (int i = 0; i < 12; i++)
+            {
+                var thang = i + 1;
+                doanhThuTheoThang[i] = donHangs
+                    .Where(d => d.NgayTao.Month == thang &&
+                                d.NgayTao.Year == namHienTai &&
+                                (d.TrangThaiDonHang == "Đã xác nhận nhận hàng" ||
+                                 d.TrangThaiDonHang == "Đã hoàn thành" ||
+                                 d.TrangThaiDonHang == "Đã thanh toán"))
+                    .Sum(d => d.TongSoTien);
+
+                thangDoanhThu[i] = "Tháng " + thang;
+            }
+
+            // Tính toán tỷ lệ đặt cọc và phí nền tảng
+            decimal tyLeDatCoc = 10; // 10%
+            decimal tyLePhiNenTang = 10; // 10%
+
+            // Đưa dữ liệu vào ViewBag
+            ViewBag.GhiChepVis = ghiChepVis;
+            ViewBag.SanPhamBanChay = sanPhamBanChay;
+            ViewBag.TongDoanhThu = tongDoanhThu;
+            ViewBag.TongLoiNhuan = tongLoiNhuan;
+            ViewBag.TongSanPham = tongSanPham;
+            ViewBag.TongDonHang = tongDonHang;
+            ViewBag.DonHangDaGiao = donHangDaGiao;
+            ViewBag.DonHangDangVanChuyen = donHangDangVanChuyen;
+            ViewBag.DonHangChoXuLy = donHangChoXuLy;
+            ViewBag.DonHangDaHuy = donHangDaHuy;
+            ViewBag.DoanhThu = doanhThuTheoThang;
+            ViewBag.ThangDoanhThu = thangDoanhThu;
+            ViewBag.TyLeDatCoc = tyLeDatCoc;
+            ViewBag.TyLePhiNenTang = tyLePhiNenTang;
+
+            return View(nguoiBan);
+        }
+
+        // Phương thức nạp tiền vào ví
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult NapTienVi(int maNguoiBan, decimal soTien, string phuongThucThanhToan)
+        {
+            try
+            {
+                // Kiểm tra quyền truy cập
+                int maNguoiDung = GetCurrentUserId();
+                var nguoiBan = db.NguoiBans.Find(maNguoiBan);
+                if (nguoiBan == null || nguoiBan.MaNguoiDung != maNguoiDung)
+                {
+                    return new HttpStatusCodeResult(HttpStatusCode.Forbidden);
+                }
+
+                // Kiểm tra số tiền
+                if (soTien <= 0)
+                {
+                    TempData["Error"] = "Số tiền nạp phải lớn hơn 0!";
+                    return RedirectToAction("QuanLyTaiKhoan", new { id = maNguoiBan });
+                }
+
+                // Nếu phương thức thanh toán là VNPAY, chuyển hướng đến trang thanh toán VNPAY
+                if (phuongThucThanhToan == "VNPAY")
+                {
+                    return RedirectToAction("TaoThanhToanVNPayNapTien", "ThanhToan", new { maNguoiBan = maNguoiBan, soTien = soTien });
+                }
+
+                // Nếu là phương thức khác, tạm thời xử lý như cập nhật trực tiếp (trong thực tế cần có quy trình xác nhận)
+                // Tạo ghi chép ví
+                var ghiChep = GhiChepVi.TaoGhiChepNap(maNguoiBan, soTien, phuongThucThanhToan);
+                db.GhiChepVis.Add(ghiChep);
+
+                // Cập nhật số dư ví
+                nguoiBan.SoDuVi += soTien;
+                db.Entry(nguoiBan).State = EntityState.Modified;
+
+                db.SaveChanges();
+
+                TempData["Success"] = "Yêu cầu nạp tiền đã được ghi nhận. Vui lòng chuyển khoản theo hướng dẫn để hoàn tất!";
+                return RedirectToAction("QuanLyTaiKhoan", new { id = maNguoiBan });
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Đã xảy ra lỗi: " + ex.Message;
+                return RedirectToAction("QuanLyTaiKhoan", new { id = maNguoiBan });
+            }
+        }
+
+        // Phương thức rút tiền từ ví
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult RutTienVi(int maNguoiBan, decimal soTien, string thongTinTaiKhoan)
+        {
+            try
+            {
+                // Kiểm tra quyền truy cập
+                int maNguoiDung = GetCurrentUserId();
+                var nguoiBan = db.NguoiBans.Find(maNguoiBan);
+                if (nguoiBan == null || nguoiBan.MaNguoiDung != maNguoiDung)
+                {
+                    return new HttpStatusCodeResult(HttpStatusCode.Forbidden);
+                }
+
+                // Kiểm tra số tiền
+                if (soTien <= 0)
+                {
+                    TempData["Error"] = "Số tiền rút phải lớn hơn 0!";
+                    return RedirectToAction("QuanLyTaiKhoan", new { id = maNguoiBan });
+                }
+
+                // Kiểm tra số dư
+                if (nguoiBan.SoDuVi < soTien)
+                {
+                    TempData["Error"] = "Số dư ví không đủ để thực hiện rút tiền!";
+                    return RedirectToAction("QuanLyTaiKhoan", new { id = maNguoiBan });
+                }
+
+                // Tạo ghi chép ví
+                var ghiChep = new GhiChepVi
+                {
+                    MaNguoiBan = maNguoiBan,
+                    SoTien = -soTien, // Số tiền âm vì là rút ra
+                    LoaiGiaoDich = "Rút tiền",
+                    MoTa = $"Rút tiền về tài khoản: {thongTinTaiKhoan}",
+                    NgayGiaoDich = DateTime.Now,
+                    TrangThai = "Đang xử lý" // Trạng thái ban đầu là đang xử lý, sau đó cần có quá trình xác nhận
+                };
+                db.GhiChepVis.Add(ghiChep);
+
+                // Cập nhật số dư ví
+                nguoiBan.SoDuVi -= soTien;
+                db.Entry(nguoiBan).State = EntityState.Modified;
+
+                db.SaveChanges();
+
+                TempData["Success"] = "Yêu cầu rút tiền đã được ghi nhận. Tiền sẽ được chuyển vào tài khoản của bạn trong vòng 24h làm việc!";
+                return RedirectToAction("QuanLyTaiKhoan", new { id = maNguoiBan });
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Đã xảy ra lỗi: " + ex.Message;
+                return RedirectToAction("QuanLyTaiKhoan", new { id = maNguoiBan });
+            }
+        }
+
+        // Phương thức lấy ID người dùng hiện tại
+        private int GetCurrentUserId()
+        {
+            // Lấy Email người dùng đã đăng nhập
+            var userName = User.Identity.Name;
+
+            // Tìm người dùng trong cơ sở dữ liệu theo Email
+            var nguoiDung = db.NguoiDungs.FirstOrDefault(n => n.Email == userName);
+
+            if (nguoiDung != null)
+            {
+                return nguoiDung.MaNguoiDung;
+            }
+
+            // Nếu không tìm thấy người dùng, thử lấy từ Session
+            if (Session["MaNguoiDung"] != null)
+            {
+                return Convert.ToInt32(Session["MaNguoiDung"]);
+            }
+
+            // Nếu vẫn không có, trả về giá trị mặc định
+            return 0; // Trả về 0 để biểu thị không tìm thấy người dùng
+        }
+
+        //27/03/2025
         protected override void Dispose(bool disposing)
                 {
                     if (disposing)
@@ -882,7 +1135,7 @@ namespace WebApplication1.Controllers
                     }
                     base.Dispose(disposing);
                 }
-            }
+    }
         public class NguoiBanViewModel
         {
             public NguoiDung NguoiDung { get; set; }

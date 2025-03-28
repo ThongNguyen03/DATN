@@ -187,13 +187,15 @@
                         <a href="@Url.Action("DonHangNguoiMua", "DonHang")" class="btn btn-sm btn-outline-secondary mr-2">
                             <i class="fas fa-arrow-left mr-1"></i> Quay lại
                         </a>
-                        <a href="@Url.Action("XuatHoaDonPdf", "DonHang", new { maDonHang = Model.MaDonHang })" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <button class="btn btn-sm btn-outline-primary mr-2" onclick="printInvoice(); return false;">
                             <i class="fas fa-print mr-1"></i> In hóa đơn
-                        </a>
+                        </button>
                     </div>
                 </div>
                 <div class="card-body">
                     <!-- Trạng thái đơn hàng -->
+
+                    <!-- Cập nhật phần hiển thị trạng thái đơn hàng trong order-header -->
                     <div class="order-header d-flex justify-content-between align-items-center mb-4">
                         <div>
                             <h5 class="mb-1">Đơn hàng #@Model.MaDonHang</h5>
@@ -204,6 +206,10 @@
                             {
                                 <span class="badge badge-warning status-badge">Đang chờ xử lý</span>
                             }
+                            else if (Model.TrangThaiDonHang == "Đã thanh toán")
+                            {
+                                <span class="badge badge-success status-badge">Đã thanh toán</span>
+                            }
                             else if (Model.TrangThaiDonHang == "Đã vận chuyển")
                             {
                                 <span class="badge badge-info status-badge">Đã vận chuyển</span>
@@ -212,9 +218,13 @@
                             {
                                 <span class="badge badge-primary status-badge">Đã giao</span>
                             }
-                            else if (Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" || Model.TrangThaiDonHang == "Đã thanh toán")
+                            else if (Model.TrangThaiDonHang == "Đã xác nhận nhận hàng")
                             {
-                                <span class="badge badge-success status-badge">@Model.TrangThaiDonHang</span>
+                                <span class="badge badge-success status-badge">Đã xác nhận nhận hàng</span>
+                            }
+                            else if (Model.TrangThaiDonHang == "Đã hoàn thành")
+                            {
+                                <span class="badge badge-success status-badge">Đã hoàn thành</span>
                             }
                             else if (Model.TrangThaiDonHang == "Đã hủy")
                             {
@@ -226,6 +236,9 @@
                             }
                         </div>
                     </div>
+
+
+
 
                     <div class="row">
                         <!-- Thông tin đơn hàng -->
@@ -318,6 +331,7 @@
                         </div>
 
                         <!-- Timeline trạng thái đơn hàng -->
+
                         <div class="col-md-5">
                             <div class="card">
                                 <div class="card-header">
@@ -325,7 +339,8 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="order-timeline">
-                                        <div class="timeline-item @(Model.TrangThaiDonHang != "Đã hủy" ? "active" : "")">
+                                        <!-- Bước 1: Đặt hàng -->
+                                        <div class="timeline-item active">
                                             <div class="timeline-date">@Model.NgayTao.ToString("dd/MM/yyyy HH:mm")</div>
                                             <div class="timeline-content">
                                                 <h6 class="mb-0">Đơn hàng đã được tạo</h6>
@@ -333,6 +348,7 @@
                                             </div>
                                         </div>
 
+                                        <!-- Bước 2: Xác nhận đơn hàng -->
                                         <div class="timeline-item @(Model.TrangThaiDonHang != "Đang chờ xử lý" && Model.TrangThaiDonHang != "Đã hủy" ? "active" : Model.TrangThaiDonHang == "Đã hủy" ? "incomplete" : "")">
                                             <div class="timeline-date">
                                                 @if (Model.TrangThaiDonHang != "Đang chờ xử lý" && Model.TrangThaiDonHang != "Đã hủy")
@@ -345,20 +361,57 @@
                                                 }
                                             </div>
                                             <div class="timeline-content">
+                                                <h6 class="mb-0">Đã xác nhận đơn hàng</h6>
+                                                <p class="text-muted small mb-0">Đơn hàng đã được xác nhận và đang chuẩn bị</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Bước 3: Đang chuẩn bị -->
+                                        <div class="timeline-item @(Model.TrangThaiDonHang == "Đang chờ xử lý" || Model.TrangThaiDonHang == "Đã vận chuyển" || Model.TrangThaiDonHang == "Đã giao" || Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" || Model.TrangThaiDonHang == "Đã thanh toán" ? "active" : "incomplete")">
+                                            <div class="timeline-date">
+                                                @if (Model.TrangThaiDonHang == "Đang chờ xử lý" || Model.TrangThaiDonHang == "Đã vận chuyển" || Model.TrangThaiDonHang == "Đã giao" || Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" || Model.TrangThaiDonHang == "Đã thanh toán")
+                                                {
+                                                    <span>Hoàn tất chuẩn bị</span>
+                                                }
+                                                else
+                                                {
+                                                    <span>Chưa chuẩn bị</span>
+                                                }
+                                            </div>
+                                            <div class="timeline-content">
+                                                <h6 class="mb-0">Đang chuẩn bị hàng</h6>
+                                                <p class="text-muted small mb-0">Đơn hàng đang được chuẩn bị</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Bước 4: Vận chuyển -->
+                                        <div class="timeline-item @(Model.TrangThaiDonHang == "Đã vận chuyển" || Model.TrangThaiDonHang == "Đã giao" || Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" ? "active" : "incomplete")">
+                                            <div class="timeline-date">
+                                                @if (Model.TrangThaiDonHang == "Đã vận chuyển" || Model.TrangThaiDonHang == "Đã giao" || Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành")
+                                                {
+                                                    @(Model.NgayCapNhat.HasValue ? Model.NgayCapNhat.Value.ToString("dd/MM/yyyy HH:mm") : "-")
+                                                }
+                                                else
+                                                {
+                                                    <span>Chưa vận chuyển</span>
+                                                }
+                                            </div>
+                                            <div class="timeline-content">
                                                 <h6 class="mb-0">Đã vận chuyển</h6>
                                                 <p class="text-muted small mb-0">Đơn hàng đã được giao cho đơn vị vận chuyển</p>
                                             </div>
                                         </div>
 
-                                        <div class="timeline-item @(Model.TrangThaiDonHang == "Đã giao" || Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" || Model.TrangThaiDonHang == "Đã thanh toán" ? "active" : "incomplete")">
+                                        <!-- Bước 5: Đã giao -->
+                                        <div class="timeline-item @(Model.TrangThaiDonHang == "Đã giao" || Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" ? "active" : "incomplete")">
                                             <div class="timeline-date">
-                                                @if (Model.TrangThaiDonHang == "Đã giao" || Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" || Model.TrangThaiDonHang == "Đã thanh toán")
+                                                @if (Model.TrangThaiDonHang == "Đã giao" || Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành")
                                                 {
                                                     @(Model.NgayGiaoHang.HasValue ? Model.NgayGiaoHang.Value.ToString("dd/MM/yyyy HH:mm") : (Model.NgayCapNhat.HasValue ? Model.NgayCapNhat.Value.ToString("dd/MM/yyyy HH:mm") : "-"))
                                                 }
                                                 else
                                                 {
-                                                    <span>Đang vận chuyển</span>
+                                                    <span>Chưa giao hàng</span>
                                                 }
                                             </div>
                                             <div class="timeline-content">
@@ -367,19 +420,20 @@
                                             </div>
                                         </div>
 
-                                        <div class="timeline-item @(Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" || Model.TrangThaiDonHang == "Đã thanh toán" ? "active" : "incomplete")">
+                                        <!-- Bước 6: Hoàn thành -->
+                                        <div class="timeline-item @(Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" ? "active" : "incomplete")">
                                             <div class="timeline-date">
-                                                @if (Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" || Model.TrangThaiDonHang == "Đã thanh toán")
+                                                @if (Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành")
                                                 {
                                                     @(Model.NgayCapNhat.HasValue ? Model.NgayCapNhat.Value.ToString("dd/MM/yyyy HH:mm") : "-")
                                                 }
                                                 else
                                                 {
-                                                    <span>Chờ xác nhận</span>
+                                                    <span>Chưa hoàn thành</span>
                                                 }
                                             </div>
                                             <div class="timeline-content">
-                                                <h6 class="mb-0">Đã xác nhận nhận hàng</h6>
+                                                <h6 class="mb-0">Đã hoàn thành</h6>
                                                 <p class="text-muted small mb-0">Người mua đã xác nhận nhận hàng thành công</p>
                                             </div>
                                         </div>
@@ -456,9 +510,9 @@
                         </div>
                     </div>
 
-                    <!-- Thao tác với đơn hàng -->
+                    <!-- Cập nhật phần Thao tác với đơn hàng -->
                     <div class="mt-4 text-right">
-                        @if (Model.TrangThaiDonHang == "Đang chờ xử lý")
+                        @if (Model.TrangThaiDonHang == "Đang chờ xử lý" || Model.TrangThaiDonHang == "Đã thanh toán")
                         {
                             using (Html.BeginForm("CapNhatTrangThaiDonHang", "DonHang", FormMethod.Post, new { style = "display: inline-block; margin-right: 10px;" }))
                             {
@@ -487,6 +541,8 @@
                             }
                         }
                     </div>
+
+
                 </div>
             </div>
         </div>
@@ -521,12 +577,37 @@
         </div>
     </div>
 </div>
-
+<!-- Phần hóa đơn in ẩn -->
+<div id="invoiceContainer" style="display: none;">
+    @Html.Partial("_Invoice", Model)
+</div>
 @section Scripts {
     <script>
         $(document).ready(function () {
             // Initialize tooltips
             $('[data-toggle="tooltip"]').tooltip();
         });
+
+        function printInvoice() {
+            var printContent = document.getElementById("invoiceContainer").innerHTML;
+            var originalContent = document.body.innerHTML;
+
+            document.body.innerHTML = printContent;
+            window.print();
+            document.body.innerHTML = originalContent;
+
+            // Khởi tạo lại các thành phần JavaScript sau khi in
+            initializeComponents();
+        }
+
+        function initializeComponents() {
+            // Kích hoạt các tooltip
+            $('[data-toggle="tooltip"]').tooltip();
+
+            // Khởi tạo lại các modal nếu cần
+            $('.modal').modal({
+                show: false
+            });
+        }
     </script>
 }

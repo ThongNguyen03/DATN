@@ -32,8 +32,6 @@ namespace WebApplication1.Models
 
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public DateTime NgayTao { get; set; } = DateTime.Now;
-
-      //  [Column(TypeName = "decimal(10,2)")]
         public decimal SoDuVi { get; set; } = 0;
 
         // Navigation properties
@@ -44,6 +42,9 @@ namespace WebApplication1.Models
         public virtual ICollection<ChuongTrinhKhuyenMai> ChuongTrinhKhuyenMais { get; set; }
         public virtual ICollection<Escrow> Escrows { get; set; }
         public virtual ICollection<LichSuGiaoDichVi> LichSuGiaoDichVis { get; set; }
+
+        //update ngày 27/3/2025
+        public virtual ICollection<GhiChepVi> GhiChepVis { get; set; }
     }
 
 }

@@ -13,6 +13,7 @@ using System.Web.Hosting;
 using System.Web.Mvc;
 using WebApplication1.Models;
 using WebApplication1.Services;
+using System.Data.SqlClient;
 
 namespace WebApplication1.Controllers
 {
@@ -174,7 +175,21 @@ namespace WebApplication1.Controllers
                 donHang.TrangThaiDonHang = "Đã xác nhận nhận hàng";
                 donHang.DaXacNhanNhanHang = true;
                 donHang.NgayCapNhat = DateTime.Now;
+
                 db.Entry(donHang).State = EntityState.Modified;
+
+                // Cập nhật trạng thái giao dịch thông qua SQL
+                string updateGiaoDichSql = @"
+                UPDATE GiaoDich 
+                SET TrangThaiGiaoDich = N'Đã hoàn thành' 
+                WHERE MaDonHang = @MaDonHang";
+
+                await db.Database.ExecuteSqlCommandAsync(
+                    updateGiaoDichSql,
+                    new SqlParameter("@MaDonHang", id)
+                );
+
+
                 db.SaveChanges();
 
                 // Giải ngân tiền cho người bán
@@ -200,64 +215,6 @@ namespace WebApplication1.Controllers
             }
         }
 
-        // POST: DonHang/HuyDonHang/5 - Cho người mua
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult HuyDonHang(int id, string lyDoHuy)
-        {
-            try
-            {
-                int maNguoiDung = GetCurrentUserId();
-                if (maNguoiDung <= 0)
-                {
-                    return RedirectToAction("DangNhap", "DangNhap");
-                }
-
-                var donHang = db.DonHangs.Find(id);
-                if (donHang == null)
-                {
-                    return HttpNotFound();
-                }
-
-                // Kiểm tra quyền truy cập
-                if (donHang.MaNguoiDung != maNguoiDung)
-                {
-                    return new HttpStatusCodeResult(HttpStatusCode.Forbidden);
-                }
-
-                // Kiểm tra trạng thái đơn hàng có thể hủy không
-                if (donHang.TrangThaiDonHang == "Đã vận chuyển" ||
-                    donHang.TrangThaiDonHang == "Đã giao" ||
-                    donHang.TrangThaiDonHang == "Đã hủy" ||
-                    donHang.TrangThaiDonHang == "Đã xác nhận nhận hàng" ||
-                    donHang.TrangThaiDonHang == "Đã hoàn thành" ||
-                    donHang.TrangThaiDonHang == "Đã thanh toán")
-                {
-                    TempData["Error"] = "Không thể hủy đơn hàng ở trạng thái hiện tại!";
-                    return RedirectToAction("ChiTiet", new { id = id });
-                }
-
-                // Cập nhật trạng thái đơn hàng
-                donHang.TrangThaiDonHang = "Đã hủy";
-                donHang.LyDoHuy = lyDoHuy;
-                donHang.NgayHuy = DateTime.Now;
-                donHang.NgayCapNhat = DateTime.Now;
-
-                db.Entry(donHang).State = EntityState.Modified;
-                db.SaveChanges();
-
-                TempData["Success"] = "Hủy đơn hàng thành công!";
-                return RedirectToAction("ChiTiet", new { id = id });
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine("Lỗi hủy đơn hàng: " + ex.Message);
-                TempData["Error"] = "Đã xảy ra lỗi khi hủy đơn hàng. Vui lòng thử lại sau!";
-                return RedirectToAction("ChiTiet", new { id = id });
-            }
-        }
-
-        // POST: DonHang/DanhGiaDonHang/5 - Cho người mua
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult DanhGiaDonHang(int id, int soDiem, string noiDungDanhGia)
@@ -748,10 +705,9 @@ namespace WebApplication1.Controllers
             }
         }
 
-        // POST: DonHang/HuyDonHangNguoiBan/5 - Cho người bán
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult HuyDonHangNguoiBan(int id, string lyDoHuy)
+        public async Task<ActionResult> HuyDonHangNguoiBan(int id, string lyDoHuy)
         {
             try
             {
@@ -762,14 +718,14 @@ namespace WebApplication1.Controllers
                 }
 
                 // Lấy thông tin người bán
-                var nguoiBan = db.NguoiBans.FirstOrDefault(n => n.MaNguoiDung == maNguoiDung);
+                var nguoiBan = await db.NguoiBans.FirstOrDefaultAsync(n => n.MaNguoiDung == maNguoiDung);
                 if (nguoiBan == null)
                 {
                     TempData["Error"] = "Bạn không có quyền thực hiện chức năng này!";
                     return RedirectToAction("Index", "Home");
                 }
 
-                var donHang = db.DonHangs.Find(id);
+                var donHang = await db.DonHangs.FindAsync(id);
                 if (donHang == null)
                 {
                     return HttpNotFound();
@@ -800,7 +756,11 @@ namespace WebApplication1.Controllers
                 donHang.NgayCapNhat = DateTime.Now;
 
                 db.Entry(donHang).State = EntityState.Modified;
-                db.SaveChanges();
+                await db.SaveChangesAsync();
+
+                // Hoàn tiền đặt cọc cho người bán
+                var escrowService = new EscrowService();
+                await escrowService.ProcessOrderCancellationAsync(id, lyDoHuy);
 
                 TempData["Success"] = "Hủy đơn hàng thành công!";
                 return RedirectToAction("ChiTietDonHangNguoiMua", new { id = id });
@@ -812,6 +772,118 @@ namespace WebApplication1.Controllers
                 return RedirectToAction("ChiTietDonHangNguoiMua", new { id = id });
             }
         }
+
+
+        // Cập nhật phương thức HuyDonHang để sử dụng async/await
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> HuyDonHang(int id, string lyDoHuy)
+        {
+            try
+            {
+                int maNguoiDung = GetCurrentUserId();
+                if (maNguoiDung <= 0)
+                {
+                    return RedirectToAction("DangNhap", "DangNhap");
+                }
+
+                var donHang = await db.DonHangs.FindAsync(id);
+                if (donHang == null)
+                {
+                    return HttpNotFound();
+                }
+
+                // Kiểm tra quyền truy cập
+                if (donHang.MaNguoiDung != maNguoiDung)
+                {
+                    return new HttpStatusCodeResult(HttpStatusCode.Forbidden);
+                }
+
+                // Kiểm tra trạng thái đơn hàng có thể hủy không
+                if (donHang.TrangThaiDonHang == "Đã vận chuyển" ||
+                    donHang.TrangThaiDonHang == "Đã giao" ||
+                    donHang.TrangThaiDonHang == "Đã hủy" ||
+                    donHang.TrangThaiDonHang == "Đã xác nhận nhận hàng" ||
+                    donHang.TrangThaiDonHang == "Đã hoàn thành" ||
+                    donHang.TrangThaiDonHang == "Đã thanh toán")
+                {
+                    TempData["Error"] = "Không thể hủy đơn hàng ở trạng thái hiện tại!";
+                    return RedirectToAction("ChiTiet", new { id = id });
+                }
+
+                // Cập nhật trạng thái đơn hàng
+                donHang.TrangThaiDonHang = "Đã hủy";
+                donHang.LyDoHuy = lyDoHuy;
+                donHang.NgayHuy = DateTime.Now;
+                donHang.NgayCapNhat = DateTime.Now;
+
+                db.Entry(donHang).State = EntityState.Modified;
+                await db.SaveChangesAsync();
+
+                // Xử lý hoàn tiền đặt cọc nếu cần
+                var escrowService = new EscrowService();
+                await escrowService.ProcessOrderCancellationAsync(id, lyDoHuy);
+
+                TempData["Success"] = "Hủy đơn hàng thành công!";
+                return RedirectToAction("ChiTiet", new { id = id });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Lỗi hủy đơn hàng: " + ex.Message);
+                TempData["Error"] = "Đã xảy ra lỗi khi hủy đơn hàng. Vui lòng thử lại sau!";
+                return RedirectToAction("ChiTiet", new { id = id });
+            }
+        }
+
+        // Cập nhật phương thức HuyDonHangAdmin để sử dụng async/await
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> HuyDonHangAdmin(int id, string lyDoHuy)
+        {
+            try
+            {
+                var donHang = await db.DonHangs.FindAsync(id);
+                if (donHang == null)
+                {
+                    return HttpNotFound();
+                }
+
+                // Kiểm tra trạng thái đơn hàng có thể hủy không
+                if (donHang.TrangThaiDonHang == "Đã xác nhận nhận hàng" ||
+                    donHang.TrangThaiDonHang == "Đã hoàn thành" ||
+                    donHang.TrangThaiDonHang == "Đã thanh toán")
+                {
+                    TempData["Error"] = "Không thể hủy đơn hàng ở trạng thái hiện tại!";
+                    return RedirectToAction("ChiTietAdmin", new { id = id });
+                }
+
+                // Cập nhật trạng thái đơn hàng
+                donHang.TrangThaiDonHang = "Đã hủy";
+                donHang.LyDoHuy = "Bị hủy bởi Admin: " + lyDoHuy;
+                donHang.NgayHuy = DateTime.Now;
+                donHang.NgayCapNhat = DateTime.Now;
+
+                db.Entry(donHang).State = EntityState.Modified;
+                await db.SaveChangesAsync();
+
+                // Xử lý hoàn tiền đặt cọc nếu cần
+                var escrowService = new EscrowService();
+                await escrowService.ProcessOrderCancellationAsync(id, lyDoHuy);
+
+                TempData["Success"] = "Hủy đơn hàng thành công!";
+                return RedirectToAction("ChiTietAdmin", new { id = id });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Lỗi hủy đơn hàng: " + ex.Message);
+                TempData["Error"] = "Đã xảy ra lỗi khi hủy đơn hàng. Vui lòng thử lại sau!";
+                return RedirectToAction("ChiTietAdmin", new { id = id });
+            }
+        }
+
+        //27/03/2025
+
         #endregion
 
 
@@ -985,50 +1057,6 @@ namespace WebApplication1.Controllers
             }
         }
 
-        // POST: DonHang/HuyDonHangAdmin/5 - Cho Admin
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        public ActionResult HuyDonHangAdmin(int id, string lyDoHuy)
-        {
-            try
-            {
-                var donHang = db.DonHangs.Find(id);
-                if (donHang == null)
-                {
-                    return HttpNotFound();
-                }
-
-                // Kiểm tra trạng thái đơn hàng có thể hủy không
-                if (donHang.TrangThaiDonHang == "Đã xác nhận nhận hàng" ||
-                    donHang.TrangThaiDonHang == "Đã hoàn thành" ||
-                    donHang.TrangThaiDonHang == "Đã thanh toán")
-                {
-                    TempData["Error"] = "Không thể hủy đơn hàng ở trạng thái hiện tại!";
-                    return RedirectToAction("ChiTietAdmin", new { id = id });
-                }
-
-                // Cập nhật trạng thái đơn hàng
-                donHang.TrangThaiDonHang = "Đã hủy";
-                donHang.LyDoHuy = "Bị hủy bởi Admin: " + lyDoHuy;
-                donHang.NgayHuy = DateTime.Now;
-                donHang.NgayCapNhat = DateTime.Now;
-
-                db.Entry(donHang).State = EntityState.Modified;
-                db.SaveChanges();
-
-                TempData["Success"] = "Hủy đơn hàng thành công!";
-                return RedirectToAction("ChiTietAdmin", new { id = id });
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine("Lỗi hủy đơn hàng: " + ex.Message);
-                TempData["Error"] = "Đã xảy ra lỗi khi hủy đơn hàng. Vui lòng thử lại sau!";
-                return RedirectToAction("ChiTietAdmin", new { id = id });
-            }
-        }
-
-        // GET: DonHang/ThongKeDonHang - Cho Admin
         [Authorize(Roles = "Admin")]
         public ActionResult ThongKeDonHang(DateTime? tuNgay = null, DateTime? denNgay = null)
         {

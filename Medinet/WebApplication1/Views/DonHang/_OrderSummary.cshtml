@@ -59,12 +59,13 @@
             <li class="list-group-item d-flex justify-content-between px-0">
                 <span>Trạng thái thanh toán:</span>
                 <span>
-                    @if (Model.TrangThaiDonHang == "Đã thanh toán")
+                    @if (Model.GiaoDichs.FirstOrDefault().TrangThaiGiaoDich == "Đã hoàn thành")
                     {
                         <span class="badge bg-success">Đã thanh toán</span>
                     }
                     else
                     {
+                        
                         <span class="badge bg-warning text-dark">Chưa thanh toán</span>
                     }
                 </span>

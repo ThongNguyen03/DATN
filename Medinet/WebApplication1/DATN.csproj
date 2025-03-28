@@ -156,6 +156,7 @@
     <Compile Include="Models\DanhGiaSanPham.cs" />
     <Compile Include="Models\DanhMucSanPham.cs" />
     <Compile Include="Models\Escrow.cs" />
+    <Compile Include="Models\GhiChepVi.cs" />
     <Compile Include="Models\HangDoiHoanTienVNPay.cs" />
     <Compile Include="Models\KhuyenMaiDonHang.cs" />
     <Compile Include="Models\KhuyenMaiSanPham.cs" />
@@ -381,6 +382,7 @@
     <Content Include="Views\DonHang\_OrderItems.cshtml" />
     <Content Include="Views\DonHang\DonHangNguoiMua.cshtml" />
     <Content Include="Views\DonHang\ChiTietDonHangNguoiMua.cshtml" />
+    <Content Include="Views\NguoiBans\QuanLyTaiKhoan.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

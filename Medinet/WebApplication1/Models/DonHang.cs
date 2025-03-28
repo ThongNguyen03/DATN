@@ -30,7 +30,7 @@ namespace WebApplication1.Models
         [StringLength(10)]
         public string PhuongThucThanhToan { get; set; }
 
-        [StringLength(20)]
+        [StringLength(50)]
         public string TrangThaiDonHang { get; set; } = "Đang chờ xử lý";
 
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
