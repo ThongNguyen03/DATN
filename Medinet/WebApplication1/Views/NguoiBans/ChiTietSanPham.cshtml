@@ -602,7 +602,7 @@
                 }
                 else if (Session["VaiTro"] != null && userRole == "Seller")
                 {
-                    <a href="@Url.Action("QuanLyDanhMuc", "NguoiBans")">Danh mục</a>
+                    <a href="@Url.Action("QuanLySanPham", "NguoiBans", new { id = ViewBag.MaNguoiBan })">Danh mục</a>
                 }
                 else if (Session["VaiTro"] != null && userRole == "Admin")
                 {
@@ -928,10 +928,10 @@
                 <div class="col-md-3 col-sm-6 mb-4">
                     <div class="product-card">
                         <div class="product-image">
-                            @if (sanPham.DanhSachAnhSanPham != null && sanPham.DanhSachAnhSanPham.Count > 0)
+                            @if (sanPham.AnhSanPhams != null && sanPham.AnhSanPhams.Count > 0)
                             {
                                 <a href="@Url.Action("ChiTietSanPham", "NguoiBans", new { id = sanPham.MaSanPham })">
-                                    <img src="@sanPham.DanhSachAnhSanPham[0].DuongDanAnh" alt="@sanPham.TenSanPham" class="img-fluid" />
+                                    <img src="@sanPham.AnhSanPhams[0].DuongDanAnh" alt="@sanPham.TenSanPham" class="img-fluid" />
                                 </a>
                             }
                             else

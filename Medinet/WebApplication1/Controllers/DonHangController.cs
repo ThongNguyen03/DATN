@@ -651,7 +651,7 @@ namespace WebApplication1.Controllers
         // POST: DonHang/CapNhatTrangThaiDonHang - Cho người bán
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult CapNhatTrangThaiDonHang(int id, string trangThai)
+        public async Task<ActionResult> CapNhatTrangThaiDonHang(int id, string trangThai)
         {
             try
             {
@@ -680,6 +680,33 @@ namespace WebApplication1.Controllers
                 {
                     return new HttpStatusCodeResult(HttpStatusCode.Forbidden);
                 }
+
+                //28/03/2025 thêm async Task<ActionResult> vào trước action
+                // Đối với các chuyển đổi trạng thái yêu cầu đặt cọc, kiểm tra số dư
+                if ((donHang.TrangThaiDonHang == "Đang chờ xử lý" || donHang.TrangThaiDonHang == "Đã thanh toán") &&
+                    trangThai == "Đã vận chuyển" &&
+                    donHang.PhuongThucThanhToan == "COD")
+                {
+                    // Kiểm tra số dư đặt cọc
+                    var escrowService = new EscrowService();
+                    var ketQua = await escrowService.KiemTraSoDuNguoiBanChiTietAsync(nguoiBan.MaNguoiBan, donHang.TongSoTien);
+                    if (!ketQua.DuTien)
+                    {
+                        decimal soDuHienTai = nguoiBan.SoDuVi;
+                        decimal soTienThieu = ketQua.SoTienYeuCau - soDuHienTai;
+                        TempData["Error"] = $"Không đủ số dư để đặt cọc. Bạn cần nạp thêm ít nhất {String.Format("{0:N0}", soTienThieu)} VNĐ để xử lý đơn hàng này.";
+                        return RedirectToAction("ChiTietDonHangNguoiMua", new { id = id });
+                    }
+
+                    // Xử lý đặt cọc
+                    bool datCocThanhCong = await escrowService.XuLyDatCocDonHangAsync(id);
+                    if (!datCocThanhCong)
+                    {
+                        TempData["Error"] = "Có lỗi xảy ra khi xử lý đặt cọc. Vui lòng thử lại sau.";
+                        return RedirectToAction("ChiTietDonHangNguoiMua", new { id = id });
+                    }
+                }
+                //28/03/2025
 
                 // Cập nhật trạng thái đơn hàng
                 donHang.TrangThaiDonHang = trangThai;

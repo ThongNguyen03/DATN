@@ -1,0 +1,43 @@
+﻿@{
+    ViewBag.Title = "Kết quả thanh toán nạp tiền";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h4 class="mb-0">Kết quả thanh toán</h4>
+                </div>
+                <div class="card-body text-center py-5">
+                    @if (ViewBag.ThanhToanThanhCong == true)
+                    {
+                        <div class="mb-4">
+                            <i class="fas fa-check-circle text-success fa-5x"></i>
+                        </div>
+                        <h4 class="text-success mb-3">Thanh toán thành công!</h4>
+                        <p class="mb-3">Bạn đã nạp thành công <strong>@String.Format("{0:N0} VNĐ", ViewBag.SoTien)</strong> vào ví.</p>
+                    }
+                    else
+                    {
+                        <div class="mb-4">
+                            <i class="fas fa-times-circle text-danger fa-5x"></i>
+                        </div>
+                        <h4 class="text-danger mb-3">Thanh toán không thành công!</h4>
+                        <p class="mb-3">Đã có lỗi xảy ra trong quá trình thanh toán. Vui lòng thử lại sau.</p>
+                    }
+
+                    <div class="mt-4">
+                        <a href="@Url.Action("NapTien", "NguoiBans")" class="btn btn-outline-primary mr-2">
+                            <i class="fas fa-redo mr-1"></i> Nạp tiền lại
+                        </a>
+                        <a href="@Url.Action("DonHangNguoiMua", "DonHang")" class="btn btn-primary">
+                            <i class="fas fa-shopping-cart mr-1"></i> Quản lý đơn hàng
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

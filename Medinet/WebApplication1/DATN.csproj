@@ -383,6 +383,8 @@
     <Content Include="Views\DonHang\DonHangNguoiMua.cshtml" />
     <Content Include="Views\DonHang\ChiTietDonHangNguoiMua.cshtml" />
     <Content Include="Views\NguoiBans\QuanLyTaiKhoan.cshtml" />
+    <Content Include="Views\NguoiBans\NapTien.cshtml" />
+    <Content Include="Views\ThanhToan\KetQuaThanhToanNapTien.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

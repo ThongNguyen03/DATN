@@ -914,7 +914,7 @@ namespace WebApplication1.Controllers
                 .Where(s => s.MaNguoiBan == id)
                 .ToList();
 
-            // Lấy thông tin sản phẩm bán chạy
+            // Thay đổi cách thức truy vấn
             var sanPhamBanChay = (from ct in db.ChiTietDonHangs
                                   join sp in db.SanPhams on ct.MaSanPham equals sp.MaSanPham
                                   join dh in db.DonHangs on ct.MaDonHang equals dh.MaDonHang
@@ -928,28 +928,38 @@ namespace WebApplication1.Controllers
                                       MaSanPham = g.Key.MaSanPham,
                                       TenSanPham = g.Key.TenSanPham,
                                       SoLuongBan = g.Sum(x => x.SoLuong),
-                                      TongTien = g.Sum(x => x.SoLuong * x.Gia),
-                                      AnhDaiDien = db.AnhSanPhams
-                                         .Where(a => a.MaSanPham == g.Key.MaSanPham)
-                                         .Select(a => a.DuongDanAnh)
-                                         .FirstOrDefault() ?? "/Content/images/no-image.jpeg"
+                                      TongTien = g.Sum(x => x.SoLuong * x.Gia)
                                   })
                                  .OrderByDescending(x => x.SoLuongBan)
                                  .Take(5)
                                  .ToList();
 
+            // Sau đó cập nhật AnhDaiDien riêng
+            var result = sanPhamBanChay.Select(sp => new SanPhamBanChayViewModel
+            {
+                MaSanPham = sp.MaSanPham,
+                TenSanPham = sp.TenSanPham,
+                SoLuongBan = sp.SoLuongBan,
+                TongTien = sp.TongTien,
+                AnhDaiDien = db.AnhSanPhams
+                    .Where(a => a.MaSanPham == sp.MaSanPham)
+                    .Select(a => a.DuongDanAnh)
+                    .FirstOrDefault() ?? "/Content/images/no-image.jpeg"
+            }).ToList();
+
+            ViewBag.SanPhamBanChay = result;
             // Tính toán các thống kê
             var tongDoanhThu = donHangs
-                .Where(d => d.TrangThaiDonHang == "Đã xác nhận nhận hàng" ||
-                           d.TrangThaiDonHang == "Đã hoàn thành" ||
-                           d.TrangThaiDonHang == "Đã thanh toán")
+                .Where(d => 
+                           d.TrangThaiDonHang == "Đã hoàn thành" 
+                           )
                 .Sum(d => d.TongSoTien);
 
             var tongLoiNhuan = tongDoanhThu - (tongDoanhThu * 0.1m); // Lợi nhuận sau khi trừ phí 10%
 
             var tongSanPham = sanPhams.Count;
             var tongDonHang = donHangs.Count;
-            var donHangDaGiao = donHangs.Count(d => d.TrangThaiDonHang == "Đã giao");
+            var donHangDaGiao = donHangs.Count(d => d.TrangThaiDonHang == "Đã hoàn thành");
             var donHangDangVanChuyen = donHangs.Count(d => d.TrangThaiDonHang == "Đã vận chuyển");
             var donHangChoXuLy = donHangs.Count(d => d.TrangThaiDonHang == "Đang chờ xử lý");
             var donHangDaHuy = donHangs.Count(d => d.TrangThaiDonHang == "Đã hủy");
@@ -979,7 +989,7 @@ namespace WebApplication1.Controllers
 
             // Đưa dữ liệu vào ViewBag
             ViewBag.GhiChepVis = ghiChepVis;
-            ViewBag.SanPhamBanChay = sanPhamBanChay;
+            //ViewBag.SanPhamBanChay = sanPhamBanChay;
             ViewBag.TongDoanhThu = tongDoanhThu;
             ViewBag.TongLoiNhuan = tongLoiNhuan;
             ViewBag.TongSanPham = tongSanPham;
@@ -996,26 +1006,52 @@ namespace WebApplication1.Controllers
             return View(nguoiBan);
         }
 
-        // Phương thức nạp tiền vào ví
+
+        // GET: NguoiBans/NapTien
+        public ActionResult NapTien()
+        {
+            int maNguoiDung = GetCurrentUserId();
+            if (maNguoiDung <= 0)
+            {
+                return RedirectToAction("DangNhap", "DangNhap");
+            }
+
+            var nguoiBan = db.NguoiBans.FirstOrDefault(n => n.MaNguoiDung == maNguoiDung);
+            if (nguoiBan == null)
+            {
+                TempData["Error"] = "Bạn không phải là người bán!";
+                return RedirectToAction("Index", "Home");
+            }
+
+            ViewBag.MaNguoiBan = nguoiBan.MaNguoiBan;
+            ViewBag.SoDuHienTai = nguoiBan.SoDuVi;
+
+            return View();
+        }
+
+        // POST: NguoiBans/NapTienVi
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult NapTienVi(int maNguoiBan, decimal soTien, string phuongThucThanhToan)
+        public ActionResult NapTienVi(decimal soTien, string phuongThucThanhToan)
         {
             try
             {
                 // Kiểm tra quyền truy cập
                 int maNguoiDung = GetCurrentUserId();
-                var nguoiBan = db.NguoiBans.Find(maNguoiBan);
-                if (nguoiBan == null || nguoiBan.MaNguoiDung != maNguoiDung)
+                var nguoiBan = db.NguoiBans.FirstOrDefault(n => n.MaNguoiDung == maNguoiDung);
+                if (nguoiBan == null)
                 {
-                    return new HttpStatusCodeResult(HttpStatusCode.Forbidden);
+                    TempData["Error"] = "Bạn không phải là người bán!";
+                    return RedirectToAction("Index", "Home");
                 }
+
+                int maNguoiBan = nguoiBan.MaNguoiBan;
 
                 // Kiểm tra số tiền
                 if (soTien <= 0)
                 {
                     TempData["Error"] = "Số tiền nạp phải lớn hơn 0!";
-                    return RedirectToAction("QuanLyTaiKhoan", new { id = maNguoiBan });
+                    return RedirectToAction("NapTien");
                 }
 
                 // Nếu phương thức thanh toán là VNPAY, chuyển hướng đến trang thanh toán VNPAY
@@ -1024,28 +1060,49 @@ namespace WebApplication1.Controllers
                     return RedirectToAction("TaoThanhToanVNPayNapTien", "ThanhToan", new { maNguoiBan = maNguoiBan, soTien = soTien });
                 }
 
-                // Nếu là phương thức khác, tạm thời xử lý như cập nhật trực tiếp (trong thực tế cần có quy trình xác nhận)
-                // Tạo ghi chép ví
-                var ghiChep = GhiChepVi.TaoGhiChepNap(maNguoiBan, soTien, phuongThucThanhToan);
-                db.GhiChepVis.Add(ghiChep);
+                // Nếu là phương thức chuyển khoản ngân hàng
+                if (phuongThucThanhToan == "ChuyenKhoan")
+                {
+                    // Tạo ghi chép ví với trạng thái "Chờ xác nhận"
+                    var ghiChep = new GhiChepVi
+                    {
+                        MaNguoiBan = maNguoiBan,
+                        SoTien = soTien,
+                        LoaiGiaoDich = "Nạp tiền",
+                        MoTa = $"Nạp tiền vào ví qua chuyển khoản ngân hàng",
+                        NgayGiaoDich = DateTime.Now,
+                        TrangThai = "Chờ xác nhận"
+                    };
+                    db.GhiChepVis.Add(ghiChep);
+                    db.SaveChanges();
 
-                // Cập nhật số dư ví
-                nguoiBan.SoDuVi += soTien;
-                db.Entry(nguoiBan).State = EntityState.Modified;
+                    TempData["Success"] = "Yêu cầu nạp tiền đã được ghi nhận. Vui lòng chuyển khoản theo hướng dẫn để hoàn tất!";
+                    return RedirectToAction("HuongDanChuyenKhoan", new { maGiaoDich = ghiChep.MaGiaoDichNgoai });
+                }
 
+                // Nếu là phương thức tiền mặt hoặc khác (cần admin phê duyệt)
+                var ghiChepKhac = new GhiChepVi
+                {
+                    MaNguoiBan = maNguoiBan,
+                    SoTien = soTien,
+                    LoaiGiaoDich = "Nạp tiền",
+                    MoTa = $"Nạp tiền vào ví qua {phuongThucThanhToan}",
+                    NgayGiaoDich = DateTime.Now,
+                    TrangThai = "Chờ xác nhận"
+                };
+                db.GhiChepVis.Add(ghiChepKhac);
                 db.SaveChanges();
 
-                TempData["Success"] = "Yêu cầu nạp tiền đã được ghi nhận. Vui lòng chuyển khoản theo hướng dẫn để hoàn tất!";
-                return RedirectToAction("QuanLyTaiKhoan", new { id = maNguoiBan });
+                TempData["Success"] = "Yêu cầu nạp tiền đã được ghi nhận. Quản trị viên sẽ xác nhận trong thời gian sớm nhất!";
+                return RedirectToAction("NapTien");
             }
             catch (Exception ex)
             {
                 TempData["Error"] = "Đã xảy ra lỗi: " + ex.Message;
-                return RedirectToAction("QuanLyTaiKhoan", new { id = maNguoiBan });
+                return RedirectToAction("NapTien");
             }
         }
 
-        // Phương thức rút tiền từ ví
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult RutTienVi(int maNguoiBan, decimal soTien, string thongTinTaiKhoan)
@@ -1149,4 +1206,14 @@ namespace WebApplication1.Controllers
             public SanPham SanPham { get; set; }
             public List<AnhSanPham> DanhSachAnh { get; set; }
         }
+        // Tạo một lớp rõ ràng thay vì sử dụng kiểu ẩn danh
+        public class SanPhamBanChayViewModel
+        {
+            public int MaSanPham { get; set; }
+            public string TenSanPham { get; set; }
+            public int SoLuongBan { get; set; }
+            public decimal TongTien { get; set; }
+            public string AnhDaiDien { get; set; }
+        }
+
 }

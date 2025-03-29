@@ -56,6 +56,136 @@ namespace WebApplication1.Services
             return depositAmount + platformFee;
         }
 
+
+        //28/03/2025
+        // Thêm phương thức mới để kiểm tra số dư và trả về thông tin chi tiết
+        public async Task<(bool DuTien, decimal SoTienYeuCau)> KiemTraSoDuNguoiBanChiTietAsync(int maNguoiBan, decimal soTien)
+        {
+            // Lấy thông tin số dư của người bán
+            var nguoiBan = await db.NguoiBans.FindAsync(maNguoiBan);
+            if (nguoiBan == null)
+            {
+                return (false, 0);
+            }
+
+            // Số tiền đặt cọc cần thiết
+            decimal requiredDeposit = CalculateRequiredDeposit(soTien);
+
+            // Phí nền tảng cần trừ trước
+            decimal platformFee = soTien * PLATFORM_FEE_RATE;
+
+            // Tổng số tiền cần có = tiền đặt cọc + phí nền tảng
+            decimal soTienYeuCau = requiredDeposit + platformFee;
+
+            return (nguoiBan.SoDuVi >= soTienYeuCau, soTienYeuCau);
+        }
+
+        // Phương thức xử lý đặt cọc cho đơn hàng - được gọi khi người bán cập nhật trạng thái
+        public async Task<bool> XuLyDatCocDonHangAsync(int maDonHang)
+        {
+            using (var dbTransaction = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    // Lấy thông tin đơn hàng
+                    var donHang = await db.DonHangs
+                        .Include(d => d.NguoiBan)
+                        .FirstOrDefaultAsync(d => d.MaDonHang == maDonHang);
+
+                    if (donHang == null)
+                    {
+                        return false;
+                    }
+
+                    // Kiểm tra nếu đã có ký quỹ
+                    var escrowExists = await db.Escrows.AnyAsync(e => e.MaDonHang == maDonHang);
+                    if (escrowExists)
+                    {
+                        return true; // Đã xử lý ký quỹ trước đó
+                    }
+
+                    // Lấy thông tin người bán
+                    var nguoiBan = await db.NguoiBans.FindAsync(donHang.MaNguoiBan);
+                    if (nguoiBan == null)
+                    {
+                        return false;
+                    }
+
+                    // Tính số tiền đặt cọc và phí
+                    decimal orderAmount = donHang.TongSoTien;
+                    decimal requiredDeposit = CalculateRequiredDeposit(orderAmount);
+                    decimal platformFee = orderAmount * PLATFORM_FEE_RATE;
+                    decimal totalAmount = requiredDeposit + platformFee;
+
+                    // Kiểm tra số dư
+                    if (nguoiBan.SoDuVi < totalAmount)
+                    {
+                        return false;
+                    }
+
+                    // Trừ tiền từ ví người bán
+                    nguoiBan.SoDuVi -= totalAmount;
+                    db.Entry(nguoiBan).State = EntityState.Modified;
+
+                    // Tạo ghi chép ví cho tiền đặt cọc
+                    var ghiChepCoc = new GhiChepVi
+                    {
+                        MaNguoiBan = nguoiBan.MaNguoiBan,
+                        MaDonHang = maDonHang,
+                        SoTien = -requiredDeposit,
+                        LoaiGiaoDich = "Đặt cọc",
+                        MoTa = $"Đặt cọc cho đơn hàng #{maDonHang}",
+                        NgayGiaoDich = DateTime.Now,
+                        TrangThai = "Thành công"
+                    };
+                    db.GhiChepVis.Add(ghiChepCoc);
+
+                    // Tạo ghi chép ví cho phí nền tảng
+                    var ghiChepPhi = new GhiChepVi
+                    {
+                        MaNguoiBan = nguoiBan.MaNguoiBan,
+                        MaDonHang = maDonHang,
+                        SoTien = -platformFee,
+                        LoaiGiaoDich = "Phí nền tảng",
+                        MoTa = $"Phí nền tảng cho đơn hàng #{maDonHang} ({PLATFORM_FEE_RATE * 100}%)",
+                        NgayGiaoDich = DateTime.Now,
+                        TrangThai = "Thành công"
+                    };
+                    db.GhiChepVis.Add(ghiChepPhi);
+
+                    // Tạo bản ghi ký quỹ
+                    var escrow = new Escrow
+                    {
+                        MaDonHang = maDonHang,
+                        MaNguoiBan = donHang.MaNguoiBan,
+                        TongTien = orderAmount,
+                        PhiNenTang = platformFee,
+                        TienChuyenChoNguoiBan = orderAmount - platformFee,
+                        TrangThai = "Đang giữ",
+                        NgayTao = DateTime.Now
+                    };
+                    db.Escrows.Add(escrow);
+
+                    // Lưu thay đổi và commit transaction
+                    await db.SaveChangesAsync();
+                    dbTransaction.Commit();
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    dbTransaction.Rollback();
+                    System.Diagnostics.Debug.WriteLine($"Lỗi xử lý đặt cọc: {ex.Message}");
+                    if (ex.InnerException != null)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                    }
+                    return false;
+                }
+            }
+        }
+
+        //28/03/2025
         public async Task<List<Escrow>> CreateMultipleEscrowsAsync(List<int> maDonHangList)
         {
             System.Diagnostics.Debug.WriteLine($"===== Bắt đầu tạo ký quỹ cho {maDonHangList.Count} đơn hàng =====");
