@@ -440,6 +440,129 @@
         </div>
     </div>
 
+    @*1/4/2025*@
+    <!-- Phần đánh giá sản phẩm -->
+    <div class="product-reviews mt-5">
+        <div class="reviews-header mb-4">
+            <h4>Đánh giá sản phẩm</h4>
+            <div class="overall-rating d-flex align-items-center">
+                @if (ViewBag.TongDanhGia != null)
+                {
+                    <div class="total-score mr-3">
+                        <span class="display-4 text-warning">@ViewBag.DiemTrungBinh</span>
+                        <span class="text-muted">/5</span>
+                    </div>
+                    <div class="rating-details">
+                        <div class="stars">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= Math.Round(ViewBag.DiemTrungBinh))
+                                {
+                                    <i class="fas fa-star text-warning"></i>
+                                }
+                                else
+                                {
+                                    <i class="far fa-star text-warning"></i>
+                                }
+                            }
+                        </div>
+                        <div class="text-muted">(@ViewBag.TongDanhGia đánh giá)</div>
+                    </div>
+                }
+                else
+                {
+                    <p>Chưa có đánh giá</p>
+                }
+            </div>
+        </div>
+
+        <!-- Thống kê đánh giá theo sao -->
+        @if (ViewBag.ThongKeDanhGia != null)
+        {
+        <div class="rating-breakdown mb-4">
+            @for (int star = 5; star >= 1; star--)
+            {
+                int count = 0;
+                ViewBag.ThongKeDanhGia.TryGetValue(star, out count);
+                double percentage = ViewBag.TongDanhGia > 0
+                    ? ((double)count / ViewBag.TongDanhGia) * 100
+                    : 0;
+
+                <div class="rating-row d-flex align-items-center mb-2">
+                    <div class="star-label mr-2">@star sao</div>
+                    <div class="progress flex-grow-1 mr-2" style="height: 10px;">
+                        <div class="progress-bar bg-warning" role="progressbar"
+                             style="width: @(percentage)%"
+                             aria-valuenow="@percentage"
+                             aria-valuemin="0"
+                             aria-valuemax="100"></div>
+                    </div>
+                    <div class="count text-muted">@count</div>
+                </div>
+            }
+        </div>
+        }
+
+        <!-- Danh sách đánh giá chi tiết -->
+        <div class="reviews-list">
+            @if (ViewBag.DanhSachDanhGia != null && ViewBag.DanhSachDanhGia.Count > 0)
+            {
+                foreach (var danhGia in ViewBag.DanhSachDanhGia)
+                {
+                    <div class="review-item border-bottom pb-3 mb-3">
+                        <div class="review-header d-flex justify-content-between">
+                            <div class="reviewer-info">
+                                <strong>@danhGia.NguoiDung.TenNguoiDung</strong>
+                                <span class="text-muted ml-2">@danhGia.NgayTao.ToString("dd/MM/yyyy HH:mm")</span>
+                            </div>
+                            <div class="review-stars">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    if (i <= danhGia.DanhGia)
+                                    {
+                                        <i class="fas fa-star text-warning"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="far fa-star text-warning"></i>
+                                    }
+                                }
+                            </div>
+                        </div>
+                        <div class="review-body mt-2">
+                            <p>@danhGia.BinhLuan</p>
+                        </div>
+                        @if (!string.IsNullOrEmpty(danhGia.DonHang?.MaDonHang.ToString()))
+                        {
+                            <div class="review-order-info text-muted small">
+                                Đánh giá cho đơn hàng #@danhGia.DonHang.MaDonHang
+                            </div>
+                        }
+                    </div>
+                }
+
+                <!-- Phân trang đánh giá -->
+                if (ViewBag.TotalPages > 1)
+                {
+                    <nav aria-label="Phân trang đánh giá">
+                        <ul class="pagination justify-content-center">
+                            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="?page=@i">@i</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <p class="text-center text-muted">Chưa có đánh giá nào cho sản phẩm này.</p>
+            }
+        </div>
+    </div>
+    @*1/4/2025*@
     <!-- Sản phẩm liên quan với phân trang - tất cả sản phẩm cùng danh mục -->
     @if (ViewBag.SanPhamLienQuan != null && ((List<WebApplication1.Models.SanPham>)ViewBag.SanPhamLienQuan).Count > 0)
     {
@@ -473,7 +596,7 @@
                             </a>
                             <div class="related-info">
                                 <a href="@Url.Action("ChiTiet", "Home", new { id = sanPham.MaSanPham })" class="text-dark text-decoration-none">
-                                    <div class="related-title">@sanPham.TenSanPham</div>
+                                    <div class="related-title" style="height:50px">@sanPham.TenSanPham</div>
                                 </a>
                                 <div class="related-price">@sanPham.GiaSanPham.ToString("N0") đ</div>
                                 @if (sanPham.SoLuotMua > 0)

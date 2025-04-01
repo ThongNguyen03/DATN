@@ -380,7 +380,7 @@
                                                         <a href="@Url.Action("ChiTietAdmin", "DonHang", new { id = item.MaDonHang })" class="btn btn-sm btn-primary">
                                                             <i class="bi bi-eye"></i>
                                                         </a>
-                                                        @if (item.TrangThaiDonHang != "Đã xác nhận nhận hàng" &&
+                                                        @*@if (item.TrangThaiDonHang != "Đã xác nhận nhận hàng" &&
                                                              item.TrangThaiDonHang != "Đã hoàn thành" &&
                                                              item.TrangThaiDonHang != "Đã thanh toán" &&
                                                              item.TrangThaiDonHang != "Đã hủy")
@@ -388,7 +388,7 @@
                                                             <button type="button" class="btn btn-sm btn-danger cancel-order-btn" data-id="@item.MaDonHang">
                                                                 <i class="bi bi-x-circle"></i>
                                                             </button>
-                                                        }
+                                                        }*@
                                                     </div>
                                                 </td>
                                             </tr>

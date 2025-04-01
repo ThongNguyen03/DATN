@@ -14,6 +14,13 @@ using System.Web.Mvc;
 using WebApplication1.Models;
 using WebApplication1.Services;
 using System.Data.SqlClient;
+using Newtonsoft.Json;
+using System.Configuration;
+using System.Net.Http.Headers;
+using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
+using System.Data.Entity.Infrastructure;
 
 namespace WebApplication1.Controllers
 {
@@ -217,6 +224,8 @@ namespace WebApplication1.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+
+        //1/4/2025
         public ActionResult DanhGiaDonHang(int id, int soDiem, string noiDungDanhGia)
         {
             try
@@ -226,19 +235,16 @@ namespace WebApplication1.Controllers
                 {
                     return RedirectToAction("DangNhap", "DangNhap");
                 }
-
                 var donHang = db.DonHangs.Find(id);
                 if (donHang == null)
                 {
                     return HttpNotFound();
                 }
-
                 // Kiểm tra quyền truy cập
                 if (donHang.MaNguoiDung != maNguoiDung)
                 {
                     return new HttpStatusCodeResult(HttpStatusCode.Forbidden);
                 }
-
                 // Kiểm tra trạng thái đơn hàng có thể đánh giá không
                 if (donHang.TrangThaiDonHang != "Đã xác nhận nhận hàng" &&
                     donHang.TrangThaiDonHang != "Đã hoàn thành" &&
@@ -247,7 +253,6 @@ namespace WebApplication1.Controllers
                     TempData["Error"] = "Chỉ có thể đánh giá đơn hàng đã nhận!";
                     return RedirectToAction("ChiTiet", new { id = id });
                 }
-
                 // Kiểm tra xem đã đánh giá trước đó chưa
                 if (donHang.DaDanhGia)
                 {
@@ -255,28 +260,57 @@ namespace WebApplication1.Controllers
                     return RedirectToAction("ChiTiet", new { id = id });
                 }
 
-                // Tạo đánh giá mới
-                var danhGia = new DanhGiaSanPham
-                {
-                    MaDonHang = id,
-                    MaNguoiDung = maNguoiDung,
-                    MaNguoiBan = donHang.MaNguoiBan,
-                    DanhGia = soDiem,
-                    BinhLuan = noiDungDanhGia,
-                    NgayTao = DateTime.Now
-                };
+                // Danh sách các đánh giá sẽ được tạo
+                var danhGias = new List<DanhGiaSanPham>();
 
-                db.DanhGiaSanPhams.Add(danhGia);
+                // Tạo đánh giá cho từng sản phẩm trong đơn hàng
+                foreach (var chiTietDonHang in donHang.ChiTietDonHangs)
+                {
+                    var danhGia = new DanhGiaSanPham
+                    {
+                        MaNguoiDung = maNguoiDung,
+                        MaSanPham = chiTietDonHang.MaSanPham,
+                        MaDonHang = id,
+                        MaNguoiBan = donHang.MaNguoiBan,
+                        DanhGia = soDiem,
+                        BinhLuan = noiDungDanhGia,
+                        DaDanhGia = true
+                    };
+                    danhGias.Add(danhGia);
+                }
+
+                // Thêm tất cả các đánh giá
+                db.DanhGiaSanPhams.AddRange(danhGias);
 
                 // Cập nhật trạng thái đã đánh giá cho đơn hàng
                 donHang.DaDanhGia = true;
                 donHang.NgayCapNhat = DateTime.Now;
-                db.Entry(donHang).State = EntityState.Modified;
 
-                db.SaveChanges();
+                try
+                {
+                    db.SaveChanges();
+                    TempData["Success"] = "Đánh giá đơn hàng thành công!";
+                    return RedirectToAction("ChiTiet", new { id = id });
+                }
+                catch (DbUpdateException ex)
+                {
+                    // Ghi log chi tiết ngoại lệ
+                    var innerException = ex.InnerException;
+                    while (innerException != null)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Ngoại lệ bên trong: " + innerException.Message);
+                        System.Diagnostics.Debug.WriteLine("Ngăn xếp lỗi: " + innerException.StackTrace);
+                        innerException = innerException.InnerException;
+                    }
 
-                TempData["Success"] = "Đánh giá đơn hàng thành công!";
-                return RedirectToAction("ChiTiet", new { id = id });
+                    // Thay thế phần validate trước đó
+                    TempData["Error"] = "Đã xảy ra lỗi khi đánh giá đơn hàng. Chi tiết: " + ex.Message;
+
+                    // Ghi log thêm thông tin về ngoại lệ
+                    System.Diagnostics.Debug.WriteLine("Chi tiết lỗi DbUpdateException: " + ex.Message);
+
+                    return RedirectToAction("ChiTiet", new { id = id });
+                }
             }
             catch (Exception ex)
             {
@@ -285,7 +319,7 @@ namespace WebApplication1.Controllers
                 return RedirectToAction("ChiTiet", new { id = id });
             }
         }
-
+        //1/4/2025
         public FileResult XuatHoaDonPdf(int maDonHang)
         {
             try

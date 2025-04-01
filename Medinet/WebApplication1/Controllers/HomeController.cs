@@ -5,6 +5,7 @@ using System.Web.Mvc;
 using WebApplication1.Models;
 using System.Data.Entity;
 using System.Data.SqlClient;
+using System.Web.UI;
 
 namespace WebApplication1.Controllers
 {
@@ -161,7 +162,7 @@ namespace WebApplication1.Controllers
 
         // GET: Home/ChiTiet - Trang chi tiết sản phẩm
         // Cập nhật phương thức ChiTiet trong HomeController
-        public ActionResult ChiTiet(int id)
+        public ActionResult ChiTiet(int id, int? page)
         {
             var sanPham = db.SanPhams
                 .Include(s => s.AnhSanPhams)
@@ -182,7 +183,44 @@ namespace WebApplication1.Controllers
                        s.TrangThai == "Đã phê duyệt")
                 .OrderByDescending(s => s.SoLuotMua)
                 .ToList();
+            //1/4/2025 thêm int? page
+            // Lấy danh sách đánh giá cho sản phẩm
+            var danhGias = db.DanhGiaSanPhams
+                .Where(dg => dg.MaSanPham == id)
+                .OrderByDescending(dg => dg.NgayTao)
+                .Include(dg => dg.NguoiDung)
+                .Include(dg => dg.DonHang)
+                .ToList();
 
+            // Tính điểm trung bình
+            ViewBag.DiemTrungBinh = danhGias.Any()
+                ? Math.Round(danhGias.Average(dg => dg.DanhGia ?? 0), 1)
+                : 0;
+
+            // Tổng số đánh giá
+            ViewBag.TongDanhGia = danhGias.Count;
+
+            // Thống kê đánh giá theo sao - an toàn hơn
+            ViewBag.ThongKeDanhGia = new Dictionary<int, int>
+            {
+                { 1, danhGias.Count(dg => dg.DanhGia == 1) },
+                { 2, danhGias.Count(dg => dg.DanhGia == 2) },
+                { 3, danhGias.Count(dg => dg.DanhGia == 3) },
+                { 4, danhGias.Count(dg => dg.DanhGia == 4) },
+                { 5, danhGias.Count(dg => dg.DanhGia == 5) }
+            };
+
+            // Phân trang
+            int pageSize = 5;
+            int pageNumber = (page ?? 1);
+            ViewBag.CurrentPage = pageNumber;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)danhGias.Count / pageSize);
+
+            ViewBag.DanhSachDanhGia = danhGias
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+            //1/4/2025
             ViewBag.SanPhamLienQuan = sanPhamLienQuan;
 
             return View(sanPham);

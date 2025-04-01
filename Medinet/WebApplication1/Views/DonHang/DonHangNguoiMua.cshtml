@@ -381,6 +381,16 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
+            // Xử lý nút đóng
+            $('.btn-secondary').on('click', function () {
+                $('#updateStatusModal').modal('hide');
+            });
+
+            // Xử lý nút close (dấu x)
+            $('.close').on('click', function () {
+                $('#updateStatusModal').modal('hide');
+            });
+
             // Initialize tooltips
             $('[data-toggle="tooltip"]').tooltip();
 

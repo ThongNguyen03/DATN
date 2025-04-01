@@ -484,7 +484,14 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <p><strong>Ngày giao hàng:</strong> @Model.NgayGiaoHang.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                                            @if (Model.NgayGiaoHang.HasValue)
+                                            {
+                                                <p><strong>Ngày giao hàng:</strong> @Model.NgayGiaoHang.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                                            }
+                                            else
+                                            {
+                                                <p><strong>Ngày giao hàng:</strong> @Model.NgayCapNhat.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                                            }
 
                                             @if (Model.TrangThaiDonHang == "Đã giao" && Model.ThoiGianTuDongXacNhan.HasValue)
                                             {
@@ -604,9 +611,12 @@
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@Model.MaDonHang" />
                                 <input type="hidden" name="trangThai" value="Đã giao" />
-                                <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-check mr-1"></i> Xác nhận đã giao hàng
-                                </button>
+                                if (Model.TrangThaiDonHang == "Đã vận chuyển")
+                                {
+                                    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#updateStatusModal" onclick="prepareStatusUpdate('@Model.MaDonHang', 'Đã giao')">
+                                        <i class="fas fa-check mr-1"></i> Xác nhận đã giao hàng
+                                    </button>
+                                }
                             }
                         }
                     </div>
@@ -619,24 +629,50 @@
 </div>
 
 @*30/3/2025*@
-<!-- Image upload field - visible only for "Đã giao" status -->
-<div id="imageUploadSection" class="d-none">
-    <hr>
-    <div class="alert alert-info">
-        <i class="fas fa-info-circle"></i> Vui lòng tải lên ảnh chứng minh việc giao hàng (hóa đơn, vận đơn, ảnh chụp hàng đã giao...).
-    </div>
-    <div class="form-group">
-        <label for="anhXacNhan">Ảnh xác nhận giao hàng <span class="text-danger">*</span></label>
-        <div class="custom-file">
-            <input type="file" class="custom-file-input" id="anhXacNhan" name="anhXacNhan">
-            <label class="custom-file-label" for="anhXacNhan">Chọn ảnh...</label>
+<!-- Modal for status update confirmation -->
+<div class="modal fade" id="updateStatusModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cập nhật trạng thái đơn hàng</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="updateStatusForm" method="post" action="@Url.Action("CapNhatTrangThaiDonHang", "DonHang")" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" id="updateOrderId" name="id" value="" />
+                    <input type="hidden" id="updateStatus" name="trangThai" value="" />
+                    <p id="statusConfirmMessage"></p>
+
+                    <!-- Image upload field - visible only for "Đã giao" status -->
+                    <div id="imageUploadSection">
+                        <hr>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Vui lòng tải lên ảnh chứng minh việc giao hàng (hóa đơn, vận đơn, ảnh chụp hàng đã giao...).
+                        </div>
+                        <div class="form-group">
+                            <label for="anhXacNhan">Ảnh xác nhận giao hàng <span class="text-danger">*</span></label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="anhXacNhan" name="anhXacNhan" required>
+                                <label class="custom-file-label" for="anhXacNhan">Chọn ảnh...</label>
+                            </div>
+                            <small class="form-text text-muted">
+                                Hình ảnh nên rõ ràng, có thể nhìn thấy thông tin vận đơn hoặc bằng chứng giao hàng. Định dạng: JPG, PNG, tối đa 5MB.
+                            </small>
+                        </div>
+                        <div id="imagePreview" class="mt-3 d-none">
+                            <img src="" class="img-fluid img-thumbnail" alt="Preview" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary">Xác nhận</button>
+                </div>
+            </form>
         </div>
-        <small class="form-text text-muted">
-            Hình ảnh nên rõ ràng, có thể nhìn thấy thông tin vận đơn hoặc bằng chứng giao hàng. Định dạng: JPG, PNG, tối đa 5MB.
-        </small>
-    </div>
-    <div id="imagePreview" class="mt-3 d-none">
-        <img src="" class="img-fluid img-thumbnail" alt="Preview" />
     </div>
 </div>
 @*30/3/2025*@
@@ -678,6 +714,45 @@
         $(document).ready(function () {
             // Initialize tooltips
             $('[data-toggle="tooltip"]').tooltip();
+        });
+
+        // Thêm vào phần JavaScript
+        function prepareStatusUpdate(orderId, status) {
+            $('#updateOrderId').val(orderId);
+            $('#updateStatus').val(status);
+
+            // Hiển thị thông báo xác nhận phù hợp
+            if (status === "Đã giao") {
+                $('#statusConfirmMessage').html('Bạn có chắc chắn muốn xác nhận đơn hàng này đã được giao?');
+                $('#imageUploadSection').removeClass('d-none');
+            } else {
+                $('#statusConfirmMessage').html('Bạn có chắc chắn muốn cập nhật trạng thái đơn hàng thành "' + status + '"?');
+                $('#imageUploadSection').addClass('d-none');
+            }
+        }
+
+        // Đảm bảo modal đóng đúng cách
+        $('#updateStatusModal').on('hidden.bs.modal', function () {
+            $('#updateStatusForm').trigger('reset');
+            $('#imagePreview').addClass('d-none');
+            $('#imagePreview img').attr('src', '');
+            $('.custom-file-label').html('Chọn ảnh...');
+        });
+
+        // Hiện tên file khi chọn
+        $('#anhXacNhan').change(function (e) {
+            if (e.target.files.length > 0) {
+                var fileName = e.target.files[0].name;
+                $('.custom-file-label').html(fileName);
+
+                // Preview image
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    $('#imagePreview').removeClass('d-none');
+                    $('#imagePreview img').attr('src', e.target.result);
+                }
+                reader.readAsDataURL(this.files[0]);
+            }
         });
 
         function printInvoice() {
