@@ -54,6 +54,13 @@ namespace WebApplication1.Models
 
         public bool DaDanhGia { get; set; } = false;
 
+
+        //30/3/2025
+        public string AnhXacNhanGiaoHang { get; set; }
+        public DateTime? ThoiGianTuDongXacNhan { get; set; }
+
+        //30/3/2025
+
         // Navigation properties
         public virtual NguoiDung NguoiDung { get; set; }
         public virtual NguoiBan NguoiBan { get; set; }

@@ -1,0 +1,1204 @@
+﻿@model WebApplication1.Models.DonHang
+@{
+    ViewBag.Title = "Chi tiết đơn hàng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Sidebar styles */
+    .page-container {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    .sidebar {
+        width: 250px;
+        background-color: #fff;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 100;
+        padding-top: 15px;
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        margin-bottom: 15px;
+    }
+
+    .sidebar-logo {
+        height: 40px;
+        margin-right: 10px;
+    }
+
+    .sidebar-heading {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #6c757d;
+        padding: 0 20px;
+        margin-bottom: 10px;
+    }
+
+    .sidebar-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-item {
+        position: relative;
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        color: #495057;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+        .sidebar-link i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .sidebar-link:hover, .sidebar-item.active .sidebar-link {
+            color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+
+            .sidebar-item.active .sidebar-link:before {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 3px;
+                background-color: #0d6efd;
+            }
+
+    /* Main content styles */
+    .main-content {
+        flex: 1;
+        padding: 20px;
+        overflow-x: hidden; /* Prevent horizontal scroll */
+    }
+
+    /* Card styles */
+    .card {
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+
+    .card-header {
+        background-color: #fff;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+        padding: 15px 20px;
+    }
+
+    /* Status badges */
+    .badge {
+        padding: 6px 10px;
+        font-weight: 500;
+        border-radius: 4px;
+    }
+
+    /* Order details section */
+    .order-info-section {
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .info-row {
+        display: flex;
+        margin-bottom: 10px;
+    }
+
+    .info-label {
+        font-weight: 500;
+        min-width: 150px;
+    }
+
+    .info-value {
+        flex: 1;
+    }
+
+    /* Product table */
+    .product-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .product-table th {
+            background-color: #f8f9fa;
+            font-weight: 500;
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .product-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #dee2e6;
+            vertical-align: middle;
+        }
+
+    .product-info {
+        display: flex;
+        align-items: center;
+    }
+
+    .product-image {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 4px;
+        margin-right: 10px;
+    }
+
+    .product-name {
+        font-weight: 500;
+        margin-bottom: 5px;
+    }
+
+    .product-code {
+        font-size: 12px;
+        color: #6c757d;
+    }
+
+    /* Price cells */
+    .price-cell {
+        text-align: right;
+        font-weight: 500;
+    }
+
+    /* Timeline styles */
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+        margin-top: 20px;
+    }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 7px;
+            width: 2px;
+            background-color: #dee2e6;
+        }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+    }
+
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+
+    .timeline-marker {
+        position: absolute;
+        left: -30px;
+        top: 0;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background-color: #0d6efd;
+        border: 2px solid #fff;
+    }
+
+    .timeline-item.completed .timeline-marker {
+        background-color: #28a745;
+    }
+
+    .timeline-item.pending .timeline-marker {
+        background-color: #ffc107;
+    }
+
+    .timeline-item.cancelled .timeline-marker {
+        background-color: #dc3545;
+    }
+
+    .timeline-content {
+        padding-bottom: 10px;
+    }
+
+    .timeline-date {
+        font-size: 12px;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+
+    .timeline-title {
+        font-weight: 500;
+        margin-bottom: 5px;
+    }
+
+    .timeline-text {
+        font-size: 14px;
+        color: #6c757d;
+    }
+
+    /* Button styles */
+    .btn-primary {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .btn-outline-secondary {
+        color: #6c757d;
+        border-color: #ced4da;
+    }
+
+    /* Image preview styles */
+    .image-preview {
+        max-width: 100%;
+        border-radius: 8px;
+        margin-top: 10px;
+        border: 1px solid #dee2e6;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+        .image-preview:hover {
+            transform: scale(1.02);
+        }
+</style>
+
+<div class="page-container">
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h6 class="sidebar-heading">CHỨC NĂNG</h6>
+
+        <ul class="sidebar-nav">
+            <li class="sidebar-item">
+                <a href="@Url.Action("Dashboard", "Admin")" class="sidebar-link">
+                    <i class="bi bi-grid"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("UserManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-people"></i>
+                    <span>Quản lý người dùng</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("ProductManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-box"></i>
+                    <span>Quản lý sản phẩm</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("CategoryManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-list-nested"></i>
+                    <span>Quản lý danh mục</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item active">
+                <a href="@Url.Action("QuanLyDonHang", "DonHang")" class="sidebar-link">
+                    <i class="bi bi-cart3"></i>
+                    <span>Quản lý đơn hàng</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("TransactionManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-currency-exchange"></i>
+                    <span>Quản lý giao dịch</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+    <!-- Main Content - Fixed Layout Structure -->
+    <div class="main-content">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Chi tiết đơn hàng #@Model.MaDonHang</h5>
+                <div>
+                    <a href="@Url.Action("QuanLyDonHang", "DonHang")" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Quay lại
+                    </a>
+                    <button type="button" class="btn btn-primary ms-2" onclick="printInvoice()">
+                        <i class="bi bi-printer me-1"></i> In hóa đơn
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @TempData["Success"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        @TempData["Error"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                <!-- FIXED LAYOUT: Using proper row structure -->
+                <div class="row">
+                    <!-- Left column - Order status and product details -->
+                    <div class="col-md-8">
+                        <!-- Trạng thái đơn hàng -->
+                        <div class="card mb-4">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">Trạng thái đơn hàng</h6>
+                                <div>
+                                    @if (Model.TrangThaiDonHang == "Đang chờ xử lý")
+                                    {
+                                        <span class="badge bg-warning text-dark">Đang chờ xử lý</span>
+                                    }
+                                    else if (Model.TrangThaiDonHang == "Đã vận chuyển")
+                                    {
+                                        <span class="badge bg-info text-white">Đã vận chuyển</span>
+                                    }
+                                    else if (Model.TrangThaiDonHang == "Đã giao")
+                                    {
+                                        <span class="badge bg-primary">Đã giao</span>
+                                    }
+                                    else if (Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" || Model.TrangThaiDonHang == "Đã thanh toán")
+                                    {
+                                        <span class="badge bg-success">@Model.TrangThaiDonHang</span>
+                                    }
+                                    else if (Model.TrangThaiDonHang == "Đã hủy")
+                                    {
+                                        <span class="badge bg-danger">Đã hủy</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">@Model.TrangThaiDonHang</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="info-row">
+                                            <div class="info-label">Mã đơn hàng:</div>
+                                            <div class="info-value">#@Model.MaDonHang</div>
+                                        </div>
+                                        <div class="info-row">
+                                            <div class="info-label">Ngày đặt:</div>
+                                            <div class="info-value">@Model.NgayTao.ToString("dd/MM/yyyy HH:mm")</div>
+                                        </div>
+                                        <div class="info-row">
+                                            <div class="info-label">Phương thức thanh toán:</div>
+                                            <div class="info-value">@Model.PhuongThucThanhToan</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-row">
+                                            <div class="info-label">Ngày cập nhật:</div>
+                                            <div class="info-value">@(Model.NgayCapNhat.HasValue ? Model.NgayCapNhat.Value.ToString("dd/MM/yyyy HH:mm") : "Chưa cập nhật")</div>
+                                        </div>
+                                        <div class="info-row">
+                                            <div class="info-label">Ngày giao hàng:</div>
+                                            <div class="info-value">@(Model.NgayGiaoHang.HasValue ? Model.NgayGiaoHang.Value.ToString("dd/MM/yyyy HH:mm") : "Chưa giao")</div>
+                                        </div>
+                                        @if (Model.TrangThaiDonHang == "Đã hủy")
+                                        {
+                                            <div class="info-row">
+                                                <div class="info-label">Ngày hủy:</div>
+                                                <div class="info-value">@(Model.NgayHuy.HasValue ? Model.NgayHuy.Value.ToString("dd/MM/yyyy HH:mm") : "Không xác định")</div>
+                                            </div>
+                                            <div class="info-row">
+                                                <div class="info-label">Lý do hủy:</div>
+                                                <div class="info-value text-danger">@Model.LyDoHuy</div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+
+                                <!-- Timeline trạng thái đơn hàng -->
+                                <div class="timeline">
+                                    <div class="timeline-item completed">
+                                        <div class="timeline-marker"></div>
+                                        <div class="timeline-content">
+                                            <div class="timeline-date">@Model.NgayTao.ToString("dd/MM/yyyy HH:mm")</div>
+                                            <div class="timeline-title">Đơn hàng được tạo</div>
+                                            <div class="timeline-text">Đơn hàng đã được tạo thành công.</div>
+                                        </div>
+                                    </div>
+
+                                    @if (Model.TrangThaiDonHang != "Đang chờ xử lý" && Model.TrangThaiDonHang != "Đã hủy")
+                                    {
+                                        <div class="timeline-item completed">
+                                            <div class="timeline-marker"></div>
+                                            <div class="timeline-content">
+                                                <div class="timeline-date">@(Model.NgayCapNhat.HasValue ? Model.NgayCapNhat.Value.ToString("dd/MM/yyyy HH:mm") : "-")</div>
+                                                <div class="timeline-title">Đã xác nhận đơn hàng</div>
+                                                <div class="timeline-text">Đơn hàng đã được xác nhận và đang chuẩn bị giao.</div>
+                                            </div>
+                                        </div>
+                                    }
+
+                                    @if (Model.TrangThaiDonHang == "Đã vận chuyển" || Model.TrangThaiDonHang == "Đã giao" ||
+                                         Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" ||
+                                         Model.TrangThaiDonHang == "Đã thanh toán")
+                                    {
+                                        <div class="timeline-item completed">
+                                            <div class="timeline-marker"></div>
+                                            <div class="timeline-content">
+                                                <div class="timeline-date">@(Model.NgayCapNhat.HasValue ? Model.NgayCapNhat.Value.ToString("dd/MM/yyyy HH:mm") : "-")</div>
+                                                <div class="timeline-title">Đã vận chuyển</div>
+                                                <div class="timeline-text">Đơn hàng đã được giao cho đơn vị vận chuyển.</div>
+                                            </div>
+                                        </div>
+                                    }
+
+                                    @if (Model.TrangThaiDonHang == "Đã giao" || Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" ||
+                                         Model.TrangThaiDonHang == "Đã hoàn thành" || Model.TrangThaiDonHang == "Đã thanh toán")
+                                    {
+                                        <div class="timeline-item completed">
+                                            <div class="timeline-marker"></div>
+                                            <div class="timeline-content">
+                                                <div class="timeline-date">@(Model.NgayGiaoHang.HasValue ? Model.NgayGiaoHang.Value.ToString("dd/MM/yyyy HH:mm") : "-")</div>
+                                                <div class="timeline-title">Đã giao hàng</div>
+                                                <div class="timeline-text">Đơn hàng đã được giao đến người mua.</div>
+                                            </div>
+                                        </div>
+                                    }
+
+                                    @if (Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" || Model.TrangThaiDonHang == "Đã hoàn thành" ||
+                                         Model.TrangThaiDonHang == "Đã thanh toán")
+                                    {
+                                        <div class="timeline-item completed">
+                                            <div class="timeline-marker"></div>
+                                            <div class="timeline-content">
+                                                <div class="timeline-date">@(Model.NgayCapNhat.HasValue ? Model.NgayCapNhat.Value.ToString("dd/MM/yyyy HH:mm") : "-")</div>
+                                                <div class="timeline-title">Đã xác nhận nhận hàng</div>
+                                                <div class="timeline-text">Người mua đã xác nhận nhận hàng thành công.</div>
+                                            </div>
+                                        </div>
+                                    }
+
+                                    @if (Model.TrangThaiDonHang == "Đã hủy")
+                                    {
+                                        <div class="timeline-item cancelled">
+                                            <div class="timeline-marker"></div>
+                                            <div class="timeline-content">
+                                                <div class="timeline-date">@(Model.NgayHuy.HasValue ? Model.NgayHuy.Value.ToString("dd/MM/yyyy HH:mm") : "-")</div>
+                                                <div class="timeline-title">Đơn hàng đã bị hủy</div>
+                                                <div class="timeline-text">Lý do: @Model.LyDoHuy</div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Ảnh xác nhận giao hàng nếu có -->
+                                @if (!string.IsNullOrEmpty(Model.AnhXacNhanGiaoHang) &&
+                                     (Model.TrangThaiDonHang == "Đã giao" || Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" ||
+                                      Model.TrangThaiDonHang == "Đã hoàn thành" || Model.TrangThaiDonHang == "Đã thanh toán"))
+                                {
+                                    <div class="mt-4">
+                                        <h6 class="mb-2">Ảnh xác nhận giao hàng:</h6>
+                                        <a href="@Url.Content(Model.AnhXacNhanGiaoHang)" target="_blank">
+                                            <img src="@Url.Content(Model.AnhXacNhanGiaoHang)" class="image-preview" style="max-height: 200px;" alt="Ảnh xác nhận giao hàng">
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Chi tiết sản phẩm -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Chi tiết sản phẩm</h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="product-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Sản phẩm</th>
+                                                <th class="text-center">Số lượng</th>
+                                                <th class="price-cell">Đơn giá</th>
+                                                <th class="price-cell">Thành tiền</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in Model.ChiTietDonHangs)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <div class="product-info">
+                                                            @{
+                                                                string anhHienThi = Url.Content("~/Content/images/no-image.jpeg");
+
+                                                                // Kiểm tra và lấy ảnh đầu tiên từ danh sách ảnh sản phẩm nếu có
+                                                                if (item.SanPham.AnhSanPhams != null && item.SanPham.AnhSanPhams.Any())
+                                                                {
+                                                                    anhHienThi = item.SanPham.AnhSanPhams.First().DuongDanAnh;
+                                                                }
+                                                            }
+                                                            <img src="@anhHienThi" alt="@item.SanPham.TenSanPham" class="product-image">
+                                                            <div>
+                                                                <div class="product-name">@item.SanPham.TenSanPham</div>
+                                                                <div class="product-code">Mã SP: @item.SanPham.MaSanPham</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-center">@item.SoLuong</td>
+                                                    <td class="price-cell">@String.Format("{0:N0} VNĐ", item.Gia)</td>
+                                                    <td class="price-cell">@String.Format("{0:N0} VNĐ", item.SoLuong * item.Gia)</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="3" class="text-end fw-bold">Tổng tiền:</td>
+                                                <td class="price-cell fw-bold">@String.Format("{0:N0} VNĐ", Model.TongSoTien)</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Right column - Customer, seller and payment info -->
+                    <div class="col-md-4">
+                        <!-- Thông tin người mua -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">Thông tin người mua</h6>
+                            </div>
+                            <div class="card-body">
+                                @if (Model.NguoiDung != null)
+                                {
+                                    <div class="d-flex align-items-center mb-3">
+                                        @if (!string.IsNullOrEmpty(Model.NguoiDung.AnhDaiDien))
+                                        {
+                                            <img src="@Url.Content(Model.NguoiDung.AnhDaiDien)" alt="@Model.NguoiDung.TenNguoiDung" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                        }
+                                        else
+                                        {
+                                            <img src="@Url.Content("~/Content/images/default-avatar.png")" alt="Avatar" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                        }
+                                        <div>
+                                            <h6 class="mb-0">@Model.NguoiDung.TenNguoiDung</h6>
+                                            <small class="text-muted">Mã: #@Model.NguoiDung.MaNguoiDung</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="info-row">
+                                        <div class="info-label">Email:</div>
+                                        <div class="info-value" style="word-break: break-word; max-width: 200px;">@Model.NguoiDung.Email</div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="info-label">Số điện thoại:</div>
+                                        <div class="info-value">@Model.NguoiDung.SoDienThoai</div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="info-label">Địa chỉ:</div>
+                                        <div class="info-value">@Model.NguoiDung.DiaChi</div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p>Không có thông tin người mua</p>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Thông tin người bán -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">Thông tin người bán</h6>
+                            </div>
+                            <div class="card-body">
+                                @if (Model.NguoiBan != null)
+                                {
+                                    <h6 class="mb-2">@Model.NguoiBan.TenCuaHang</h6>
+
+                                    <div class="info-row">
+                                        <div class="info-label">Mã người bán:</div>
+                                        <div class="info-value">#@Model.NguoiBan.MaNguoiBan</div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="info-label">Số điện thoại:</div>
+                                        <div class="info-value">@Model.NguoiBan.SoDienThoaiCuaHang</div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="info-label">Địa chỉ cửa hàng:</div>
+                                        <div class="info-value">@Model.NguoiBan.DiaChiCuaHang</div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p>Không có thông tin người bán</p>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Thông tin thanh toán -->
+                        @if (ViewBag.Escrow != null)
+                        {
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Thông tin thanh toán</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="info-row">
+                                        <div class="info-label">Mã ký quỹ:</div>
+                                        <div class="info-value">@ViewBag.Escrow.MaKyQuy</div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="info-label">Trạng thái:</div>
+                                        <div class="info-value">
+                                            @if (ViewBag.Escrow.TrangThai == "Đã giải ngân")
+                                            {
+                                                <span class="text-success">Đã thanh toán</span>
+                                            }
+                                            else if (ViewBag.Escrow.TrangThai == "Đang giữ")
+                                            {
+                                                <span class="text-warning">Đang chờ xử lý</span>
+                                            }
+                                            else if (ViewBag.Escrow.TrangThai == "Đã hoàn tiền")
+                                            {
+                                                <span class="text-danger">Đã hoàn tiền</span>
+                                            }
+                                            else
+                                            {
+                                                <span>@ViewBag.Escrow.TrangThai</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="info-label">Tổng tiền:</div>
+                                        <div class="info-value">@string.Format("{0:N0} VNĐ", ViewBag.Escrow.TongTien)</div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="info-label">Phí nền tảng:</div>
+                                        <div class="info-value">@string.Format("{0:N0} VNĐ", ViewBag.Escrow.PhiNenTang)</div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="info-label">Tiền nhận được:</div>
+                                        <div class="info-value">@string.Format("{0:N0} VNĐ", ViewBag.Escrow.TienChuyenChoNguoiBan)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận hủy đơn hàng -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelOrderModalLabel">Xác nhận hủy đơn hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="cancelOrderForm" method="post" action="@Url.Action("HuyDonHangAdmin", "DonHang")">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" name="id" value="@Model.MaDonHang" />
+                    <div class="form-group">
+                        <label for="lyDoHuy">Lý do hủy đơn hàng <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="lyDoHuy" name="lyDoHuy" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Xử lý nút tải ảnh nếu cần
+            $('.image-preview').on('click', function () {
+                var imgSrc = $(this).attr('src');
+                window.open(imgSrc, '_blank');
+            });
+        });
+
+        function printInvoice() {
+            // Mở cửa sổ mới để in
+            var printWindow = window.open('', '_blank');
+
+            // Trích xuất thông tin đơn hàng và trạng thái
+            var orderTitle = $('.card-header h5').text();
+            var orderStatus = $('.card-header .badge').prop('outerHTML') || '<span>Không xác định</span>';
+
+            // Cách lấy tên người mua và tên cửa hàng
+            var customerName = "";
+            $('.card:contains("Thông tin người mua") .d-flex').each(function() {
+                var potentialName = $(this).find('h6.mb-0').text().trim();
+                if (potentialName && potentialName.length > 0) {
+                    customerName = potentialName;
+                }
+            });
+
+            // Phương pháp dự phòng
+            if (!customerName) {
+                $('.card:contains("Thông tin người mua")').each(function() {
+                    var text = $(this).text();
+                    var nameMatch = text.match(/Nguyễn\s+[^\n]+/);
+                    if (nameMatch) {
+                        customerName = nameMatch[0].trim();
+                    }
+                });
+            }
+
+            var shopName = "";
+            $('.card:contains("Thông tin người bán") .card-body').each(function() {
+                var potentialShop = $(this).find('h6.mb-2').first().text().trim();
+                if (potentialShop && potentialShop.length > 0) {
+                    shopName = potentialShop;
+                }
+            });
+
+            // Phương pháp dự phòng
+            if (!shopName) {
+                $('.card:contains("Thông tin người bán")').each(function() {
+                    var text = $(this).text();
+                    var shopMatch = text.match(/Cửa\s+Hàng\s+[^\n]+/);
+                    if (shopMatch) {
+                        shopName = shopMatch[0].trim();
+                    }
+                });
+            }
+
+            // Lấy thông tin số điện thoại (chỉ lấy giá trị đầu tiên, tránh lặp)
+            var customerPhone = $('.card:contains("Thông tin người mua") .info-row:contains("Số điện thoại") .info-value').first().text().trim();
+            var sellerPhone = $('.card:contains("Thông tin người bán") .info-row:contains("Số điện thoại") .info-value').first().text().trim();
+
+            // Tạo HTML cho bản in
+            var printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${orderTitle}</title>
+                    <style>
+                        /* Định dạng chung */
+                        body {
+                            font-family: "Segoe UI", Arial, sans-serif;
+                            margin: 0;
+                            padding: 20px;
+                            color: #333;
+                            background: #fff;
+                        }
+
+                        /* Header */
+                        .print-header {
+                            text-align: center;
+                            margin-bottom: 20px;
+                            border-bottom: 2px solid #222;
+                            padding-bottom: 15px;
+                        }
+                        .print-header h1 {
+                            font-size: 24px;
+                            margin: 10px 0;
+                            font-weight: bold;
+                        }
+                        .print-logo {
+                            max-height: 70px;
+                            margin-bottom: 10px;
+                        }
+
+                        /* Section styling */
+                        .print-section {
+                            margin-bottom: 20px;
+                            border: 1px solid #ddd;
+                            border-radius: 5px;
+                            overflow: hidden;
+                        }
+                        .section-header {
+                            background-color: #f2f2f2;
+                            padding: 10px 15px;
+                            font-weight: bold;
+                            border-bottom: 1px solid #ddd;
+                        }
+                        .section-content {
+                            padding: 15px;
+                        }
+
+                        /* Table styling */
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                        }
+                        table.info-table td {
+                            padding: 8px;
+                            border-bottom: 1px solid #eee;
+                        }
+                        table.info-table td:first-child {
+                            font-weight: 500;
+                            width: 30%;
+                        }
+
+                        /* Products table */
+                        .product-table {
+                            margin-top: 10px;
+                            width: 100%;
+                            border-collapse: collapse;
+                        }
+                        .product-table th {
+                            background-color: #f5f5f5;
+                            padding: 10px;
+                            text-align: left;
+                            border: 1px solid #ddd;
+                            font-weight: 600;
+                        }
+                        .product-table td {
+                            padding: 10px;
+                            border: 1px solid #ddd;
+                            vertical-align: middle;
+                        }
+                        .product-table tfoot td {
+                            font-weight: bold;
+                            background-color: #f5f5f5;
+                        }
+                        .text-center {
+                            text-align: center;
+                        }
+                        .price-cell {
+                            text-align: right;
+                        }
+
+                        /* Product info */
+                        .product-info {
+                            display: flex;
+                            align-items: center;
+                        }
+                        .product-image {
+                            width: 50px;
+                            height: 50px;
+                            object-fit: cover;
+                            border-radius: 3px;
+                            margin-right: 10px;
+                        }
+                        .product-name {
+                            font-weight: 500;
+                            margin-bottom: 3px;
+                        }
+                        .product-code {
+                            font-size: 12px;
+                            color: #666;
+                        }
+
+                        /* Footer */
+                        .print-footer {
+                            margin-top: 30px;
+                            padding-top: 15px;
+                            border-top: 1px solid #ddd;
+                            text-align: center;
+                            font-size: 12px;
+                            color: #666;
+                        }
+
+                        /* Status badges */
+                        .badge {
+                            display: inline-block;
+                            padding: 4px 8px;
+                            font-size: 12px;
+                            font-weight: 500;
+                            border-radius: 4px;
+                            color: white;
+                        }
+                        .bg-success { background-color: #28a745; }
+                        .bg-warning { background-color: #ffc107; color: #212529 !important; }
+                        .bg-danger { background-color: #dc3545; }
+                        .bg-primary { background-color: #007bff; }
+                        .bg-info { background-color: #17a2b8; }
+                        .bg-secondary { background-color: #6c757d; }
+
+                        /* Two column layout */
+                        .row {
+                            display: flex;
+                            flex-wrap: wrap;
+                            margin-right: -15px;
+                            margin-left: -15px;
+                        }
+                        .col {
+                            flex: 1;
+                            padding: 0 15px;
+                            min-width: 45%;
+                        }
+
+                        /* Customer and seller heading */
+                        .customer-seller-heading {
+                            font-weight: bold;
+                            font-size: 16px;
+                            margin-top: 0;
+                            margin-bottom: 15px;
+                            padding-bottom: 8px;
+                            border-bottom: 1px solid #eee;
+                        }
+
+                        media print {
+                            .print-section {
+                                page-break-inside: avoid;
+                            }
+                            page {
+                                size: A4;
+                                margin: 1.5cm;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <!-- Header -->
+                    <div class="print-header">
+                        <img src="/Content/images/medinet-logo.png" class="print-logo" alt="Logo">
+                        <h1>HÓA ĐƠN BÁN HÀNG</h1>
+                        <p>Ngày in: ${new Date().toLocaleDateString('vi-VN')}</p>
+                    </div>
+
+                    <!-- Order Details -->
+                    <div class="print-section">
+                        <div class="section-header">
+                            THÔNG TIN ĐƠN HÀNG
+                        </div>
+                        <div class="section-content">
+                            <table class="info-table">
+                                <tr>
+                                    <td>Mã đơn hàng:</td>
+                                    <td>${$('.info-row:contains("Mã đơn hàng") .info-value').text() || orderTitle}</td>
+                                </tr>
+                                <tr>
+                                    <td>Trạng thái:</td>
+                                    <td>${orderStatus}</td>
+                                </tr>
+                                <tr>
+                                    <td>Ngày đặt:</td>
+                                    <td>${$('.info-row:contains("Ngày đặt") .info-value').text() || ''}</td>
+                                </tr>
+                                <tr>
+                                    <td>Phương thức thanh toán:</td>
+                                    <td>${$('.info-row:contains("Phương thức thanh toán") .info-value').text() || ''}</td>
+                                </tr>
+                                <tr>
+                                    <td>Ngày cập nhật:</td>
+                                    <td>${$('.info-row:contains("Ngày cập nhật") .info-value').text() || ''}</td>
+                                </tr>
+                                <tr>
+                                    <td>Ngày giao hàng:</td>
+                                    <td>${$('.info-row:contains("Ngày giao hàng") .info-value').text() || ''}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Customer & Seller Info -->
+                    <div class="row">
+                        <!-- Customer Info -->
+                        <div class="col">
+                            <div class="print-section">
+                                <div class="section-header">
+                                    THÔNG TIN NGƯỜI MUA
+                                </div>
+                                <div class="section-content">
+                                    ${customerName ? `<h3 class="customer-seller-heading">${customerName}</h3>` : ''}
+                                    <table class="info-table">
+                                        <tr>
+                                            <td>Mã người dùng:</td>
+                                            <td>${$('.card:contains("Thông tin người mua") small.text-muted').text().replace('Mã:', '').trim() || ''}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Email:</td>
+                                            <td>${$('.card:contains("Thông tin người mua") .info-row:contains("Email") .info-value').first().text() || ''}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Số điện thoại:</td>
+                                            <td>${customerPhone}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Địa chỉ:</td>
+                                            <td>${$('.card:contains("Thông tin người mua") .info-row:contains("Địa chỉ") .info-value').first().text() || ''}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Seller Info -->
+                        <div class="col">
+                            <div class="print-section">
+                                <div class="section-header">
+                                    THÔNG TIN NGƯỜI BÁN
+                                </div>
+                                <div class="section-content">
+                                    ${shopName ? `<h3 class="customer-seller-heading">${shopName}</h3>` : ''}
+                                    <table class="info-table">
+                                        <tr>
+                                            <td>Mã người bán:</td>
+                                            <td>${$('.card:contains("Thông tin người bán") .info-row:contains("Mã người bán") .info-value').first().text() || ''}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Số điện thoại:</td>
+                                            <td>${sellerPhone}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Địa chỉ cửa hàng:</td>
+                                            <td>${$('.card:contains("Thông tin người bán") .info-row:contains("Địa chỉ") .info-value').first().text() || ''}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Details -->
+                    <div class="print-section">
+                        <div class="section-header">
+                            CHI TIẾT SẢN PHẨM
+                        </div>
+                        <div class="section-content">
+                            <table class="product-table">
+                                <thead>
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th class="text-center">Số lượng</th>
+                                        <th class="price-cell">Đơn giá</th>
+                                        <th class="price-cell">Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${buildProductRows()}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" class="price-cell">Tổng tiền:</td>
+                                        <td class="price-cell">${$('.product-table tfoot .price-cell').text() || ''}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Payment Info (if available) -->
+                    ${$('.card:contains("Thông tin thanh toán")').length ? `
+                    <div class="print-section">
+                        <div class="section-header">
+                            THÔNG TIN THANH TOÁN
+                        </div>
+                        <div class="section-content">
+                            <table class="info-table">
+                                <tr>
+                                    <td>Mã ký quỹ:</td>
+                                    <td>${$('.card:contains("Thông tin thanh toán") .info-row:contains("Mã ký quỹ") .info-value').first().text() || ''}</td>
+                                </tr>
+                                <tr>
+                                    <td>Trạng thái:</td>
+                                    <td>${$('.card:contains("Thông tin thanh toán") .info-row:contains("Trạng thái") .info-value').first().html() || ''}</td>
+                                </tr>
+                                <tr>
+                                    <td>Tổng tiền:</td>
+                                    <td>${$('.card:contains("Thông tin thanh toán") .info-row:contains("Tổng tiền") .info-value').first().text() || ''}</td>
+                                </tr>
+                                <tr>
+                                    <td>Phí nền tảng:</td>
+                                    <td>${$('.card:contains("Thông tin thanh toán") .info-row:contains("Phí nền tảng") .info-value').first().text() || ''}</td>
+                                </tr>
+                                <tr>
+                                    <td>Tiền nhận được:</td>
+                                    <td>${$('.card:contains("Thông tin thanh toán") .info-row:contains("Tiền nhận được") .info-value').first().text() || ''}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <!-- Footer -->
+                    <div class="print-footer">
+                        <p>Cảm ơn quý khách đã mua hàng!</p>
+                        <p>Hotline: 1900 1234 - Email: medinetpro183@gmail.com</p>
+                        <p>© ${new Date().getFullYear()} - Bản quyền thuộc công ty TNHH Thương mại điện tử Medinet Pro</p>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            // Hàm để xây dựng các hàng sản phẩm
+            function buildProductRows() {
+                var rows = '';
+                var processedProducts = new Set(); // Theo dõi các sản phẩm đã xử lý
+
+                $('.product-table tbody tr').each(function() {
+                    var productName = $(this).find('.product-name').text().trim();
+                    // Nếu sản phẩm đã được xử lý, bỏ qua
+                    if (productName && processedProducts.has(productName)) {
+                        return;
+                    }
+
+                    var productCode = $(this).find('.product-code').text().trim();
+                    var productImage = $(this).find('.product-image').attr('src') || '';
+                    var quantity = $(this).find('td.text-center').text().trim();
+                    var price = $(this).find('td.price-cell').first().text().trim();
+                    var total = $(this).find('td.price-cell').last().text().trim();
+
+                    rows += `
+                        <tr>
+                            <td>
+                                <div class="product-info">
+                                    ${productImage ? `<img src="${productImage}" class="product-image" alt="${productName}">` : ''}
+                                    <div>
+                                        <div class="product-name">${productName}</div>
+                                        <div class="product-code">${productCode}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">${quantity}</td>
+                            <td class="price-cell">${price}</td>
+                            <td class="price-cell">${total}</td>
+                        </tr>
+                    `;
+
+                    // Đánh dấu sản phẩm đã xử lý
+                    if (productName) {
+                        processedProducts.add(productName);
+                    }
+                });
+
+                return rows || '<tr><td colspan="4" style="text-align:center">Không có thông tin sản phẩm</td></tr>';
+            }
+
+            // Viết nội dung vào cửa sổ in
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+
+            // Chờ tải xong rồi in
+            printWindow.onload = function() {
+                // Trì hoãn một chút để đảm bảo CSS được áp dụng
+                setTimeout(function() {
+                    printWindow.print();
+                    // Không đóng cửa sổ sau khi in để người dùng có thể xem trước
+                    // printWindow.close();
+                }, 500);
+            };
+        }
+    </script>
+}

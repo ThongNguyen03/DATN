@@ -1,0 +1,551 @@
+﻿@model IEnumerable<WebApplication1.Models.DonHang>
+@{
+    ViewBag.Title = "Quản lý đơn hàng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Sidebar styles */
+    .page-container {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    .sidebar {
+        width: 250px;
+        background-color: #fff;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 100;
+        padding-top: 15px;
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        margin-bottom: 15px;
+    }
+
+    .sidebar-logo {
+        height: 40px;
+        margin-right: 10px;
+    }
+
+    .sidebar-heading {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #6c757d;
+        padding: 0 20px;
+        margin-bottom: 10px;
+    }
+
+    .sidebar-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-item {
+        position: relative;
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        color: #495057;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+        .sidebar-link i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .sidebar-link:hover, .sidebar-item.active .sidebar-link {
+            color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+
+            .sidebar-item.active .sidebar-link:before {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 3px;
+                background-color: #0d6efd;
+            }
+
+    /* Main content styles */
+    .main-content {
+        flex: 1;
+        padding: 20px;
+    }
+
+    /* Card styles */
+    .card {
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+
+    .card-header {
+        background-color: #fff;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+        padding: 15px 20px;
+    }
+
+    /* Status badges */
+    .badge {
+        padding: 6px 10px;
+        font-weight: 500;
+        border-radius: 4px;
+    }
+
+    /* Filter box */
+    .filter-box {
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    /* Filter dropdown */
+    .filter-dropdown {
+        border-radius: 8px;
+    }
+
+    /* Button styles */
+    .btn-primary {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .btn-outline-secondary {
+        color: #6c757d;
+        border-color: #ced4da;
+    }
+
+    /* Pagination */
+    .pagination .page-link {
+        color: #0d6efd;
+        border-radius: 4px;
+        margin: 0 3px;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    /* Table styles */
+    .table {
+        margin-bottom: 0;
+    }
+
+        .table th {
+            font-weight: 500;
+            color: #495057;
+            border-top: none;
+            background-color: #f8f9fa;
+        }
+
+        .table td {
+            vertical-align: middle;
+        }
+
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    /* Sort styles */
+    .sort-link {
+        display: flex;
+        align-items: center;
+        color: #495057;
+        text-decoration: none;
+    }
+
+        .sort-link:hover {
+            color: #0d6efd;
+        }
+
+        .sort-link i {
+            margin-left: 5px;
+        }
+
+    /* Sort dropdown */
+    .sort-dropdown {
+        min-width: 180px;
+    }
+</style>
+
+<div class="page-container">
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h6 class="sidebar-heading">CHỨC NĂNG</h6>
+
+        <ul class="sidebar-nav">
+            <li class="sidebar-item">
+                <a href="@Url.Action("Dashboard", "Admin")" class="sidebar-link">
+                    <i class="bi bi-grid"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("UserManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-people"></i>
+                    <span>Quản lý người dùng</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("ProductManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-box"></i>
+                    <span>Quản lý sản phẩm</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("CategoryManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-list-nested"></i>
+                    <span>Quản lý danh mục</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item active">
+                <a href="@Url.Action("QuanLyDonHang", "DonHang")" class="sidebar-link">
+                    <i class="bi bi-cart3"></i>
+                    <span>Quản lý đơn hàng</span>
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a href="@Url.Action("TransactionManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-currency-exchange"></i>
+                    <span>Quản lý giao dịch</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Quản lý đơn hàng</h5>
+                <a href="@Url.Action("ThongKeDonHang", "DonHang")" class="btn btn-sm btn-primary">
+                    <i class="bi bi-bar-chart-line me-1"></i> Thống kê
+                </a>
+            </div>
+            <div class="card-body">
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @TempData["Success"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        @TempData["Error"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                <!-- Bộ lọc đơn hàng -->
+                <div class="filter-box mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <select class="form-select filter-dropdown" id="statusFilter">
+                                <option value="">-- Tất cả trạng thái --</option>
+                                <option value="Đang chờ xử lý" @(ViewBag.TrangThai == "Đang chờ xử lý" ? "selected" : "")>Đang chờ xử lý</option>
+                                <option value="Đã vận chuyển" @(ViewBag.TrangThai == "Đã vận chuyển" ? "selected" : "")>Đã vận chuyển</option>
+                                <option value="Đã giao" @(ViewBag.TrangThai == "Đã giao" ? "selected" : "")>Đã giao</option>
+                                <option value="Đã xác nhận nhận hàng" @(ViewBag.TrangThai == "Đã xác nhận nhận hàng" ? "selected" : "")>Đã xác nhận nhận hàng</option>
+                                <option value="Đã hoàn thành" @(ViewBag.TrangThai == "Đã hoàn thành" ? "selected" : "")>Đã hoàn thành</option>
+                                <option value="Đã hủy" @(ViewBag.TrangThai == "Đã hủy" ? "selected" : "")>Đã hủy</option>
+                                <option value="Đã thanh toán" @(ViewBag.TrangThai == "Đã thanh toán" ? "selected" : "")>Đã thanh toán</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select sort-dropdown" id="sortOrder">
+                                <option value="date_desc" @(ViewBag.SortOrder == "date_desc" ? "selected" : "")>Mới nhất</option>
+                                <option value="date_asc" @(ViewBag.SortOrder == "date_asc" ? "selected" : "")>Cũ nhất</option>
+                                <option value="price_desc" @(ViewBag.SortOrder == "price_desc" ? "selected" : "")>Giá cao nhất</option>
+                                <option value="price_asc" @(ViewBag.SortOrder == "price_asc" ? "selected" : "")>Giá thấp nhất</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button type="button" id="applyFilterBtn" class="btn btn-primary">
+                                <i class="bi bi-filter me-1"></i> Áp dụng bộ lọc
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body p-0">
+                        @if (Model != null && Model.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-striped mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã đơn hàng</th>
+                                            <th>Khách hàng</th>
+                                            <th>Người bán</th>
+                                            <th>
+                                                <a href="@Url.Action("QuanLyDonHang", "DonHang", new { trangThai = ViewBag.TrangThai, sortOrder = ViewBag.DateSortParam })" class="sort-link">
+                                                    Ngày đặt
+                                                    @if (ViewBag.SortOrder == "date_desc")
+                                                    {
+                                                        <i class="bi bi-sort-down"></i>
+                                                    }
+                                                    else if (ViewBag.SortOrder == "date_asc")
+                                                    {
+                                                        <i class="bi bi-sort-up"></i>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="bi bi-sort"></i>
+                                                    }
+                                                </a>
+                                            </th>
+                                            <th>
+                                                <a href="@Url.Action("QuanLyDonHang", "DonHang", new { trangThai = ViewBag.TrangThai, sortOrder = ViewBag.PriceSortParam })" class="sort-link">
+                                                    Tổng tiền
+                                                    @if (ViewBag.SortOrder == "price_desc")
+                                                    {
+                                                        <i class="bi bi-sort-down"></i>
+                                                    }
+                                                    else if (ViewBag.SortOrder == "price_asc")
+                                                    {
+                                                        <i class="bi bi-sort-up"></i>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="bi bi-sort"></i>
+                                                    }
+                                                </a>
+                                            </th>
+                                            <th>Trạng thái</th>
+                                            <th>Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in Model)
+                                        {
+                                            <tr>
+                                                <td>#@item.MaDonHang</td>
+                                                <td>@(item.NguoiDung != null ? item.NguoiDung.TenNguoiDung : "Không có thông tin")</td>
+                                                <td>@(item.NguoiBan != null ? item.NguoiBan.TenCuaHang : "Không có thông tin")</td>
+                                                <td>@item.NgayTao.ToString("dd/MM/yyyy HH:mm")</td>
+                                                <td>@String.Format("{0:N0} VNĐ", item.TongSoTien)</td>
+                                                <td>
+                                                    @if (item.TrangThaiDonHang == "Đang chờ xử lý")
+                                                    {
+                                                        <span class="badge bg-warning text-dark">Đang chờ xử lý</span>
+                                                    }
+                                                    else if (item.TrangThaiDonHang == "Đã vận chuyển")
+                                                    {
+                                                        <span class="badge bg-info">Đã vận chuyển</span>
+                                                    }
+                                                    else if (item.TrangThaiDonHang == "Đã giao")
+                                                    {
+                                                        <span class="badge bg-primary">Đã giao</span>
+                                                    }
+                                                    else if (item.TrangThaiDonHang == "Đã xác nhận nhận hàng" || item.TrangThaiDonHang == "Đã hoàn thành" || item.TrangThaiDonHang == "Đã thanh toán")
+                                                    {
+                                                        <span class="badge bg-success">@item.TrangThaiDonHang</span>
+                                                    }
+                                                    else if (item.TrangThaiDonHang == "Đã hủy")
+                                                    {
+                                                        <span class="badge bg-danger">Đã hủy</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-secondary">@item.TrangThaiDonHang</span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group">
+                                                        <a href="@Url.Action("ChiTietAdmin", "DonHang", new { id = item.MaDonHang })" class="btn btn-sm btn-primary">
+                                                            <i class="bi bi-eye"></i>
+                                                        </a>
+                                                        @if (item.TrangThaiDonHang != "Đã xác nhận nhận hàng" &&
+                                                             item.TrangThaiDonHang != "Đã hoàn thành" &&
+                                                             item.TrangThaiDonHang != "Đã thanh toán" &&
+                                                             item.TrangThaiDonHang != "Đã hủy")
+                                                        {
+                                                            <button type="button" class="btn btn-sm btn-danger cancel-order-btn" data-id="@item.MaDonHang">
+                                                                <i class="bi bi-x-circle"></i>
+                                                            </button>
+                                                        }
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-5">
+                                <img src="~/Content/images/empty-order.png" alt="Không có đơn hàng" style="width: 120px;" class="mb-3">
+                                <h5>Không có đơn hàng nào</h5>
+                                <p class="text-muted">Chưa có đơn hàng nào trong hệ thống hoặc không tìm thấy đơn hàng phù hợp với bộ lọc.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Phân trang -->
+                @{
+                    int currentPage = Convert.ToInt32(ViewBag.CurrentPage > 0 ? ViewBag.CurrentPage : 1);
+                    int totalPages = Convert.ToInt32(ViewBag.TotalPages > 0 ? ViewBag.TotalPages : 1);
+                }
+
+                @if (totalPages > 1)
+                {
+                    <div class="d-flex justify-content-center mt-4">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination">
+                                @if (currentPage > 1)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" href="@Url.Action("QuanLyDonHang", "DonHang", new { page = currentPage - 1, trangThai = ViewBag.TrangThai, sortOrder = ViewBag.SortOrder })" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                }
+                                else
+                                {
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                }
+
+                                @for (int i = 1; i <= Math.Min(10, totalPages); i++)
+                                {
+                                    <li class="page-item @(i == currentPage ? "active" : "")">
+                                        <a class="page-link" href="@Url.Action("QuanLyDonHang", "DonHang", new { page = i, trangThai = ViewBag.TrangThai, sortOrder = ViewBag.SortOrder })">@i</a>
+                                    </li>
+                                }
+
+                                @if (currentPage < totalPages)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" href="@Url.Action("QuanLyDonHang", "DonHang", new { page = currentPage + 1, trangThai = ViewBag.TrangThai, sortOrder = ViewBag.SortOrder })" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                }
+                                else
+                                {
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận hủy đơn hàng -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelOrderModalLabel">Xác nhận hủy đơn hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="cancelOrderForm" method="post" action="@Url.Action("HuyDonHangAdmin", "DonHang")">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" id="cancelOrderId" name="id" value="" />
+                    <div class="form-group">
+                        <label for="lyDoHuy">Lý do hủy đơn hàng <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="lyDoHuy" name="lyDoHuy" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Xử lý nút áp dụng bộ lọc
+            $('#applyFilterBtn').on('click', function () {
+                applyFilters();
+            });
+
+            // Xử lý khi chọn trạng thái
+            $('#statusFilter').on('change', function () {
+                // Nếu muốn áp dụng ngay khi chọn, bỏ ghi chú dòng dưới
+                // applyFilters();
+            });
+
+            // Xử lý khi chọn sắp xếp
+            $('#sortOrder').on('change', function () {
+                // Nếu muốn áp dụng ngay khi chọn, bỏ ghi chú dòng dưới
+                // applyFilters();
+            });
+
+            // Hàm áp dụng bộ lọc
+            function applyFilters() {
+                var status = $('#statusFilter').val();
+                var sortOrder = $('#sortOrder').val();
+
+                // Xây dựng URL với các tham số lọc
+                var url = '@Url.Action("QuanLyDonHang", "DonHang")';
+                var params = [];
+
+                if (status) {
+                    params.push('trangThai=' + encodeURIComponent(status));
+                }
+
+                if (sortOrder) {
+                    params.push('sortOrder=' + encodeURIComponent(sortOrder));
+                }
+
+                // Tạo URL cuối cùng
+                if (params.length > 0) {
+                    url += '?' + params.join('&');
+                }
+
+                // Chuyển hướng đến URL mới
+                window.location.href = url;
+            }
+
+            // Xử lý nút hủy đơn hàng
+            $('.cancel-order-btn').on('click', function () {
+                var orderId = $(this).data('id');
+                $('#cancelOrderId').val(orderId);
+                $('#cancelOrderModal').modal('show');
+            });
+        });
+    </script>
+}

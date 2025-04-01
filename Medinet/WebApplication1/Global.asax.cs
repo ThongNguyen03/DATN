@@ -10,6 +10,7 @@ using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
 using WebApplication1.Models;
+using WebApplication1.Services;
 
 namespace WebApplication1
 {
@@ -21,7 +22,8 @@ namespace WebApplication1
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
-
+            // Start the order auto-confirmation service 30/3/2025
+            OrderAutoConfirmationStarter.Start();
 
             // Cấu hình connection pooling
             string connString = ConfigurationManager.ConnectionStrings["MedinetDATN"].ConnectionString;

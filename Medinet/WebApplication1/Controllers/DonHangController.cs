@@ -651,7 +651,7 @@ namespace WebApplication1.Controllers
         // POST: DonHang/CapNhatTrangThaiDonHang - Cho người bán
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> CapNhatTrangThaiDonHang(int id, string trangThai)
+        public async Task<ActionResult> CapNhatTrangThaiDonHang(int id, string trangThai, HttpPostedFileBase anhXacNhan)
         {
             try
             {
@@ -681,6 +681,37 @@ namespace WebApplication1.Controllers
                     return new HttpStatusCodeResult(HttpStatusCode.Forbidden);
                 }
 
+                //30/3/2025
+                // Nếu trạng thái mới là "Đã giao", yêu cầu người bán phải tải lên ảnh xác nhận
+                if (trangThai == "Đã giao")
+                {
+                    // Kiểm tra và lưu ảnh xác nhận
+                    if (anhXacNhan == null || anhXacNhan.ContentLength == 0)
+                    {
+                        TempData["Error"] = "Vui lòng tải lên ảnh xác nhận giao hàng!";
+                        return RedirectToAction("ChiTietDonHangNguoiMua", new { id = id });
+                    }
+
+                    // Xử lý lưu tệp hình ảnh
+                    string fileName = Path.GetFileNameWithoutExtension(anhXacNhan.FileName)
+                        + "_" + DateTime.Now.ToString("yyyyMMddHHmmss")
+                        + Path.GetExtension(anhXacNhan.FileName);
+
+                    string uploadPath = Server.MapPath("~/Content/images/confirmations/");
+
+                    // Đảm bảo thư mục tồn tại
+                    if (!Directory.Exists(uploadPath))
+                    {
+                        Directory.CreateDirectory(uploadPath);
+                    }
+
+                    string filePath = Path.Combine(uploadPath, fileName);
+                    anhXacNhan.SaveAs(filePath);
+
+                    // Lưu đường dẫn ảnh vào đơn hàng
+                    donHang.AnhXacNhanGiaoHang = "/Content/images/confirmations/" + fileName;
+                }
+                //30/3/2025
                 //28/03/2025 thêm async Task<ActionResult> vào trước action
                 // Đối với các chuyển đổi trạng thái yêu cầu đặt cọc, kiểm tra số dư
                 if ((donHang.TrangThaiDonHang == "Đang chờ xử lý" || donHang.TrangThaiDonHang == "Đã thanh toán") &&
@@ -716,6 +747,9 @@ namespace WebApplication1.Controllers
                 if (trangThai == "Đã giao")
                 {
                     donHang.NgayGiaoHang = DateTime.Now;
+                    //30/3/2025
+                    donHang.ThoiGianTuDongXacNhan = DateTime.Now.AddDays(3);
+                    //30/3/2025
                 }
 
                 db.Entry(donHang).State = EntityState.Modified;
@@ -865,7 +899,7 @@ namespace WebApplication1.Controllers
         // Cập nhật phương thức HuyDonHangAdmin để sử dụng async/await
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<ActionResult> HuyDonHangAdmin(int id, string lyDoHuy)
         {
             try
@@ -899,13 +933,13 @@ namespace WebApplication1.Controllers
                 await escrowService.ProcessOrderCancellationAsync(id, lyDoHuy);
 
                 TempData["Success"] = "Hủy đơn hàng thành công!";
-                return RedirectToAction("ChiTietAdmin", new { id = id });
+                return RedirectToAction("QuanLyDonHang");
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine("Lỗi hủy đơn hàng: " + ex.Message);
                 TempData["Error"] = "Đã xảy ra lỗi khi hủy đơn hàng. Vui lòng thử lại sau!";
-                return RedirectToAction("ChiTietAdmin", new { id = id });
+                return RedirectToAction("QuanLyDonHang");
             }
         }
 
@@ -918,11 +952,14 @@ namespace WebApplication1.Controllers
 
         #region Admin
         // GET: DonHang/QuanLyDonHang - Cho Admin
-        [Authorize(Roles = "Admin")]
-        public ActionResult QuanLyDonHang(string trangThai = "", int maNguoiBan = 0, int maNguoiDung = 0, DateTime? tuNgay = null, DateTime? denNgay = null)
+        [Authorize]
+        public ActionResult QuanLyDonHang(string trangThai = "", int maNguoiBan = 0, int maNguoiDung = 0,
+                                            DateTime? tuNgay = null, DateTime? denNgay = null, string sortOrder = "date_desc", int page = 1)
         {
             try
             {
+                int pageSize = 10; // Số lượng đơn hàng trên mỗi trang
+
                 // Lấy danh sách đơn hàng với các điều kiện lọc
                 var query = db.DonHangs
                     .Include(d => d.NguoiBan)
@@ -957,13 +994,48 @@ namespace WebApplication1.Controllers
                     query = query.Where(d => d.NgayTao <= denNgay.Value.AddDays(1));
                 }
 
-                // Sắp xếp và lấy kết quả
-                var donHangs = query.OrderByDescending(d => d.NgayTao).ToList();
+                // Sắp xếp theo các tiêu chí
+                switch (sortOrder)
+                {
+                    case "date_asc":
+                        query = query.OrderBy(d => d.NgayTao);
+                        break;
+                    case "price_desc":
+                        query = query.OrderByDescending(d => d.TongSoTien);
+                        break;
+                    case "price_asc":
+                        query = query.OrderBy(d => d.TongSoTien);
+                        break;
+                    default: // date_desc là mặc định
+                        query = query.OrderByDescending(d => d.NgayTao);
+                        break;
+                }
+
+                // Tính toán phân trang
+                int totalItems = query.Count();
+                int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+                // Đảm bảo trang hiện tại không vượt quá tổng số trang
+                if (page > totalPages && totalPages > 0)
+                {
+                    page = totalPages;
+                }
+                else if (page < 1)
+                {
+                    page = 1;
+                }
+
+                // Lấy đơn hàng theo trang
+                var donHangs = query
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
 
                 // Lấy danh sách trạng thái đơn hàng để hiển thị trong dropdown
                 ViewBag.DanhSachTrangThai = new SelectList(
                     new List<string> {
                 "", "Đang chờ xử lý",
+                "Chờ thanh toán",
                 "Đã vận chuyển",
                 "Đã giao",
                 "Đã xác nhận nhận hàng",
@@ -989,6 +1061,13 @@ namespace WebApplication1.Controllers
                 ViewBag.MaNguoiDung = maNguoiDung;
                 ViewBag.TuNgay = tuNgay;
                 ViewBag.DenNgay = denNgay;
+                ViewBag.CurrentPage = page;
+                ViewBag.TotalPages = totalPages;
+                ViewBag.SortOrder = sortOrder;
+
+                // Lưu các thông tin sắp xếp
+                ViewBag.DateSortParam = sortOrder == "date_desc" ? "date_asc" : "date_desc";
+                ViewBag.PriceSortParam = sortOrder == "price_desc" ? "price_asc" : "price_desc";
 
                 return View(donHangs);
             }
@@ -999,9 +1078,8 @@ namespace WebApplication1.Controllers
                 return RedirectToAction("Index", "Home");
             }
         }
-
         // GET: DonHang/ChiTietAdmin/5 - Cho Admin
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public ActionResult ChiTietAdmin(int id)
         {
             try
@@ -1049,7 +1127,7 @@ namespace WebApplication1.Controllers
         // POST: DonHang/CapNhatTrangThaiDonHangAdmin - Cho Admin
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public ActionResult CapNhatTrangThaiDonHangAdmin(int id, string trangThai)
         {
             try
@@ -1084,7 +1162,7 @@ namespace WebApplication1.Controllers
             }
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public ActionResult ThongKeDonHang(DateTime? tuNgay = null, DateTime? denNgay = null)
         {
             try
@@ -1191,7 +1269,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: DonHang/XuatBaoCao - Cho Admin
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public ActionResult XuatBaoCao(DateTime tuNgay, DateTime denNgay)
         {
             try

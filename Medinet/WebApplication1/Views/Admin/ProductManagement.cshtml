@@ -181,7 +181,7 @@
             </li>
 
             <li class="sidebar-item">
-                <a href="@Url.Action("OrderManagement", "Admin")" class="sidebar-link">
+                <a href="@Url.Action("QuanLyDonHang", "DonHang")" class="sidebar-link">
                     <i class="bi bi-cart3"></i>
                     <span>Quản lý đơn hàng</span>
                 </a>
@@ -296,14 +296,6 @@
                                                     <a href="@Url.Action("ProductDetails", "Admin", new { id = item.MaSanPham })" class="btn btn-sm btn-secondary">Xem</a>
                                                     <button class="btn btn-sm btn-danger delete-product-btn" data-id="@item.MaSanPham">Xóa</button>
 
-                                                    @*@if (item.TrangThai == "Bị từ chối")
-                                                    {
-                                                        <button class="btn btn-sm btn-success restore-product-btn" data-id="@item.MaSanPham">Khôi phục</button>
-                                                    }
-                                                    else
-                                                    {
-
-                                                    }*@
                                                 </td>
                                             </tr>
                                         }
