@@ -1183,6 +1183,157 @@ namespace WebApplication1.Controllers
             return 0; // Trả về 0 để biểu thị không tìm thấy người dùng
         }
 
+        //2/4/2025
+        // Add this method to your NguoiBansController class
+        public ActionResult QuanLyDanhGia(int? id, int? page, string searchTerm = "",
+            string statusFilter = "", string sortOrder = "newest", DateTime? startDate = null, DateTime? endDate = null)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+
+            // Xác thực người bán tồn tại
+            NguoiBan nguoiBan = db.NguoiBans.Find(id);
+            if (nguoiBan == null)
+            {
+                return HttpNotFound();
+            }
+
+            // Thiết lập phân trang
+            int pageSize = 10;
+            int pageNumber = (page ?? 1);
+
+            // Lấy danh sách sản phẩm của người bán
+            var sanPhamIds = db.SanPhams
+                .Where(s => s.MaNguoiBan == id)
+                .Select(s => s.MaSanPham)
+                .ToList();
+
+            // Lấy danh sách đánh giá cho các sản phẩm của người bán
+            var danhGiaQuery = db.DanhGiaSanPhams
+                .Include(d => d.SanPham)
+                .Include(d => d.NguoiDung)
+                .Where(d => sanPhamIds.Contains(d.MaSanPham) && d.DaDanhGia == true);
+
+            // Áp dụng bộ lọc tìm kiếm nếu có
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                danhGiaQuery = danhGiaQuery.Where(d =>
+                    d.BinhLuan.Contains(searchTerm) ||
+                    d.SanPham.TenSanPham.Contains(searchTerm) ||
+                    d.NguoiDung.TenNguoiDung.Contains(searchTerm));
+            }
+
+            // Áp dụng bộ lọc số sao nếu có
+            if (!string.IsNullOrEmpty(statusFilter))
+            {
+                int soSao;
+                if (int.TryParse(statusFilter, out soSao))
+                {
+                    danhGiaQuery = danhGiaQuery.Where(d => d.DanhGia == soSao);
+                }
+            }
+
+            // Áp dụng bộ lọc ngày tháng
+            if (startDate.HasValue)
+            {
+                danhGiaQuery = danhGiaQuery.Where(d => d.NgayTao >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                DateTime adjustedEndDate = endDate.Value.AddDays(1).AddSeconds(-1);
+                danhGiaQuery = danhGiaQuery.Where(d => d.NgayTao <= adjustedEndDate);
+            }
+
+            // Áp dụng sắp xếp
+            switch (sortOrder)
+            {
+                case "oldest":
+                    danhGiaQuery = danhGiaQuery.OrderBy(d => d.NgayTao);
+                    break;
+                case "ratingAsc":
+                    danhGiaQuery = danhGiaQuery.OrderBy(d => d.DanhGia);
+                    break;
+                case "ratingDesc":
+                    danhGiaQuery = danhGiaQuery.OrderByDescending(d => d.DanhGia);
+                    break;
+                case "productAsc":
+                    danhGiaQuery = danhGiaQuery.OrderBy(d => d.SanPham.TenSanPham);
+                    break;
+                case "productDesc":
+                    danhGiaQuery = danhGiaQuery.OrderByDescending(d => d.SanPham.TenSanPham);
+                    break;
+                default: // newest
+                    danhGiaQuery = danhGiaQuery.OrderByDescending(d => d.NgayTao);
+                    break;
+            }
+
+            // Đếm tổng số đánh giá sau khi lọc
+            int totalItems = danhGiaQuery.Count();
+
+            // Tính tổng số trang
+            int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+            // Đảm bảo trang hiện tại không vượt quá tổng số trang
+            if (pageNumber > totalPages && totalPages > 0)
+            {
+                pageNumber = 1;
+                return RedirectToAction("QuanLyDanhGia", new
+                {
+                    id = id,
+                    page = pageNumber,
+                    searchTerm = searchTerm,
+                    statusFilter = statusFilter,
+                    sortOrder = sortOrder,
+                    startDate = startDate,
+                    endDate = endDate
+                });
+            }
+
+            // Lấy đánh giá theo trang
+            var danhGiaTrang = danhGiaQuery
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            // Tính điểm đánh giá trung bình
+            double? trungBinhDanhGia = null;
+            if (totalItems > 0)
+            {
+                trungBinhDanhGia = danhGiaQuery.Average(d => (double)d.DanhGia);
+            }
+
+            // Thống kê số lượng đánh giá theo số sao
+            var thongKeDanhGia = danhGiaQuery
+                .GroupBy(d => d.DanhGia)
+                .Select(g => new { SoSao = g.Key, SoLuong = g.Count() })
+                .ToDictionary(x => x.SoSao, x => x.SoLuong);
+
+            // Đặt thông tin người bán và phân trang vào ViewBag để hiển thị
+            ViewBag.MaNguoiBan = id;
+            ViewBag.TenCuaHang = nguoiBan.TenCuaHang;
+            ViewBag.CurrentPage = pageNumber;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalItems = totalItems;
+            ViewBag.HasPreviousPage = pageNumber > 1;
+            ViewBag.HasNextPage = pageNumber < totalPages;
+            ViewBag.PageSize = pageSize;
+
+            // Lưu các giá trị filter để sử dụng trong view
+            ViewBag.SearchTerm = searchTerm;
+            ViewBag.StatusFilter = statusFilter;
+            ViewBag.SortOrder = sortOrder;
+            ViewBag.StartDate = startDate;
+            ViewBag.EndDate = endDate;
+            ViewBag.TrungBinhDanhGia = trungBinhDanhGia;
+            ViewBag.ThongKeDanhGia = thongKeDanhGia;
+
+            return View(danhGiaTrang);
+        }
+        //2/4/2025
+
         //27/03/2025
         protected override void Dispose(bool disposing)
                 {
@@ -1206,6 +1357,7 @@ namespace WebApplication1.Controllers
             public SanPham SanPham { get; set; }
             public List<AnhSanPham> DanhSachAnh { get; set; }
         }
+
         // Tạo một lớp rõ ràng thay vì sử dụng kiểu ẩn danh
         public class SanPhamBanChayViewModel
         {

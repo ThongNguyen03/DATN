@@ -1,0 +1,563 @@
+﻿@model List<WebApplication1.Models.DanhGiaSanPham>
+@{
+    ViewBag.Title = "Quản lý đánh giá";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    int currentPage = ViewBag.CurrentPage;
+    int totalPages = ViewBag.TotalPages;
+    int totalItems = ViewBag.TotalItems;
+    bool hasPreviousPage = ViewBag.HasPreviousPage;
+    bool hasNextPage = ViewBag.HasNextPage;
+    int pageSize = ViewBag.PageSize;
+    double? trungBinhDanhGia = ViewBag.TrungBinhDanhGia;
+    var thongKeDanhGia = ViewBag.ThongKeDanhGia as Dictionary<int?, int>;
+
+    // Lấy danh sách phản hồi từ ViewBag
+    var phanHoiList = ViewBag.PhanHoiList as List<WebApplication1.Models.PhanHoiDanhGia>;
+}
+
+<style>
+    /* Custom styles for tabs and sidebar */
+    .seller-sidebar {
+        background-color: #ffffff; /* White background for seller sidebar */
+        border: 1px solid #e9ecef;
+    }
+
+        .seller-sidebar .card-header {
+            background-color: #f8f9fa; /* Light gray header */
+            color: #212529; /* Dark text */
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .seller-sidebar .list-group-item {
+            background-color: transparent;
+            color: #212529; /* Dark text */
+            border-color: #e9ecef;
+        }
+
+            .seller-sidebar .list-group-item:hover {
+                background-color: #f8f9fa;
+            }
+
+            .seller-sidebar .list-group-item.active {
+                background-color: #007bff;
+                border-color: #007bff;
+                color: #ffffff; /* White text for active item */
+            }
+
+    /* Pagination styling */
+    .pagination > li {
+        display: inline-block;
+        margin-right: 5px;
+    }
+
+        .pagination > li > a,
+        .pagination > li > span {
+            color: #007bff;
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 3px;
+            padding: 0.5rem 0.75rem;
+        }
+
+    .pagination > .active > a,
+    .pagination > .active > span {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+    }
+
+    .pagination > .disabled > a,
+    .pagination > .disabled > span {
+        color: #6c757d;
+        pointer-events: none;
+        background-color: #fff;
+    }
+
+    /* Đánh giá sao styling */
+    .star-rating {
+        color: #ffc107; /* Star color */
+        font-size: 18px;
+    }
+
+    .rating-summary {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .rating-bars .progress {
+        height: 8px;
+        margin-bottom: 10px;
+    }
+
+    .rating-count {
+        min-width: 30px;
+        text-align: right;
+    }
+
+    /* CSS để đảm bảo button search và input cùng kích thước */
+    .input-group .input-group-append .btn {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        /* Đảm bảo icon nằm giữa button */
+        .input-group .input-group-append .btn i {
+            margin: 0;
+        }
+
+    /* Styling cho các tab */
+    .rating-tabs .nav-link {
+        color: #6c757d;
+        border: none;
+        border-radius: 0;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+    }
+
+        .rating-tabs .nav-link.active {
+            color: #007bff;
+            background-color: transparent;
+            border-bottom: 2px solid #007bff;
+        }
+
+    /* Styling cho bảng đánh giá */
+    #reviewTable {
+        border-collapse: collapse;
+        box-shadow: 0 2px 3px rgba(0,0,0,0.05);
+    }
+
+        #reviewTable th {
+            vertical-align: middle;
+            font-weight: 600;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            text-align: center;
+        }
+
+        #reviewTable td {
+            vertical-align: middle;
+            padding: 0.75rem;
+            line-height: 1.5;
+        }
+
+        /* Thêm màu nền xen kẻ cho bảng */
+        #reviewTable tbody tr:nth-of-type(odd) {
+            background-color: rgba(0,0,0,0.02);
+        }
+
+        /* Style cho hover dòng */
+        #reviewTable tbody tr:hover {
+            background-color: rgba(0,123,255,0.05);
+        }
+
+    /* Nội dung đánh giá */
+    .review-content {
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* Ngày đánh giá */
+    .review-date {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    /* Reply button */
+    .btn-reply {
+        color: #28a745;
+        border-color: #28a745;
+    }
+
+        .btn-reply:hover {
+            background-color: #28a745;
+            color: white;
+        }
+
+    /* Thẻ trạng thái đã trả lời */
+    .badge-replied {
+        background-color: #28a745;
+        color: white;
+    }
+
+    /* Stars container */
+    .stars-container {
+        white-space: nowrap;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card seller-sidebar">
+                <div class="card-header text-black">
+                    <h5 class="mb-0">Trang người bán</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="@Url.Action("EditSellerProfile", "NguoiDungs")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-store mr-2"></i> Thông tin cửa hàng
+                    </a>
+                    <a href="@Url.Action("QuanLySanPham", "NguoiBans", new { id = ViewBag.MaNguoiBan })" class="list-group-item list-group-item-action">
+                        <i class="fas fa-box mr-2"></i> Sản phẩm
+                    </a>
+                    <a href="@Url.Action("DonHangNguoiMua", "DonHang")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shopping-cart mr-2"></i> Đơn hàng
+                    </a>
+                    <a href="@Url.Action("QuanLyDanhGia", "NguoiBans", new { id = ViewBag.MaNguoiBan })" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-star mr-2"></i> Đánh giá
+                    </a>
+                    <a href="@Url.Action("QuanLyTaiKhoan", "NguoiBans", new { id = ViewBag.MaNguoiBan })" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-line mr-2"></i> Thống kê
+                    </a>
+                    <a href="@Url.Action("DangXuat", "DangNhap")" class="list-group-item list-group-item-action text-danger">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Đăng xuất
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Quản lý đánh giá - @ViewBag.TenCuaHang</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Tổng quan đánh giá -->
+                    <div class="rating-summary mb-4">
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                                <h2 class="mb-0">@(trungBinhDanhGia.HasValue ? Math.Round(trungBinhDanhGia.Value, 1).ToString("0.0") : "0.0")</h2>
+                                <div class="star-rating">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (trungBinhDanhGia.HasValue && i <= Math.Round(trungBinhDanhGia.Value))
+                                        {
+                                            <i class="fas fa-star"></i>
+                                        }
+                                        else if (trungBinhDanhGia.HasValue && i - 0.5 <= Math.Round(trungBinhDanhGia.Value, 1))
+                                        {
+                                            <i class="fas fa-star-half-alt"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="far fa-star"></i>
+                                        }
+                                    }
+                                </div>
+                                <p class="text-muted mt-2">@totalItems đánh giá</p>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="rating-bars">
+                                    @for (int i = 5; i >= 1; i--)
+                                    {
+                                        int count = thongKeDanhGia != null && thongKeDanhGia.ContainsKey(i) ? thongKeDanhGia[i] : 0;
+                                        double percent = totalItems > 0 ? (double)count / totalItems * 100 : 0;
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="mr-2">@i <i class="fas fa-star text-warning"></i></div>
+                                            <div class="progress flex-grow-1">
+                                                <div class="progress-bar bg-warning" role="progressbar" style="width: @percent%" aria-valuenow="@percent" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                            <div class="rating-count ml-2">@count</div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Phần tabs -->
+                    <!--<ul class="nav nav-tabs rating-tabs mb-3" id="ratingTabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link @(string.IsNullOrEmpty(ViewBag.StatusFilter) ? "active" : "")" id="all-tab" href="@Url.Action("QuanLyDanhGia", "NguoiBans", new { id = ViewBag.MaNguoiBan })" role="tab">
+                                Tất cả
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewBag.StatusFilter == "replied" ? "active" : "")" id="replied-tab" href="@Url.Action("QuanLyDanhGia", "NguoiBans", new { id = ViewBag.MaNguoiBan, statusFilter = "replied" })" role="tab">
+                                Đã trả lời
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewBag.StatusFilter == "waiting" ? "active" : "")" id="waiting-tab" href="@Url.Action("QuanLyDanhGia", "NguoiBans", new { id = ViewBag.MaNguoiBan, statusFilter = "waiting" })" role="tab">
+                                Chờ trả lời
+                            </a>
+                        </li>
+                    </ul>-->
+
+                    <!-- Phần tìm kiếm và lọc -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <form id="searchForm" method="get" action="@Url.Action("QuanLyDanhGia", "NguoiBans")">
+                                <input type="hidden" name="id" value="@ViewBag.MaNguoiBan" />
+                                <input type="hidden" name="page" value="1" />
+                                <input type="hidden" name="statusFilter" id="hiddenStatusFilter" value="@ViewBag.StatusFilter" />
+                                <input type="hidden" name="sortOrder" id="hiddenSortOrder" value="@ViewBag.SortOrder" />
+
+                                <div class="input-group">
+                                    <input type="text" id="searchInput" name="searchTerm" class="form-control" placeholder="Tìm kiếm đánh giá..." value="@ViewBag.SearchTerm">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="submit">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-md-3">
+                            <select id="ratingFilter" class="form-control" onchange="applyFilter()">
+                                <option value="">-- Tất cả số sao --</option>
+                                <option value="5" @(ViewBag.StatusFilter == "5" ? "selected" : "")>5 sao</option>
+                                <option value="4" @(ViewBag.StatusFilter == "4" ? "selected" : "")>4 sao</option>
+                                <option value="3" @(ViewBag.StatusFilter == "3" ? "selected" : "")>3 sao</option>
+                                <option value="2" @(ViewBag.StatusFilter == "2" ? "selected" : "")>2 sao</option>
+                                <option value="1" @(ViewBag.StatusFilter == "1" ? "selected" : "")>1 sao</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select id="sortOrder" class="form-control" onchange="applyFilter()">
+                                <option value="newest" @(ViewBag.SortOrder == "newest" ? "selected" : "")>Mới nhất</option>
+                                <option value="oldest" @(ViewBag.SortOrder == "oldest" ? "selected" : "")>Cũ nhất</option>
+                                <option value="ratingDesc" @(ViewBag.SortOrder == "ratingDesc" ? "selected" : "")>Đánh giá cao nhất</option>
+                                <option value="ratingAsc" @(ViewBag.SortOrder == "ratingAsc" ? "selected" : "")>Đánh giá thấp nhất</option>
+                                <option value="productAsc" @(ViewBag.SortOrder == "productAsc" ? "selected" : "")>Sản phẩm A-Z</option>
+                                <option value="productDesc" @(ViewBag.SortOrder == "productDesc" ? "selected" : "")>Sản phẩm Z-A</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Bảng danh sách đánh giá -->
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="reviewTable">
+                            <thead>
+                                <tr>
+                                    <th width="60">STT</th>
+                                    <th>Sản phẩm</th>
+                                    <th>Đánh giá</th>
+                                    <th>Người đánh giá</th>
+                                    <th>Ngày đánh giá</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model != null && Model.Any())
+                                {
+                                    int stt = (currentPage - 1) * pageSize + 1;
+                                    foreach (var item in Model)
+                                    {
+                                        <tr>
+                                            <td class="text-center">@stt</td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    @{
+                                                        string anhHienThi = Url.Content("~/Content/images/no-image.jpeg");
+                                                        if (item.SanPham != null && item.SanPham.AnhSanPhams != null && item.SanPham.AnhSanPhams.Any())
+                                                        {
+                                                            anhHienThi = item.SanPham.AnhSanPhams.First().DuongDanAnh;
+                                                        }
+                                                    }
+                                                    <img src="@anhHienThi" alt="@item.SanPham?.TenSanPham" class="img-thumbnail mr-2" style="width: 50px; height: 50px; object-fit: cover;">
+                                                    <div>
+                                                        <a href="@Url.Action("ChiTietSanPham", "NguoiBans", new { id = item.MaSanPham })">
+                                                            @(item.SanPham?.TenSanPham ?? "Không có tên")
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <div class="stars-container mb-1">
+                                                        @for (int i = 1; i <= 5; i++)
+                                                        {
+                                                            if (item.DanhGia.HasValue && i <= item.DanhGia.Value)
+                                                            {
+                                                                <i class="fas fa-star text-warning"></i>
+                                                            }
+                                                            else
+                                                            {
+                                                                <i class="far fa-star text-warning"></i>
+                                                            }
+                                                        }
+                                                    </div>
+                                                    <div class="review-content">@item.BinhLuan</div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div>@item.NguoiDung.TenNguoiDung</div>
+                                            </td>
+                                            <td>
+                                                <div class="review-date">@item.NgayTao.ToString("dd/MM/yyyy")</div>
+                                            </td>
+                                        </tr>
+                                        stt++;
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            @if (!string.IsNullOrEmpty(ViewBag.SearchTerm) || !string.IsNullOrEmpty(ViewBag.StatusFilter))
+                                            {
+                                                <div class="alert alert-info mt-2">
+                                                    <i class="fas fa-info-circle mr-2"></i> Không tìm thấy đánh giá nào phù hợp với bộ lọc.
+                                                    <a href="@Url.Action("QuanLyDanhGia", "NguoiBans", new { id = ViewBag.MaNguoiBan })" class="alert-link">Xóa bộ lọc</a>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="mt-3">
+                                                    <i class="fas fa-star fa-3x text-muted mb-3"></i>
+                                                    <p>Chưa có đánh giá nào</p>
+                                                </div>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Phân trang - chỉ hiển thị khi có đánh giá -->
+                    @if (Model != null && Model.Any() && ViewBag.TotalPages > 1)
+                    {
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div>
+                                <span>Hiển thị @Model.Count() trên tổng số @ViewBag.TotalItems đánh giá</span>
+                            </div>
+                            <div>
+                                <ul class="pagination mb-0">
+                                    @if (ViewBag.HasPreviousPage)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" href="@Url.Action("QuanLyDanhGia", "NguoiBans", new { id = ViewBag.MaNguoiBan, page = ViewBag.CurrentPage - 1, searchTerm = ViewBag.SearchTerm, statusFilter = ViewBag.StatusFilter, sortOrder = ViewBag.SortOrder })">
+                                                <i class="fas fa-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+                                        </li>
+                                    }
+
+                                    @{
+                                        const int maxPagesToShow = 5;
+                                        int startPage = Math.Max(1, ViewBag.CurrentPage - maxPagesToShow / 2);
+                                        int endPage = Math.Min(ViewBag.TotalPages, startPage + maxPagesToShow - 1);
+
+                                        // Điều chỉnh lại startPage nếu cần thiết
+                                        if (endPage - startPage + 1 < maxPagesToShow)
+                                        {
+                                            startPage = Math.Max(1, endPage - maxPagesToShow + 1);
+                                        }
+                                    }
+
+                                    @for (int i = startPage; i <= endPage; i++)
+                                    {
+                                        if (i == ViewBag.CurrentPage)
+                                        {
+                                            <li class="page-item active">
+                                                <span class="page-link">@i</span>
+                                            </li>
+                                        }
+                                        else
+                                        {
+                                            <li class="page-item">
+                                                <a class="page-link" href="@Url.Action("QuanLyDanhGia", "NguoiBans", new { id = ViewBag.MaNguoiBan, page = i, searchTerm = ViewBag.SearchTerm, statusFilter = ViewBag.StatusFilter, sortOrder = ViewBag.SortOrder })">@i</a>
+                                            </li>
+                                        }
+                                    }
+
+                                    @if (ViewBag.HasNextPage)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" href="@Url.Action("QuanLyDanhGia", "NguoiBans", new { id = ViewBag.MaNguoiBan, page = ViewBag.CurrentPage + 1, searchTerm = ViewBag.SearchTerm, statusFilter = ViewBag.StatusFilter, sortOrder = ViewBag.SortOrder })">
+                                                <i class="fas fa-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    }
+                    else if (Model != null && Model.Any())
+                    {
+                        <div class="mt-3">
+                            <span>Hiển thị @Model.Count() trên tổng số @ViewBag.TotalItems đánh giá</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Hiển thị thông báo nếu có
+        function showAlert(message, type) {
+            var alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            var alertHtml = '<div class="alert ' + alertClass + ' alert-dismissible fade show" role="alert">' +
+                message +
+                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                '<span aria-hidden="true">&times;</span>' +
+                '</button>' +
+                '</div>';
+
+            // Thêm thông báo vào đầu card-body
+            $('.card-body:first').prepend(alertHtml);
+
+            // Tự động đóng thông báo sau 5 giây
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 5000);
+        }
+
+        $(document).ready(function() {
+            // Kiểm tra và hiển thị thông báo từ TempData
+            var successMessage = '@TempData["Success"]';
+            var errorMessage = '@TempData["Error"]';
+
+            if (successMessage && successMessage !== '' && successMessage !== '@TempData["Success"]') {
+                showAlert(successMessage, 'success');
+            }
+
+            if (errorMessage && errorMessage !== '' && errorMessage !== '@TempData["Error"]') {
+                showAlert(errorMessage, 'error');
+            }
+
+            // Tab navigation
+            $('#all-tab, #replied-tab, #waiting-tab').click(function(e) {
+                e.preventDefault();
+                window.location.href = $(this).attr('href');
+            });
+        });
+
+        // Xử lý khi thay đổi bộ lọc
+        function applyFilter() {
+            var ratingFilter = $('#ratingFilter').val();
+            var sortOrder = $('#sortOrder').val();
+
+            // Cập nhật giá trị hidden inputs
+            $('#hiddenStatusFilter').val(ratingFilter);
+            $('#hiddenSortOrder').val(sortOrder);
+
+            // Submit form
+            $('#searchForm').submit();
+        }
+    </script>
+}

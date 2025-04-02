@@ -167,6 +167,7 @@
     <Compile Include="Models\GioHang.cs" />
     <Compile Include="Models\NguoiBan.cs" />
     <Compile Include="Models\NguoiDung.cs" />
+    <Compile Include="Models\PhanHoiDanhGia.cs" />
     <Compile Include="Models\SanPham.cs" />
     <Compile Include="Models\ThongBao.cs" />
     <Compile Include="Models\ThongKeDoanhThuViewModel.cs" />
@@ -388,6 +389,7 @@
     <Content Include="Views\ThanhToan\KetQuaThanhToanNapTien.cshtml" />
     <Content Include="Views\DonHang\QuanLyDonHang.cshtml" />
     <Content Include="Views\DonHang\ChiTietAdmin.cshtml" />
+    <Content Include="Views\NguoiBans\QuanLyDanhGia.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

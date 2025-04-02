@@ -36,6 +36,9 @@ namespace WebApplication1.Models
         public virtual DbSet<ThongTinHoanTien> ThongTinHoanTiens { get; set; }
         public virtual DbSet<HangDoiHoanTienVNPay> HangDoiHoanTienVNPays { get; set; }
         //27/3/2025
+        //2/4/2025
+        public DbSet<PhanHoiDanhGia> PhanHoiDanhGias { get; set; }
+        //2/4/2025
         public DbSet<GhiChepVi> GhiChepVis { get; set; }
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -166,7 +169,20 @@ namespace WebApplication1.Models
                 .WithMany(dh => dh.DanhGiaSanPhams)
                 .HasForeignKey(d => d.MaDonHang)
                 .WillCascadeOnDelete(false);
+            //2/4/2025
+            // Cấu hình cho PhanHoiDanhGia
+            modelBuilder.Entity<PhanHoiDanhGia>()
+                .HasRequired(p => p.DanhGiaSanPham)
+                .WithMany()
+                .HasForeignKey(p => p.MaDanhGiaSanPham)
+                .WillCascadeOnDelete(false);
 
+            modelBuilder.Entity<PhanHoiDanhGia>()
+                .HasRequired(p => p.NguoiBan)
+                .WithMany()
+                .HasForeignKey(p => p.MaNguoiBan)
+                .WillCascadeOnDelete(false);
+            //2/4/2025
             // 16. MỐI QUAN HỆ NguoiDung - ThongBao (1-n)
             modelBuilder.Entity<ThongBao>()
                 .HasRequired(tb => tb.NguoiDung)

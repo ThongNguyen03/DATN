@@ -828,20 +828,20 @@
                                 <div class="review-rating">
                                     @for (int i = 1; i <= 5; i++)
                                     {
-                                        <i class="fa @(i <= danhGia.DiemDanhGia ? "fa-star" : "fa-star-o") text-warning"></i>
+                                        <i class="fa @(i <= danhGia.DanhGia ? "fa-star" : "fa-star-o") text-warning"></i>
                                     }
                                 </div>
-                                <span class="review-date">@danhGia.NgayDanhGia.ToString("dd/MM/yyyy")</span>
+                                <span class="review-date">@danhGia.NgayTao.ToString("dd/MM/yyyy")</span>
                             </div>
                         </div>
                         <div class="review-content">
-                            <p>@danhGia.NoiDungDanhGia</p>
-                            @if (!string.IsNullOrEmpty(danhGia.HinhAnhDanhGia))
+                            <p>@danhGia.BinhLuan</p>
+                            @*@if (!string.IsNullOrEmpty(danhGia.HinhAnhDanhGia))
                             {
                                 <div class="review-images">
                                     <img src="@danhGia.HinhAnhDanhGia" alt="Hình ảnh đánh giá" class="img-thumbnail" style="max-width: 100px; max-height: 100px;" />
                                 </div>
-                            }
+                            }*@
                         </div>
                         <hr>
                     </div>
