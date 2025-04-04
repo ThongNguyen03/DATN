@@ -275,13 +275,43 @@
         .image-preview:hover {
             transform: scale(1.02);
         }
+
+    /* CSS cho menu con */
+    .sidebar-submenu {
+        list-style: none;
+        padding-left: 15px;
+        margin: 0;
+        display: none; /* Mặc định ẩn */
+    }
+
+        .sidebar-submenu .sidebar-link {
+            padding: 8px 20px 8px 30px;
+            font-size: 0.9em;
+        }
+
+        .sidebar-submenu .sidebar-item.active .sidebar-link:before {
+            left: 15px;
+        }
+
+        /* Hiển thị menu con khi có class 'show' */
+        .sidebar-submenu.show {
+            display: block;
+        }
+
+    /* Xoay mũi tên khi mở rộng */
+    .sidebar-link .bi-chevron-down {
+        transition: transform 0.3s;
+    }
+
+    .sidebar-link.expanded .bi-chevron-down {
+        transform: rotate(180deg);
+    }
 </style>
 
 <div class="page-container">
     <!-- Sidebar Navigation -->
     <div class="sidebar">
         <h6 class="sidebar-heading">CHỨC NĂNG</h6>
-
         <ul class="sidebar-nav">
             <li class="sidebar-item">
                 <a href="@Url.Action("Dashboard", "Admin")" class="sidebar-link">
@@ -289,40 +319,62 @@
                     <span>Dashboard</span>
                 </a>
             </li>
-
             <li class="sidebar-item">
                 <a href="@Url.Action("UserManagement", "Admin")" class="sidebar-link">
                     <i class="bi bi-people"></i>
                     <span>Quản lý người dùng</span>
                 </a>
             </li>
-
             <li class="sidebar-item">
                 <a href="@Url.Action("ProductManagement", "Admin")" class="sidebar-link">
                     <i class="bi bi-box"></i>
                     <span>Quản lý sản phẩm</span>
                 </a>
             </li>
-
             <li class="sidebar-item">
                 <a href="@Url.Action("CategoryManagement", "Admin")" class="sidebar-link">
                     <i class="bi bi-list-nested"></i>
                     <span>Quản lý danh mục</span>
                 </a>
             </li>
-
             <li class="sidebar-item active">
                 <a href="@Url.Action("QuanLyDonHang", "DonHang")" class="sidebar-link">
                     <i class="bi bi-cart3"></i>
                     <span>Quản lý đơn hàng</span>
                 </a>
             </li>
-
             <li class="sidebar-item">
-                <a href="@Url.Action("TransactionManagement", "Admin")" class="sidebar-link">
+                <a href="javascript:void(0);" class="sidebar-link" id="transactionDropdown">
                     <i class="bi bi-currency-exchange"></i>
                     <span>Quản lý giao dịch</span>
+                    <i class="bi bi-chevron-down ms-auto"></i>
                 </a>
+                <ul class="sidebar-submenu" id="transactionSubmenu">
+                    <li class="sidebar-item ">
+                        <a href="@Url.Action("Dashboard", "GiaoDich")" class="sidebar-link">
+                            <i class="bi bi-bar-chart"></i>
+                            <span>Tổng quan</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="@Url.Action("Index", "GiaoDich")" class="sidebar-link">
+                            <i class="bi bi-credit-card"></i>
+                            <span>Giao dịch</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="@Url.Action("Escrow", "GiaoDich")" class="sidebar-link">
+                            <i class="bi bi-safe"></i>
+                            <span>Ký quỹ (Escrow)</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="@Url.Action("WalletLogs", "GiaoDich")" class="sidebar-link">
+                            <i class="bi bi-wallet2"></i>
+                            <span>Ghi chép ví</span>
+                        </a>
+                    </li>
+                </ul>
             </li>
         </ul>
     </div>
@@ -741,6 +793,18 @@
             $('.image-preview').on('click', function () {
                 var imgSrc = $(this).attr('src');
                 window.open(imgSrc, '_blank');
+            });
+
+            if ($('#transactionSubmenu .sidebar-item.active').length > 0) {
+                $('#transactionSubmenu').addClass('show');
+                $('#transactionDropdown').addClass('expanded');
+            }
+
+            // Bắt sự kiện click
+            $('#transactionDropdown').on('click', function (e) {
+                e.preventDefault();
+                $('#transactionSubmenu').toggleClass('show');
+                $(this).toggleClass('expanded');
             });
         });
 

@@ -140,6 +140,7 @@
     <Compile Include="Controllers\DangKyController.cs" />
     <Compile Include="Controllers\DangNhapController.cs" />
     <Compile Include="Controllers\DonHangController.cs" />
+    <Compile Include="Controllers\GiaoDichController.cs" />
     <Compile Include="Controllers\GioHangsController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\NguoiBansController.cs" />
@@ -390,6 +391,13 @@
     <Content Include="Views\DonHang\QuanLyDonHang.cshtml" />
     <Content Include="Views\DonHang\ChiTietAdmin.cshtml" />
     <Content Include="Views\NguoiBans\QuanLyDanhGia.cshtml" />
+    <Content Include="Views\GiaoDich\Index.cshtml" />
+    <Content Include="Views\GiaoDich\Escrow.cshtml" />
+    <Content Include="Views\GiaoDich\WalletLogs.cshtml" />
+    <Content Include="Views\GiaoDich\Details.cshtml" />
+    <Content Include="Views\GiaoDich\EscrowDetails.cshtml" />
+    <Content Include="Views\GiaoDich\WalletLogDetails.cshtml" />
+    <Content Include="Views\GiaoDich\Dashboard.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

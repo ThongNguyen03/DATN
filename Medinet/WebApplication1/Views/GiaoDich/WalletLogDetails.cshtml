@@ -1,0 +1,663 @@
+﻿@model WebApplication1.Models.GhiChepVi
+@{
+    ViewBag.Title = "Chi tiết ghi chép ví";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Sidebar styles - same as Index.cshtml */
+    .page-container {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    .sidebar {
+        width: 250px;
+        background-color: #fff;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 100;
+        padding-top: 15px;
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        margin-bottom: 15px;
+    }
+
+    .sidebar-logo {
+        height: 40px;
+        margin-right: 10px;
+    }
+
+    .sidebar-heading {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #6c757d;
+        padding: 0 20px;
+        margin-bottom: 10px;
+    }
+
+    .sidebar-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-item {
+        position: relative;
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        color: #495057;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+        .sidebar-link i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .sidebar-link:hover, .sidebar-item.active .sidebar-link {
+            color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+
+            .sidebar-item.active .sidebar-link:before {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 3px;
+                background-color: #0d6efd;
+            }
+
+    /* Main content styles */
+    .main-content {
+        flex: 1;
+        padding: 20px;
+    }
+
+    .status-badge {
+        font-size: 0.9rem;
+        padding: 8px 12px;
+        border-radius: 20px;
+    }
+
+    .info-row {
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #f0f0f0;
+        padding-bottom: 1rem;
+    }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+    .info-label {
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .wallet-amount {
+        font-size: 2rem;
+        font-weight: 700;
+    }
+
+    .amount-positive {
+        color: #198754;
+    }
+
+    .amount-negative {
+        color: #dc3545;
+    }
+
+    .transaction-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .transaction-icon-credit {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+
+    .transaction-icon-debit {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    /* CSS cho menu con */
+    .sidebar-submenu {
+        list-style: none;
+        padding-left: 15px;
+        margin: 0;
+        display: none; /* Mặc định ẩn */
+    }
+
+        .sidebar-submenu .sidebar-link {
+            padding: 8px 20px 8px 30px;
+            font-size: 0.9em;
+        }
+
+        .sidebar-submenu .sidebar-item.active .sidebar-link:before {
+            left: 15px;
+        }
+
+        /* Hiển thị menu con khi có class 'show' */
+        .sidebar-submenu.show {
+            display: block;
+        }
+
+    /* Xoay mũi tên khi mở rộng */
+    .sidebar-link .bi-chevron-down {
+        transition: transform 0.3s;
+    }
+
+    .sidebar-link.expanded .bi-chevron-down {
+        transform: rotate(180deg);
+    }
+</style>
+
+<div class="page-container">
+    <!-- Sidebar Navigation -->
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h6 class="sidebar-heading">CHỨC NĂNG</h6>
+        <ul class="sidebar-nav">
+            <li class="sidebar-item">
+                <a href="@Url.Action("Dashboard", "Admin")" class="sidebar-link">
+                    <i class="bi bi-grid"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="@Url.Action("UserManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-people"></i>
+                    <span>Quản lý người dùng</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="@Url.Action("ProductManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-box"></i>
+                    <span>Quản lý sản phẩm</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="@Url.Action("CategoryManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-list-nested"></i>
+                    <span>Quản lý danh mục</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="@Url.Action("QuanLyDonHang", "DonHang")" class="sidebar-link">
+                    <i class="bi bi-cart3"></i>
+                    <span>Quản lý đơn hàng</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="javascript:void(0);" class="sidebar-link" id="transactionDropdown">
+                    <i class="bi bi-currency-exchange"></i>
+                    <span>Quản lý giao dịch</span>
+                    <i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul class="sidebar-submenu" id="transactionSubmenu">
+                    <li class="sidebar-item ">
+                        <a href="@Url.Action("Dashboard", "GiaoDich")" class="sidebar-link">
+                            <i class="bi bi-bar-chart"></i>
+                            <span>Tổng quan</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="@Url.Action("Index", "GiaoDich")" class="sidebar-link">
+                            <i class="bi bi-credit-card"></i>
+                            <span>Giao dịch</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="@Url.Action("Escrow", "GiaoDich")" class="sidebar-link">
+                            <i class="bi bi-safe"></i>
+                            <span>Ký quỹ (Escrow)</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item active">
+                        <a href="@Url.Action("WalletLogs", "GiaoDich")" class="sidebar-link">
+                            <i class="bi bi-wallet2"></i>
+                            <span>Ghi chép ví</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container-fluid p-0">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h3 mb-0">Chi tiết ghi chép ví #@Model.MaGhiChep</h1>
+                <a href="@Url.Action("WalletLogs", "GiaoDich")" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </a>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Thông tin giao dịch ví</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex flex-column align-items-center mb-4 pb-3 border-bottom">
+                                <div class="transaction-icon @(Model.SoTien > 0 ? "transaction-icon-credit" : "transaction-icon-debit")">
+                                    <i class="bi @(Model.SoTien > 0 ? "bi-arrow-down-circle" : "bi-arrow-up-circle")"></i>
+                                </div>
+                                <div class="wallet-amount @(Model.SoTien > 0 ? "amount-positive" : "amount-negative")">
+                                    @(Model.SoTien > 0 ? "+" : "")@string.Format("{0:N0} VNĐ", Model.SoTien)
+                                </div>
+                                <div class="text-muted">@Model.LoaiGiaoDich</div>
+                            </div>
+
+                            <div class="row info-row">
+                                <div class="col-md-4 info-label">Mã ghi chép:</div>
+                                <div class="col-md-8">@Model.MaGhiChep</div>
+                            </div>
+                            <div class="row info-row">
+                                <div class="col-md-4 info-label">Người bán:</div>
+                                <div class="col-md-8">
+                                    @if (Model.NguoiBan != null)
+                                    {
+                                        @Model.NguoiBan.TenCuaHang
+                                    }
+                                    else
+                                    {
+                                        <span>ID: @Model.MaNguoiBan</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="row info-row">
+                                <div class="col-md-4 info-label">Loại giao dịch:</div>
+                                <div class="col-md-8">@Model.LoaiGiaoDich</div>
+                            </div>
+                            <div class="row info-row">
+                                <div class="col-md-4 info-label">Mô tả:</div>
+                                <div class="col-md-8">@(Model.MoTa ?? "Không có mô tả")</div>
+                            </div>
+                            <div class="row info-row">
+                                <div class="col-md-4 info-label">Ngày giao dịch:</div>
+                                <div class="col-md-8">@Model.NgayGiaoDich.ToString("dd/MM/yyyy HH:mm:ss")</div>
+                            </div>
+                            <div class="row info-row">
+                                <div class="col-md-4 info-label">Trạng thái:</div>
+                                <div class="col-md-8">
+                                    <span class="badge @(Model.TrangThai == "Thành công" ? "bg-success" : "bg-danger") status-badge">
+                                        @Model.TrangThai
+                                    </span>
+                                </div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.MaGiaoDichNgoai))
+                            {
+                                <div class="row info-row">
+                                    <div class="col-md-4 info-label">Mã giao dịch ngoài:</div>
+                                    <div class="col-md-8">@Model.MaGiaoDichNgoai</div>
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.IP))
+                            {
+                                <div class="row info-row">
+                                    <div class="col-md-4 info-label">Địa chỉ IP:</div>
+                                    <div class="col-md-8">@Model.IP</div>
+                                </div>
+                            }
+                            @if (Model.MaDonHang.HasValue)
+                            {
+                                <div class="row info-row">
+                                    <div class="col-md-4 info-label">Mã đơn hàng:</div>
+                                    <div class="col-md-8">
+                                        <a href="@Url.Action("ChiTietAdmin", "DonHang", new { id = Model.MaDonHang })">
+                                            @Model.MaDonHang
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    @if (Model.DonHang != null)
+                    {
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Thông tin đơn hàng liên quan</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row info-row">
+                                    <div class="col-md-4 info-label">Mã đơn hàng:</div>
+                                    <div class="col-md-8">@Model.DonHang.MaDonHang</div>
+                                </div>
+                                <div class="row info-row">
+                                    <div class="col-md-4 info-label">Ngày đặt hàng:</div>
+                                    <div class="col-md-8">@Model.DonHang.NgayTao.ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                                <div class="row info-row">
+                                    <div class="col-md-4 info-label">Trạng thái đơn hàng:</div>
+                                    <div class="col-md-8">
+                                        <span class="badge @(Model.DonHang.TrangThaiDonHang == "Đã hoàn thành" ? "bg-success" :
+                                                            (Model.DonHang.TrangThaiDonHang == "Đang xử lý" ? "bg-warning" :
+                                                            (Model.DonHang.TrangThaiDonHang == "Đang giao hàng" ? "bg-info" : "bg-danger")))">
+                                            @Model.DonHang.TrangThaiDonHang
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="row info-row">
+                                    <div class="col-md-4 info-label">Tổng tiền đơn hàng:</div>
+                                    <div class="col-md-8">@string.Format("{0:N0} VNĐ", Model.DonHang.TongSoTien)</div>
+                                </div>
+                                <div class="mt-3">
+                                    <a href="@Url.Action("ChiTietAdmin", "DonHang", new { id = Model.MaDonHang })" class="btn btn-primary">
+                                        <i class="bi bi-eye"></i> Xem chi tiết đơn hàng
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Thao tác</h5>
+                        </div>
+                        <div class="card-body">
+                            <a href="#" id="btnPrintReceipt" class="btn btn-outline-secondary w-100 mb-2">
+                                <i class="bi bi-printer"></i> In biên lai
+                            </a>
+
+                            <a href="#" class="btn btn-outline-info w-100">
+                                <i class="bi bi-envelope"></i> Gửi email thông báo
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Thông tin người dùng</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.NguoiBan != null)
+                            {
+                                <div class="d-flex flex-column align-items-center mb-3">
+                                    <div class="mb-3">
+                                        <div style="width: 80px; height: 80px; background-color: #f8f9fa; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                            <i class="bi bi-person" style="font-size: 2rem;"></i>
+                                        </div>
+                                    </div>
+                                    <h5 class="mb-0">@Model.NguoiBan.TenCuaHang</h5>
+                                    <p class="text-muted">ID: @Model.NguoiBan.MaNguoiBan</p>
+                                </div>
+
+                                <div class="row info-row">
+                                    <div class="col-md-4 info-label">Email:</div>
+                                    <div class="col-md-8">email@example.com</div>
+                                </div>
+                                <div class="row info-row">
+                                    <div class="col-md-4 info-label">Số điện thoại:</div>
+                                    <div class="col-md-8">0123456789</div>
+                                </div>
+                                <div class="row info-row">
+                                    <div class="col-md-4 info-label">Địa chỉ:</div>
+                                    <div class="col-md-8">Hà Nội, Việt Nam</div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <a href="@Url.Action("UserDetails", "Admin", new { id = Model.NguoiBan.MaNguoiDung })" class="btn btn-outline-primary w-100">
+                                        <i class="bi bi-person"></i> Xem hồ sơ người bán
+                                    </a>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning mb-0">
+                                    Không tìm thấy thông tin chi tiết về người bán này.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+// Update the Script section with this code
+$(document).ready(function () {
+    // Existing code for sidebar functionality
+    if ($('#transactionSubmenu .sidebar-item.active').length > 0) {
+        $('#transactionSubmenu').addClass('show');
+        $('#transactionDropdown').addClass('expanded');
+    }
+
+    $('#transactionDropdown').on('click', function (e) {
+        e.preventDefault();
+        $('#transactionSubmenu').toggleClass('show');
+        $(this).toggleClass('expanded');
+    });
+
+    // Print receipt functionality
+    $("#btnPrintReceipt").on("click", function (e) {
+        e.preventDefault();
+        printReceipt();
+    });
+
+    function printReceipt() {
+        // Create a new window for the receipt
+        const printWindow = window.open('', '_blank', 'height=600,width=800');
+
+        // Get transaction data from the page
+        const maGhiChep = $(".card-body .info-row:contains('Mã ghi chép')").find(".col-md-8").text().trim();
+        const nguoiBan = $(".card-body .info-row:contains('Người bán')").find(".col-md-8").text().trim();
+        const loaiGiaoDich = $(".card-body .info-row:contains('Loại giao dịch')").find(".col-md-8").text().trim();
+        const moTa = $(".card-body .info-row:contains('Mô tả')").find(".col-md-8").text().trim();
+        const ngayGiaoDich = $(".card-body .info-row:contains('Ngày giao dịch')").find(".col-md-8").text().trim();
+        const trangThai = $(".card:contains('Thông tin giao dịch ví') .info-row:contains('Trạng thái')").find(".badge").text().trim();
+        const maDonHang = $(".card-body .info-row:contains('Mã đơn hàng')").find(".col-md-8 a").text().trim();
+        const soTien = $(".wallet-amount").text().trim();
+
+        // Current date and time for receipt printing
+        const today = new Date();
+        const printDate = today.toLocaleDateString('vi-VN');
+        const printTime = today.toLocaleTimeString('vi-VN');
+
+        // Build the receipt HTML
+        const receiptHTML = `
+            <!DOCTYPE html>
+            <html lang="vi">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Biên lai giao dịch #${maGhiChep}</title>
+                <style>
+                    body {
+                        font-family: 'Segoe UI', Arial, sans-serif;
+                        margin: 0;
+                        padding: 20px;
+                        color: #333;
+                    }
+                    .receipt {
+                        max-width: 800px;
+                        margin: 0 auto;
+                        border: 1px solid #ddd;
+                        padding: 20px;
+                    }
+                    .receipt-header {
+                        text-align: center;
+                        border-bottom: 2px solid #eee;
+                        padding-bottom: 20px;
+                        margin-bottom: 20px;
+                    }
+                    .receipt-title {
+                        font-size: 24px;
+                        font-weight: bold;
+                        margin-bottom: 5px;
+                    }
+                    .receipt-subtitle {
+                        font-size: 16px;
+                        color: #666;
+                    }
+                    .receipt-info {
+                        margin-bottom: 20px;
+                    }
+                    .receipt-row {
+                        display: flex;
+                        border-bottom: 1px solid #f0f0f0;
+                        padding: 10px 0;
+                    }
+                    .receipt-label {
+                        font-weight: 600;
+                        width: 200px;
+                    }
+                    .receipt-value {
+                        flex: 1;
+                    }
+                    .receipt-amount {
+                        font-size: 20px;
+                        font-weight: bold;
+                        text-align: center;
+                        padding: 15px 0;
+                        margin: 15px 0;
+                        background-color: #f9f9f9;
+                        border-radius: 5px;
+                    }
+                    .amount-positive {
+                        color: #198754;
+                    }
+                    .amount-negative {
+                        color: #dc3545;
+                    }
+                    .receipt-footer {
+                        text-align: center;
+                        margin-top: 30px;
+                        font-size: 14px;
+                        color: #666;
+                        border-top: 1px solid #eee;
+                        padding-top: 20px;
+                    }
+                    .print-info {
+                        font-size: 12px;
+                        color: #999;
+                        margin-top: 5px;
+                    }
+                    .status-badge {
+                        display: inline-block;
+                        padding: 5px 10px;
+                        border-radius: 20px;
+                        font-size: 14px;
+                        color: white;
+                    }
+                    .status-success {
+                        background-color: #198754;
+                    }
+                    .status-danger {
+                        background-color: #dc3545;
+                    }
+                    .status-warning {
+                        background-color: #ffc107;
+                    }
+                    media print {
+                        body {
+                            padding: 0;
+                        }
+                        .receipt {
+                            border: none;
+                        }
+                        .no-print {
+                            display: none;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="receipt">
+                    <div class="receipt-header">
+                        <div class="receipt-title">BIÊN LAI GIAO DỊCH</div>
+                        <div class="receipt-subtitle">Mã ghi chép: ${maGhiChep}</div>
+                    </div>
+
+                    <div class="receipt-amount ${soTien.includes('+') ? 'amount-positive' : 'amount-negative'}">
+                        ${soTien}
+                    </div>
+
+                    <div class="receipt-info">
+                        <div class="receipt-row">
+                            <div class="receipt-label">Người bán:</div>
+                            <div class="receipt-value">${nguoiBan}</div>
+                        </div>
+                        <div class="receipt-row">
+                            <div class="receipt-label">Loại giao dịch:</div>
+                            <div class="receipt-value">${loaiGiaoDich}</div>
+                        </div>
+                        <div class="receipt-row">
+                            <div class="receipt-label">Mô tả:</div>
+                            <div class="receipt-value">${moTa}</div>
+                        </div>
+                        <div class="receipt-row">
+                            <div class="receipt-label">Ngày giao dịch:</div>
+                            <div class="receipt-value">${ngayGiaoDich}</div>
+                        </div>
+                        <div class="receipt-row">
+                            <div class="receipt-label">Trạng thái:</div>
+                            <div class="receipt-value">
+                                <span class="status-badge ${trangThai.includes('Thành công') ? 'status-success' : (trangThai.includes('Đang xử lý')  ? 'status-warning' : 'status-danger')}">
+                                    ${trangThai}
+                                </span>
+                            </div>
+                        </div>
+                        ${maDonHang ? `
+                        <div class="receipt-row">
+                            <div class="receipt-label">Mã đơn hàng:</div>
+                            <div class="receipt-value">${maDonHang}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="receipt-footer">
+                        <div>© MedinetPro 2025 - Tất cả các quyền được bảo lưu</div>
+                        <div class="print-info">Biên lai được in ngày ${printDate} lúc ${printTime}</div>
+                    </div>
+
+                    <div class="no-print" style="text-align: center; margin-top: 30px;">
+                        <button onclick="window.print()" style="padding: 10px 20px; background: #0d6efd; color: white; border: none; border-radius: 5px; cursor: pointer;">In biên lai</button>
+                        <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">Đóng</button>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        // Write to the new window and print
+        printWindow.document.open();
+        printWindow.document.write(receiptHTML);
+        printWindow.document.close();
+
+        // Focus on the new window
+        printWindow.focus();
+    }
+});
+    </script>
+}

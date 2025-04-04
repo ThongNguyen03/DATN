@@ -1,0 +1,582 @@
+﻿@* ~/Views/GiaoDich/Dashboard.cshtml *@
+@{
+    ViewBag.Title = "Tổng quan giao dịch";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Sidebar styles - Same as other views */
+    .page-container {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    .sidebar {
+        width: 250px;
+        background-color: #fff;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 100;
+        padding-top: 15px;
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        margin-bottom: 15px;
+    }
+
+    .sidebar-logo {
+        height: 40px;
+        margin-right: 10px;
+    }
+
+    .sidebar-heading {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #6c757d;
+        padding: 0 20px;
+        margin-bottom: 10px;
+    }
+
+    .sidebar-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-item {
+        position: relative;
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        color: #495057;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+        .sidebar-link i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .sidebar-link:hover, .sidebar-item.active .sidebar-link {
+            color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+
+            .sidebar-item.active .sidebar-link:before {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 3px;
+                background-color: #0d6efd;
+            }
+
+    /* Main content styles */
+    .main-content {
+        flex: 1;
+        padding: 20px;
+    }
+
+    /* Dashboard styles */
+    .dashboard-card {
+        border-radius: 0.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        transition: transform 0.2s;
+    }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .dashboard-icon {
+        font-size: 2rem;
+        width: 4rem;
+        height: 4rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 350px;
+    }
+
+    .table-responsive {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .badge-status {
+        padding: 5px 10px;
+        border-radius: 20px;
+    }
+
+
+    /* CSS cho menu con */
+    .sidebar-submenu {
+        list-style: none;
+        padding-left: 15px;
+        margin: 0;
+        display: none; /* Mặc định ẩn */
+    }
+
+        .sidebar-submenu .sidebar-link {
+            padding: 8px 20px 8px 30px;
+            font-size: 0.9em;
+        }
+
+        .sidebar-submenu .sidebar-item.active .sidebar-link:before {
+            left: 15px;
+        }
+
+        /* Hiển thị menu con khi có class 'show' */
+        .sidebar-submenu.show {
+            display: block;
+        }
+
+    /* Xoay mũi tên khi mở rộng */
+    .sidebar-link .bi-chevron-down {
+        transition: transform 0.3s;
+    }
+
+    .sidebar-link.expanded .bi-chevron-down {
+        transform: rotate(180deg);
+    }
+</style>
+
+<div class="page-container">
+    <!-- Sidebar Navigation -->
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h6 class="sidebar-heading">CHỨC NĂNG</h6>
+        <ul class="sidebar-nav">
+            <li class="sidebar-item">
+                <a href="@Url.Action("Dashboard", "Admin")" class="sidebar-link">
+                    <i class="bi bi-grid"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="@Url.Action("UserManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-people"></i>
+                    <span>Quản lý người dùng</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="@Url.Action("ProductManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-box"></i>
+                    <span>Quản lý sản phẩm</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="@Url.Action("CategoryManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-list-nested"></i>
+                    <span>Quản lý danh mục</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="@Url.Action("QuanLyDonHang", "DonHang")" class="sidebar-link">
+                    <i class="bi bi-cart3"></i>
+                    <span>Quản lý đơn hàng</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="javascript:void(0);" class="sidebar-link" id="transactionDropdown">
+                    <i class="bi bi-currency-exchange"></i>
+                    <span>Quản lý giao dịch</span>
+                    <i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul class="sidebar-submenu" id="transactionSubmenu">
+                    <li class="sidebar-item active">
+                        <a href="@Url.Action("Dashboard", "GiaoDich")" class="sidebar-link">
+                            <i class="bi bi-bar-chart"></i>
+                            <span>Tổng quan</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="@Url.Action("Index", "GiaoDich")" class="sidebar-link">
+                            <i class="bi bi-credit-card"></i>
+                            <span>Giao dịch</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="@Url.Action("Escrow", "GiaoDich")" class="sidebar-link">
+                            <i class="bi bi-safe"></i>
+                            <span>Ký quỹ (Escrow)</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="@Url.Action("WalletLogs", "GiaoDich")" class="sidebar-link">
+                            <i class="bi bi-wallet2"></i>
+                            <span>Ghi chép ví</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container-fluid p-0">
+            <h1 class="h3 mb-3">@ViewBag.Title</h1>
+
+            <!-- Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-primary dashboard-card bg-white h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Tổng giao dịch
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TongGiaoDich</div>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="dashboard-icon bg-primary bg-opacity-10 text-primary">
+                                        <i class="bi bi-credit-card"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success dashboard-card bg-white h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Tổng doanh thu
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">@string.Format("{0:N0} VNĐ", ViewBag.TongDoanhThu)</div>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="dashboard-icon bg-success bg-opacity-10 text-success">
+                                        <i class="bi bi-cash-stack"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info dashboard-card bg-white h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Giao dịch hoàn thành
+                                    </div>
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col-auto">
+                                            <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">@ViewBag.GiaoDichHoanThanh</div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="progress progress-sm mr-2">
+                                                <div class="progress-bar bg-info" role="progressbar"
+                                                     style="width: @(ViewBag.TongGiaoDich > 0 ? (ViewBag.GiaoDichHoanThanh * 100 / ViewBag.TongGiaoDich) : 0)%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="dashboard-icon bg-info bg-opacity-10 text-info">
+                                        <i class="bi bi-check-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning dashboard-card bg-white h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Đang chờ xử lý
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.GiaoDichDangXuLy</div>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="dashboard-icon bg-warning bg-opacity-10 text-warning">
+                                        <i class="bi bi-hourglass-split"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Escrow Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-md-6 mb-4">
+                    <div class="card dashboard-card bg-white h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Thống kê Escrow</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-0 bg-light p-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="dashboard-icon bg-primary bg-opacity-10 text-primary me-3">
+                                                <i class="bi bi-safe"></i>
+                                            </div>
+                                            <div>
+                                                <div class="small text-muted">Tổng Escrow</div>
+                                                <div class="h5 mb-0">@ViewBag.TongEscrow</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-0 bg-light p-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="dashboard-icon bg-warning bg-opacity-10 text-warning me-3">
+                                                <i class="bi bi-lock"></i>
+                                            </div>
+                                            <div>
+                                                <div class="small text-muted">Đang giữ</div>
+                                                <div class="h5 mb-0">@ViewBag.EscrowDangGiu</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-0 bg-light p-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="dashboard-icon bg-success bg-opacity-10 text-success me-3">
+                                                <i class="bi bi-cash"></i>
+                                            </div>
+                                            <div>
+                                                <div class="small text-muted">Phí nền tảng</div>
+                                                <div class="h5 mb-0">@string.Format("{0:N0} VNĐ", ViewBag.TongPhiNenTang)</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-0 bg-light p-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="dashboard-icon bg-danger bg-opacity-10 text-danger me-3">
+                                                <i class="bi bi-x-circle"></i>
+                                            </div>
+                                            <div>
+                                                <div class="small text-muted">Giao dịch thất bại</div>
+                                                <div class="h5 mb-0">@ViewBag.GiaoDichThatBai</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card dashboard-card bg-white h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Phân bố trạng thái giao dịch</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="statusDistributionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card dashboard-card bg-white">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Thống kê giao dịch 7 ngày gần đây</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="transactionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card dashboard-card bg-white">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Giao dịch gần đây</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã GD</th>
+                                            <th>Mã đơn hàng</th>
+                                            <th>Phương thức</th>
+                                            <th>Tổng tiền</th>
+                                            <th>Ngày giao dịch</th>
+                                            <th>Trạng thái</th>
+                                            <th class="text-center">Hành động</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in ViewBag.GiaoDichGanDay)
+                                        {
+                                            var statusClass = item.TrangThaiGiaoDich == "Đã hoàn thành" ? "bg-success" :
+                                                            (item.TrangThaiGiaoDich == "Đang chờ xử lý" ? "bg-warning" : "bg-danger");
+
+                                            var paymentClass = item.PhuongThucThanhToan == "COD" ? "bg-primary" : "bg-info";
+
+                                            <tr>
+                                                <td>@item.MaGiaoDich</td>
+                                                <td>@item.MaDonHang</td>
+                                                <td>
+                                                    <span class="badge @paymentClass">@item.PhuongThucThanhToan</span>
+                                                </td>
+                                                <td>@string.Format("{0:N0} VNĐ", item.TongTien)</td>
+                                                <td>@item.NgayGiaoDich.ToString("dd/MM/yyyy HH:mm")</td>
+                                                <td>
+                                                    <span class="badge @statusClass">@item.TrangThaiGiaoDich</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <a href="@Url.Action("Details", "GiaoDich", new { id = item.MaGiaoDich })" class="btn btn-sm btn-secondary">
+                                                        <i class="bi bi-info-circle"></i> 
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <a href="@Url.Action("Index", "GiaoDich")" class="btn btn-primary">
+                                <i class="bi bi-list"></i> Xem tất cả giao dịch
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function () {
+
+
+            if ($('#transactionSubmenu .sidebar-item.active').length > 0) {
+                $('#transactionSubmenu').addClass('show');
+                $('#transactionDropdown').addClass('expanded');
+            }
+
+            // Bắt sự kiện click
+            $('#transactionDropdown').on('click', function (e) {
+                e.preventDefault();
+                $('#transactionSubmenu').toggleClass('show');
+                $(this).toggleClass('expanded');
+            });
+
+
+            // Transaction Chart
+            var ctxTransaction = document.getElementById('transactionChart').getContext('2d');
+            var transactionChart = new Chart(ctxTransaction, {
+                type: 'bar',
+                data: {
+                    labels: [@Html.Raw(ViewBag.NgayThongKe)],
+                    datasets: [
+                        {
+                            label: 'Số lượng giao dịch',
+                            data: [@ViewBag.SoGiaoDich],
+                            backgroundColor: 'rgba(78, 115, 223, 0.4)',
+                            borderColor: 'rgba(78, 115, 223, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Doanh thu (Triệu VNĐ)',
+                            data: [@ViewBag.DoanhThu],
+                            type: 'line',
+                            borderColor: 'rgba(28, 200, 138, 1)',
+                            backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                            pointBackgroundColor: 'rgba(28, 200, 138, 1)',
+                            pointBorderColor: 'rgba(28, 200, 138, 1)',
+                            pointHoverBackgroundColor: 'rgba(28, 200, 138, 1)',
+                            pointHoverBorderColor: 'rgba(28, 200, 138, 1)',
+                            fill: true,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Số lượng giao dịch'
+                            }
+                        },
+                        y1: {
+                            beginAtZero: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Doanh thu (Triệu VNĐ)'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Status Distribution Pie Chart
+            var ctxStatus = document.getElementById('statusDistributionChart').getContext('2d');
+            var statusChart = new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Đã hoàn thành', 'Đang chờ xử lý', 'Không thành công'],
+                    datasets: [{
+                        data: [@ViewBag.GiaoDichHoanThanh, @ViewBag.GiaoDichDangXuLy, @ViewBag.GiaoDichThatBai],
+                        backgroundColor: ['#1cc88a', '#f6c23e', '#e74a3b'],
+                        hoverBackgroundColor: ['#17a673', '#dda20a', '#be2617'],
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}
