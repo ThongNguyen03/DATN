@@ -114,7 +114,7 @@ namespace WebApplication1.Controllers
                             switch (vaiTro)
                             {
                                 case "Admin":
-                                    return RedirectToAction("UserManagement", "Admin");
+                                    return RedirectToAction("Dashboard", "Admin");
                                 case "Seller":
                                     return RedirectToAction("EditSellerProfile", "NguoiDungs");
                                 case "Buyer":

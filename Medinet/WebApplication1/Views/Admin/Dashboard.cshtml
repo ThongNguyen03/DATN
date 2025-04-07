@@ -1,0 +1,975 @@
+﻿@model WebApplication1.Controllers.AdminController.DashboardViewModel
+@{
+    ViewBag.Title = "Tổng quan hệ thống";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Sidebar styles - same as UserManagement */
+    .page-container {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    .sidebar {
+        width: 250px;
+        background-color: #fff;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 100;
+        padding-top: 15px;
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        margin-bottom: 15px;
+    }
+
+    .sidebar-logo {
+        height: 40px;
+        margin-right: 10px;
+    }
+
+    .sidebar-heading {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #6c757d;
+        padding: 0 20px;
+        margin-bottom: 10px;
+    }
+
+    .sidebar-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-item {
+        position: relative;
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        color: #495057;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+        .sidebar-link i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .sidebar-link:hover, .sidebar-item.active .sidebar-link {
+            color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+
+            .sidebar-item.active .sidebar-link:before {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 3px;
+                background-color: #0d6efd;
+            }
+
+    /* Main content styles */
+    .main-content {
+        flex: 1;
+        padding: 20px;
+    }
+
+    /* CSS cho menu con */
+    .sidebar-submenu {
+        list-style: none;
+        padding-left: 15px;
+        margin: 0;
+        display: none; /* Mặc định ẩn */
+    }
+
+        .sidebar-submenu .sidebar-link {
+            padding: 8px 20px 8px 30px;
+            font-size: 0.9em;
+        }
+
+        .sidebar-submenu .sidebar-item.active .sidebar-link:before {
+            left: 15px;
+        }
+
+        /* Hiển thị menu con khi có class 'show' */
+        .sidebar-submenu.show {
+            display: block;
+        }
+
+    /* Xoay mũi tên khi mở rộng */
+    .sidebar-link .bi-chevron-down {
+        transition: transform 0.3s;
+    }
+
+    .sidebar-link.expanded .bi-chevron-down {
+        transform: rotate(180deg);
+    }
+
+    /* Dashboard specific styles */
+    .stat-card {
+        border-left: 4px solid;
+        height: 100%;
+    }
+
+        .stat-card.primary {
+            border-color: #0d6efd;
+        }
+
+        .stat-card.success {
+            border-color: #198754;
+        }
+
+        .stat-card.warning {
+            border-color: #ffc107;
+        }
+
+        .stat-card.danger {
+            border-color: #dc3545;
+        }
+
+        .stat-card .icon {
+            font-size: 30px;
+            opacity: 0.7;
+        }
+
+        .stat-card .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .stat-card .stat-label {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+    .chart-container {
+        position: relative;
+        height: 250px;
+        width: 100%;
+    }
+
+    .badge-status {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+
+    .badge-approved {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+
+    .badge-pending {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+
+    .badge-rejected {
+        background-color: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .badge-upgrade {
+        background-color: #e0e7ff;
+        color: #3730a3;
+    }
+
+    .activity-item {
+        display: flex;
+        margin-bottom: 15px;
+    }
+
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        margin-right: 15px;
+    }
+
+    .activity-content {
+        flex: 1;
+    }
+
+    .action-btn {
+        padding: 5px 10px;
+        font-size: 14px;
+        margin-right: 5px;
+    }
+</style>
+
+<div class="page-container">
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h6 class="sidebar-heading">CHỨC NĂNG</h6>
+        <ul class="sidebar-nav">
+            <li class="sidebar-item active">
+                <a href="@Url.Action("Dashboard", "Admin")" class="sidebar-link">
+                    <i class="bi bi-grid"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="@Url.Action("UserManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-people"></i>
+                    <span>Quản lý người dùng</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="@Url.Action("ProductManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-box"></i>
+                    <span>Quản lý sản phẩm</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="@Url.Action("CategoryManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-list-nested"></i>
+                    <span>Quản lý danh mục</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="@Url.Action("QuanLyDonHang", "DonHang")" class="sidebar-link">
+                    <i class="bi bi-cart3"></i>
+                    <span>Quản lý đơn hàng</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="javascript:void(0);" class="sidebar-link" id="transactionDropdown">
+                    <i class="bi bi-currency-exchange"></i>
+                    <span>Quản lý giao dịch</span>
+                    <i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul class="sidebar-submenu" id="transactionSubmenu">
+                    <li class="sidebar-item">
+                        <a href="@Url.Action("Dashboard", "GiaoDich")" class="sidebar-link">
+                            <i class="bi bi-bar-chart"></i>
+                            <span>Tổng quan</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="@Url.Action("Index", "GiaoDich")" class="sidebar-link">
+                            <i class="bi bi-credit-card"></i>
+                            <span>Giao dịch</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="@Url.Action("Escrow", "GiaoDich")" class="sidebar-link">
+                            <i class="bi bi-safe"></i>
+                            <span>Ký quỹ (Escrow)</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="@Url.Action("WalletLogs", "GiaoDich")" class="sidebar-link">
+                            <i class="bi bi-wallet2"></i>
+                            <span>Ghi chép ví</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container-fluid p-0">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h3 mb-0">@ViewBag.Title</h1>
+                <div class="btn-group time-filter">
+                    <button type="button" id="btn-today" class="btn btn-outline-secondary">Hôm nay</button>
+                    <button type="button" id="btn-week" class="btn btn-primary">7 ngày</button>
+                    <button type="button" id="btn-month" class="btn btn-primary">30 ngày</button>
+                    <button type="button" id="btn-all" class="btn btn-outline-secondary">Tất cả</button>
+                </div>
+            </div>
+
+            <!-- Thẻ thống kê trong row -->
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card mb-4">
+                        <div class="card-body stat-card primary">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="stat-value" id="total-users">@Model.TotalUsers</div>
+                                    <div class="stat-label">Tổng người dùng</div>
+                                </div>
+                                <div class="icon text-primary">
+                                    <i class="bi bi-people"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between">
+                                    <small>Người mua: @Model.Buyers</small>
+                                    <small>Người bán: @Model.Sellers</small>
+                                </div>
+                                <div class="progress mt-1" style="height: 5px;">
+                                    <div class="progress-bar" role="progressbar" style="width: @(Model.ActiveUsers * 100 / (Model.TotalUsers > 0 ? Model.TotalUsers : 1))%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card mb-4">
+                        <div class="card-body stat-card success">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="stat-value" id="total-revenue">@String.Format("{0:N0}", Model.TotalRevenue) ₫</div>
+                                    <div class="stat-label">Doanh thu</div>
+                                </div>
+                                <div class="icon text-success">
+                                    <i class="bi bi-graph-up"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between">
+                                    <small>Phí nền tảng: <span id="total-commission">@String.Format("{0:N0}", Model.TotalCommission)</span> ₫</small>
+                                </div>
+                                <div class="progress mt-1" style="height: 5px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 75%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card mb-4">
+                        <div class="card-body stat-card warning">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="stat-value" id="total-orders">@Model.TotalOrders</div>
+                                    <div class="stat-label">Tổng đơn hàng</div>
+                                </div>
+                                <div class="icon text-warning">
+                                    <i class="bi bi-cart3"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between">
+                                    <small id="new-orders-count">Đang xử lý: @Model.NewOrders</small>
+                                    <small id="delivered-orders-count">Đã giao: @Model.DeliveredOrders</small>
+                                </div>
+                                <div class="progress mt-1" style="height: 5px;">
+                                    <div class="progress-bar bg-warning" id="orders-progress" role="progressbar" style="width: @(Model.DeliveredOrders * 100 / (Model.TotalOrders > 0 ? Model.TotalOrders : 1))%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card mb-4">
+                        <div class="card-body stat-card danger">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="stat-value" id="pending-approvals">@Model.PendingProducts</div>
+                                    <div class="stat-label">Chờ phê duyệt</div>
+                                </div>
+                                <div class="icon text-danger">
+                                    <i class="bi bi-hourglass-split"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between">
+                                    <small>Sản phẩm: @Model.PendingProducts</small>
+                                    <small>Nâng cấp: @Model.PendingUpgradeUsers</small>
+                                </div>
+                                <div class="progress mt-1" style="height: 5px;">
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: 65%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Charts Row -->
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Biểu đồ doanh thu & đơn hàng</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Phân bổ đơn hàng</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="orderStatusChart"></canvas>
+                            </div>
+                        </div>
+                        <!-- Cập nhật phần trăm trong biểu đồ phân bổ đơn hàng -->
+                        <div class="card-footer bg-white">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="fw-bold text-success" id="success-percentage">@((Model.DeliveredOrders * 100 / (Model.TotalOrders > 0 ? Model.TotalOrders : 1)).ToString("0"))%</div>
+                                    <small class="text-muted">Thành công</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="fw-bold text-warning" id="pending-percentage">@((Model.NewOrders * 100 / (Model.TotalOrders > 0 ? Model.TotalOrders : 1)).ToString("0"))%</div>
+                                    <small class="text-muted">Chờ xử lý</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="fw-bold text-danger" id="cancelled-percentage">@((Model.CancelledOrders * 100 / (Model.TotalOrders > 0 ? Model.TotalOrders : 1)).ToString("0"))%</div>
+                                    <small class="text-muted">Đã hủy</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Bottom Section Structure - Enhancing the layout organization -->
+            <div class="row mb-4">
+                <!-- Recent Orders -->
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Đơn hàng gần đây</h5>
+                            <a href="@Url.Action("QuanLyDonHang", "DonHang")" class="btn btn-sm btn-primary">Xem tất cả</a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Mã ĐH</th>
+                                            <th>Khách hàng</th>
+                                            <th>Tổng tiền</th>
+                                            <th>Trạng thái</th>
+                                            <th>Ngày đặt</th>
+                                            <th>Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (Model.RecentOrders != null && Model.RecentOrders.Any())
+                                        {
+                                            foreach (var order in Model.RecentOrders)
+                                            {
+                                                var statusClass = order.OrderStatus == "Đã hoàn thành" || order.OrderStatus == "Đã giao" ? "badge-approved" :
+                                                                 order.OrderStatus == "Đã hủy" ? "badge-rejected" : "badge-pending";
+
+                                                <tr>
+                                                    <td>#@order.OrderId</td>
+                                                    <td>@order.CustomerName</td>
+                                                    <td>@String.Format("{0:N0}", order.TotalAmount) ₫</td>
+                                                    <td><span class="badge-status @statusClass">@order.OrderStatus</span></td>
+                                                    <td>@order.OrderDate.ToString("dd/MM/yyyy")</td>
+                                                    <td>
+                                                        <a href="@Url.Action("ChiTietAdmin", "DonHang", new { id = order.OrderId })" class="btn btn-sm btn-outline-primary action-btn">
+                                                            <i class="bi bi-eye"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr>
+                                                <td colspan="6" class="text-center py-3">Không có đơn hàng nào</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar Information -->
+                <div class="col-lg-4">
+                    <!-- Pending Approvals -->
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Chờ phê duyệt</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <ul class="list-group list-group-flush">
+                                @if (Model.PendingUpgrades != null && Model.PendingUpgrades.Any())
+                                {
+                                    foreach (var user in Model.PendingUpgrades)
+                                    {
+                                        <li class="list-group-item d-flex justify-content-between align-items-center p-3">
+                                            <div>
+                                                <div class="fw-bold">Yêu cầu nâng cấp tài khoản</div>
+                                                <small class="text-muted">Từ: @user.UserName (@user.Email)</small>
+                                            </div>
+                                            <div>
+                                                <a href="@Url.Action("UserDetails", "Admin", new { id = user.UserId })" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </div>
+                                        </li>
+                                    }
+                                }
+
+                                @if (Model.PendingProductApprovals != null && Model.PendingProductApprovals.Any())
+                                {
+                                    foreach (var product in Model.PendingProductApprovals)
+                                    {
+                                        <li class="list-group-item d-flex justify-content-between align-items-center p-3">
+                                            <div>
+                                                <div class="fw-bold">Sản phẩm mới: @product.ProductName</div>
+                                                <small class="text-muted">Cửa hàng: @product.SellerName</small>
+                                            </div>
+                                            <div>
+                                                <a href="@Url.Action("ProductDetails", "Admin", new { id = product.ProductId })" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </div>
+                                        </li>
+                                    }
+                                }
+
+                                @if ((Model.PendingUpgrades == null || !Model.PendingUpgrades.Any()) &&
+                                    (Model.PendingProductApprovals == null || !Model.PendingProductApprovals.Any()))
+                                {
+                                    <li class="list-group-item p-3 text-center">
+                                        <div class="text-muted">Không có phê duyệt chờ xử lý</div>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activities -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Hoạt động gần đây</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush">
+                                @if (Model.RecentActivities != null && Model.RecentActivities.Any())
+                                {
+                                    foreach (var activity in Model.RecentActivities)
+                                    {
+                                        <div class="list-group-item border-0 p-3">
+                                            <div class="d-flex">
+                                                <div class="me-3">
+                                                    <div class="@activity.ColorClass text-white rounded-circle p-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                                        <i class="@activity.IconClass"></i>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <p class="mb-1">@activity.Message</p>
+                                                    <small class="text-muted">@FormatTimeAgo(activity.ActivityTime)</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="list-group-item border-0 p-3 text-center">
+                                        <p class="text-muted">Không có hoạt động nào gần đây</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    @functions {
+                        // Hàm hỗ trợ định dạng thời gian dạng "Vừa xong", "5 phút trước", v.v.
+                        public string FormatTimeAgo(DateTime dateTime)
+                        {
+                            TimeSpan timeDifference = DateTime.Now - dateTime;
+
+                            if (timeDifference.TotalMinutes < 1)
+                                return "Vừa xong";
+                            if (timeDifference.TotalMinutes < 60)
+                                return $"{(int)timeDifference.TotalMinutes} phút trước";
+                            if (timeDifference.TotalHours < 24)
+                                return $"{(int)timeDifference.TotalHours} giờ trước";
+                            if (timeDifference.TotalDays < 30)
+                                return $"{(int)timeDifference.TotalDays} ngày trước";
+
+                            return dateTime.ToString("dd/MM/yyyy");
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- Third Row - Stats -->
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Top người bán</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Cửa hàng</th>
+                                            <th class="text-end">Doanh số</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (Model.TopSellers != null && Model.TopSellers.Any())
+                                        {
+                                            foreach (var seller in Model.TopSellers)
+                                            {
+                                                <tr>
+                                                    <td>@seller.SellerName</td>
+                                                    <td class="text-end">@String.Format("{0:N0}", seller.Revenue) ₫</td>
+                                                </tr>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr>
+                                                <td colspan="2" class="text-center">Không có dữ liệu</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Giao dịch gần đây</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Mã GD</th>
+                                            <th>Loại</th>
+                                            <th class="text-end">Số tiền</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (Model.RecentTransactions != null && Model.RecentTransactions.Any())
+                                        {
+                                            foreach (var transaction in Model.RecentTransactions)
+                                            {
+                                                var statusClass = transaction.TransactionStatus == "Đã hoàn thành" ? "bg-success" :
+                                                                transaction.TransactionStatus == "Không thành công" ? "bg-danger" : "bg-warning";
+
+                                                <tr>
+                                                    <td>#@transaction.TransactionId</td>
+                                                    <td><span class="badge @statusClass">@transaction.TransactionStatus</span></td>
+                                                    <td class="text-end">@String.Format("{0:N0}", transaction.Amount) ₫</td>
+                                                </tr>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr>
+                                                <td colspan="3" class="text-center">Không có dữ liệu</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Thống kê sản phẩm</h5>
+                        </div>
+                        <div class="card-body px-4 py-3">
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Sản phẩm đã duyệt</span>
+                                    <span class="fw-bold">@Model.ApprovedProducts</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: @(Model.ApprovedProducts * 100 / (Model.TotalProducts > 0 ? Model.TotalProducts : 1))%"></div>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Sản phẩm đang chờ duyệt</span>
+                                    <span class="fw-bold">@Model.PendingProducts</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-warning" role="progressbar" style="width: @(Model.PendingProducts * 100 / (Model.TotalProducts > 0 ? Model.TotalProducts : 1))%"></div>
+                                </div>
+                            </div>
+                            <div class="mb-0">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Sản phẩm bị từ chối</span>
+                                    <span class="fw-bold">@Model.RejectedProducts</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: @(Model.RejectedProducts * 100 / (Model.TotalProducts > 0 ? Model.TotalProducts : 1))%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white">
+                            <div class="d-grid">
+                                <a href="@Url.Action("ProductManagement", "Admin")" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-arrow-right"></i> Quản lý sản phẩm
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Biến chứa các biểu đồ để có thể truy cập ở mọi nơi
+            var revenueChart;
+            var orderStatusChart;
+
+            // Khởi tạo biểu đồ
+            initCharts();
+
+            // Thêm xử lý sự kiện cho nút "Tất cả"
+            $('#btn-all').on('click', function () {
+                $(this).addClass('btn-primary').removeClass('btn-outline-secondary');
+                $('#btn-today, #btn-week, #btn-month').removeClass('btn-primary').addClass('btn-outline-secondary');
+                loadDashboardData('all');
+            });
+
+            // Xử lý sự kiện cho các nút bộ lọc thời gian
+            $('#btn-today').on('click', function() {
+                loadDashboardData('today');
+            });
+
+            $('#btn-week').on('click', function() {
+                loadDashboardData('week');
+            });
+
+            $('#btn-month').on('click', function() {
+                loadDashboardData('month');
+            });
+
+            // Hàm tải dữ liệu theo bộ lọc
+            function loadDashboardData(timeRange) {
+                // Reset trạng thái các nút
+                $('.time-filter .btn').removeClass('btn-primary').addClass('btn-outline-secondary');
+
+                // Đánh dấu nút đang active
+                $('#btn-' + timeRange).removeClass('btn-outline-secondary').addClass('btn-primary');
+
+                // Tải dữ liệu qua AJAX
+                $.ajax({
+                    url: '@Url.Action("GetDashboardData", "Admin")',
+                    data: { timeRange: timeRange },
+                    type: 'GET',
+                    success: function(result) {
+                        // Cập nhật dữ liệu và vẽ lại biểu đồ
+                        updateCharts(result);
+                        // Cập nhật các số liệu thống kê
+                        updateStatistics(result);
+                    },
+                    error: function(error) {
+                        console.error('Lỗi khi tải dữ liệu:', error);
+                    }
+                });
+            }
+
+            // Khởi tạo biểu đồ
+            function initCharts() {
+                // Biểu đồ doanh thu
+                var ctx1 = document.getElementById('revenueChart').getContext('2d');
+                var revenueChartConfig = {
+                    type: 'line',
+                    data: {
+                        labels: [@Html.Raw(string.Join(",", Model.OrderChartData.Select(d => $"'{d.Date}'")))],
+                        datasets: [{
+                            label: 'Đơn hàng',
+                            data: [@string.Join(",", Model.OrderChartData.Select(d => d.Count))],
+                            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            yAxisID: 'y',
+                        }, {
+                            label: 'Doanh thu (VNĐ)',
+                            data: [@string.Join(",", Model.OrderChartData.Select(d => d.Revenue))],
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            yAxisID: 'y1',
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        stacked: false,
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: 'Số đơn hàng'
+                                },
+                                min: 0, // Thiết lập giá trị tối thiểu là 0
+                                suggestedMin: 0, // Đề xuất giá trị tối thiểu là 0
+                                beginAtZero: true, // Bắt đầu từ 0
+                                ticks: {
+                                    precision: 0, // Chỉ hiển thị số nguyên
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: {
+                                    display: true,
+                                    text: 'Doanh thu (VNĐ)'
+                                },
+                                min: 0, // Thiết lập giá trị tối thiểu là 0
+                                suggestedMin: 0, // Đề xuất giá trị tối thiểu là 0
+                                beginAtZero: true, // Bắt đầu từ 0
+                                grid: {
+                                    drawOnChartArea: false,
+                                },
+                            },
+                        }
+                    }
+                };
+
+                // Biểu đồ phân bổ đơn hàng
+                var ctx2 = document.getElementById('orderStatusChart').getContext('2d');
+                var orderStatusChartConfig = {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Thành công', 'Chờ xử lý', 'Đã hủy'],
+                        datasets: [{
+                            data: [@Model.DeliveredOrders, @Model.NewOrders, @Model.CancelledOrders],
+                            backgroundColor: [
+                                'rgba(40, 167, 69, 0.8)',
+                                'rgba(255, 193, 7, 0.8)',
+                                'rgba(220, 53, 69, 0.8)'
+                            ],
+                            borderColor: [
+                                'rgba(40, 167, 69, 1)',
+                                'rgba(255, 193, 7, 1)',
+                                'rgba(220, 53, 69, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                            }
+                        },
+                        cutout: '70%'
+                    }
+                };
+
+                // Khởi tạo biểu đồ
+                revenueChart = new Chart(ctx1, revenueChartConfig);
+                orderStatusChart = new Chart(ctx2, orderStatusChartConfig);
+            }
+
+            // Hàm cập nhật biểu đồ
+            function updateCharts(data) {
+                // Cập nhật biểu đồ doanh thu và đơn hàng
+                revenueChart.data.labels = data.chartLabels;
+                revenueChart.data.datasets[0].data = data.orderData;
+                revenueChart.data.datasets[1].data = data.revenueData;
+                revenueChart.update();
+
+                // Cập nhật biểu đồ phân bổ đơn hàng
+                orderStatusChart.data.datasets[0].data = [
+                    data.deliveredOrders,
+                    data.newOrders,
+                    data.cancelledOrders
+                ];
+                orderStatusChart.update();
+
+                // Cập nhật các phần trăm hiển thị
+                updatePercentages(data);
+            }
+
+            // Cập nhật các phần trăm hiển thị
+            function updatePercentages(data) {
+                var totalOrders = data.totalOrders > 0 ? data.totalOrders : 1;
+                var deliveredPercent = Math.round(data.deliveredOrders * 100 / totalOrders);
+                var pendingPercent = Math.round(data.newOrders * 100 / totalOrders);
+                var cancelledPercent = Math.round(data.cancelledOrders * 100 / totalOrders);
+
+                $('#success-percentage').text(deliveredPercent + '%');
+                $('#pending-percentage').text(pendingPercent + '%');
+                $('#cancelled-percentage').text(cancelledPercent + '%');
+            }
+
+            // Cập nhật các số liệu thống kê
+            function updateStatistics(data) {
+                // Cập nhật thống kê tổng quan
+                $('#total-users').text(data.totalUsers || '@Model.TotalUsers');
+                $('#total-revenue').text(formatCurrency(data.totalRevenue) + ' ₫');
+                $('#total-commission').text(formatCurrency(data.totalCommission) + ' ₫');
+                $('#total-orders').text(data.totalOrders);
+                $('#pending-approvals').text(data.pendingProducts || '@Model.PendingProducts');
+
+                // Cập nhật chi tiết và tỷ lệ
+                $('#delivered-orders-count').text('Đã giao: ' + data.deliveredOrders);
+                $('#new-orders-count').text('Đang xử lý: ' + data.newOrders);
+
+                // Cập nhật thanh tiến trình
+                var totalOrders = data.totalOrders > 0 ? data.totalOrders : 1;
+                var deliveredPercent = Math.round(data.deliveredOrders * 100 / totalOrders);
+                $('#orders-progress').css('width', deliveredPercent + '%');
+            }
+
+            // Hàm định dạng tiền tệ
+            function formatCurrency(value) {
+                return new Intl.NumberFormat('vi-VN').format(value);
+            }
+
+            // Mặc định tải dữ liệu 7 ngày
+            loadDashboardData('week');
+
+            // For transaction submenu
+            $('#transactionDropdown').on('click', function(e) {
+                e.preventDefault();
+                $('#transactionSubmenu').toggleClass('show');
+                $(this).toggleClass('expanded');
+            });
+        });
+    </script>
+}

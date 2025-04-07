@@ -398,6 +398,7 @@
     <Content Include="Views\GiaoDich\EscrowDetails.cshtml" />
     <Content Include="Views\GiaoDich\WalletLogDetails.cshtml" />
     <Content Include="Views\GiaoDich\Dashboard.cshtml" />
+    <Content Include="Views\Admin\Dashboard.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
