@@ -157,6 +157,15 @@
                                                         <a href="@Url.Action("ChiTiet", new { id = item.MaDonHang })" class="btn btn-sm btn-primary">
                                                             <i class="bi bi-eye"></i> Chi tiết
                                                         </a>
+                                                        @if (item.PhuongThucThanhToan == "COD" &&
+                                                            (item.TrangThaiDonHang == "Đang chờ xử lý" ||
+                                                            item.TrangThaiDonHang == "Chờ thanh toán"))
+                                                        {
+                                                            <button type="button" class="btn btn-sm btn-danger cancel-order-btn" data-id="@item.MaDonHang"
+                                                                    data-bs-toggle="tooltip" title="Hủy đơn hàng">
+                                                                <i class="bi bi-x-circle"></i>
+                                                            </button>
+                                                        }
                                                     </td>
                                                 </tr>
                                             }
@@ -176,3 +185,60 @@
         </div>
     </div>
 </div>
+
+<!-- Modal xác nhận hủy đơn hàng -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelOrderModalLabel">Xác nhận hủy đơn hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="cancelOrderForm" method="post" action="@Url.Action("HuyDonHang", "DonHang")">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" id="cancelOrderId" name="id" value="" />
+                    <div class="form-group">
+                        <label for="lyDoHuy">Lý do hủy đơn hàng <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="lyDoHuy" name="lyDoHuy" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        // Khởi tạo tooltips nếu sử dụng Bootstrap 5
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+
+        // Xử lý nút hủy đơn hàng
+        $('.cancel-order-btn').on('click', function () {
+            var orderId = $(this).data('id');
+            $('#cancelOrderId').val(orderId);
+            $('#lyDoHuy').val(''); // Xóa lý do trước đó
+            $('#cancelOrderModal').modal('show');
+        });
+
+        // Kiểm tra form khi hủy đơn hàng
+        $('#cancelOrderForm').on('submit', function (e) {
+            var lyDoHuy = $('#lyDoHuy').val().trim();
+
+            if (!lyDoHuy) {
+                e.preventDefault();
+                alert('Vui lòng nhập lý do hủy đơn hàng!');
+                return false;
+            }
+
+            return true;
+        });
+    });
+</script>

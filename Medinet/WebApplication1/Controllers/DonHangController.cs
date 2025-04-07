@@ -832,13 +832,17 @@ namespace WebApplication1.Controllers
                     return new HttpStatusCodeResult(HttpStatusCode.Forbidden);
                 }
 
+                // THÊM ĐIỀU KIỆN: Chỉ hủy được đơn hàng thanh toán COD
+                if (donHang.PhuongThucThanhToan != "COD")
+                {
+                    TempData["Error"] = "Chỉ có thể hủy đơn hàng thanh toán bằng phương thức COD!";
+                    return RedirectToAction("ChiTietDonHangNguoiMua", new { id = id });
+                }
+
                 // Kiểm tra trạng thái đơn hàng có thể hủy không
-                if (donHang.TrangThaiDonHang == "Đã vận chuyển" ||
-                    donHang.TrangThaiDonHang == "Đã giao" ||
-                    donHang.TrangThaiDonHang == "Đã hủy" ||
-                    donHang.TrangThaiDonHang == "Đã xác nhận nhận hàng" ||
-                    donHang.TrangThaiDonHang == "Đã hoàn thành" ||
-                    donHang.TrangThaiDonHang == "Đã thanh toán")
+                // Chỉ cho phép hủy khi đơn hàng chưa vận chuyển
+                if (donHang.TrangThaiDonHang != "Đang chờ xử lý" &&
+                    donHang.TrangThaiDonHang != "Chờ thanh toán")
                 {
                     TempData["Error"] = "Không thể hủy đơn hàng ở trạng thái hiện tại!";
                     return RedirectToAction("ChiTietDonHangNguoiMua", new { id = id });
@@ -846,7 +850,7 @@ namespace WebApplication1.Controllers
 
                 // Cập nhật trạng thái đơn hàng
                 donHang.TrangThaiDonHang = "Đã hủy";
-                donHang.LyDoHuy = lyDoHuy;
+                donHang.LyDoHuy = "Bị hủy bởi người bán: " + lyDoHuy; // Thêm thông tin người hủy
                 donHang.NgayHuy = DateTime.Now;
                 donHang.NgayCapNhat = DateTime.Now;
 
@@ -894,13 +898,17 @@ namespace WebApplication1.Controllers
                     return new HttpStatusCodeResult(HttpStatusCode.Forbidden);
                 }
 
+                // THÊM ĐIỀU KIỆN: Chỉ hủy được đơn hàng thanh toán COD
+                if (donHang.PhuongThucThanhToan != "COD")
+                {
+                    TempData["Error"] = "Chỉ có thể hủy đơn hàng thanh toán bằng phương thức COD!";
+                    return RedirectToAction("ChiTiet", new { id = id });
+                }
+
                 // Kiểm tra trạng thái đơn hàng có thể hủy không
-                if (donHang.TrangThaiDonHang == "Đã vận chuyển" ||
-                    donHang.TrangThaiDonHang == "Đã giao" ||
-                    donHang.TrangThaiDonHang == "Đã hủy" ||
-                    donHang.TrangThaiDonHang == "Đã xác nhận nhận hàng" ||
-                    donHang.TrangThaiDonHang == "Đã hoàn thành" ||
-                    donHang.TrangThaiDonHang == "Đã thanh toán")
+                // Chỉ cho phép hủy khi đơn hàng chưa vận chuyển
+                if (donHang.TrangThaiDonHang != "Đang chờ xử lý" &&
+                    donHang.TrangThaiDonHang != "Chờ thanh toán")
                 {
                     TempData["Error"] = "Không thể hủy đơn hàng ở trạng thái hiện tại!";
                     return RedirectToAction("ChiTiet", new { id = id });
@@ -908,7 +916,7 @@ namespace WebApplication1.Controllers
 
                 // Cập nhật trạng thái đơn hàng
                 donHang.TrangThaiDonHang = "Đã hủy";
-                donHang.LyDoHuy = lyDoHuy;
+                donHang.LyDoHuy = "Bị hủy bởi người mua: " + lyDoHuy; // Thêm thông tin người hủy
                 donHang.NgayHuy = DateTime.Now;
                 donHang.NgayCapNhat = DateTime.Now;
 
@@ -944,10 +952,17 @@ namespace WebApplication1.Controllers
                     return HttpNotFound();
                 }
 
+                // THÊM ĐIỀU KIỆN: Chỉ hủy được đơn hàng thanh toán COD
+                if (donHang.PhuongThucThanhToan != "COD")
+                {
+                    TempData["Error"] = "Chỉ có thể hủy đơn hàng thanh toán bằng phương thức COD!";
+                    return RedirectToAction("ChiTietAdmin", new { id = id });
+                }
+
                 // Kiểm tra trạng thái đơn hàng có thể hủy không
-                if (donHang.TrangThaiDonHang == "Đã xác nhận nhận hàng" ||
-                    donHang.TrangThaiDonHang == "Đã hoàn thành" ||
-                    donHang.TrangThaiDonHang == "Đã thanh toán")
+                // Chỉ cho phép hủy khi đơn hàng chưa vận chuyển
+                if (donHang.TrangThaiDonHang != "Đang chờ xử lý" &&
+                    donHang.TrangThaiDonHang != "Chờ thanh toán")
                 {
                     TempData["Error"] = "Không thể hủy đơn hàng ở trạng thái hiện tại!";
                     return RedirectToAction("ChiTietAdmin", new { id = id });

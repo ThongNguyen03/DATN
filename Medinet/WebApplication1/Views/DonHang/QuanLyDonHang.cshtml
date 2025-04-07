@@ -430,15 +430,14 @@
                                                         <a href="@Url.Action("ChiTietAdmin", "DonHang", new { id = item.MaDonHang })" class="btn btn-sm btn-primary">
                                                             <i class="bi bi-eye"></i>
                                                         </a>
-                                                        @*@if (item.TrangThaiDonHang != "Đã xác nhận nhận hàng" &&
-                                                                 item.TrangThaiDonHang != "Đã hoàn thành" &&
-                                                                 item.TrangThaiDonHang != "Đã thanh toán" &&
-                                                                 item.TrangThaiDonHang != "Đã hủy")
-                                                            {
-                                                                <button type="button" class="btn btn-sm btn-danger cancel-order-btn" data-id="@item.MaDonHang">
-                                                                    <i class="bi bi-x-circle"></i>
-                                                                </button>
-                                                            }*@
+                                                        @if (item.PhuongThucThanhToan == "COD" &&
+                                                             (item.TrangThaiDonHang == "Đang chờ xử lý" ||
+                                                              item.TrangThaiDonHang == "Chờ thanh toán"))
+                                                        {
+                                                            <button type="button" class="btn btn-sm btn-danger cancel-order-btn" data-id="@item.MaDonHang">
+                                                                <i class="bi bi-x-circle"></i>
+                                                            </button>
+                                                        }
                                                     </div>
                                                 </td>
                                             </tr>
@@ -607,6 +606,39 @@
                 e.preventDefault();
                 $('#transactionSubmenu').toggleClass('show');
                 $(this).toggleClass('expanded');
+            });
+
+
+
+
+
+
+
+            // Khởi tạo tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+
+            // Xử lý nút hủy đơn hàng
+            $('.cancel-order-btn').on('click', function () {
+                var orderId = $(this).data('id');
+                $('#cancelOrderId').val(orderId);
+                $('#lyDoHuy').val(''); // Xóa lý do trước đó
+                $('#cancelOrderModal').modal('show');
+            });
+
+            // Kiểm tra form khi hủy đơn hàng
+            $('#cancelOrderForm').on('submit', function (e) {
+                var lyDoHuy = $('#lyDoHuy').val().trim();
+
+                if (!lyDoHuy) {
+                    e.preventDefault();
+                    alert('Vui lòng nhập lý do hủy đơn hàng!');
+                    return false;
+                }
+
+                return true;
             });
         });
     </script>

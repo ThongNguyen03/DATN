@@ -262,12 +262,7 @@
                                                                 data-toggle="tooltip">
                                                             <i class="fas fa-truck"></i>
                                                         </button>
-                                                        <button type="button" class="btn btn-sm btn-outline-danger cancel-order-btn"
-                                                                data-id="@item.MaDonHang"
-                                                                title="Hủy đơn hàng"
-                                                                data-toggle="tooltip">
-                                                            <i class="fas fa-times"></i>
-                                                        </button>
+
                                                     }
                                                     @if (item.TrangThaiDonHang == "Đã vận chuyển")
                                                     {
@@ -277,6 +272,16 @@
                                                                 title="Xác nhận đã giao"
                                                                 data-toggle="tooltip">
                                                             <i class="fas fa-check"></i>
+                                                        </button>
+                                                    }
+                                                    @if ((item.TrangThaiDonHang == "Đang chờ xử lý" || item.TrangThaiDonHang == "Chờ thanh toán") && item.PhuongThucThanhToan=="COD")
+                                                    {
+
+                                                        <button type="button" class="btn btn-sm btn-outline-danger cancel-order-btn"
+                                                                data-id="@item.MaDonHang"
+                                                                title="Hủy đơn hàng"
+                                                                data-toggle="tooltip">
+                                                            <i class="fas fa-times"></i>
                                                         </button>
                                                     }
                                                 </div>
@@ -304,15 +309,13 @@
     </div>
 </div>
 
-<!-- Modal for order cancellation -->
-<div class="modal fade" id="cancelOrderModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+<!-- Modal xác nhận hủy đơn hàng -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Hủy đơn hàng</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <h5 class="modal-title" id="cancelOrderModalLabel">Xác nhận hủy đơn hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="cancelOrderForm" method="post" action="@Url.Action("HuyDonHangNguoiBan", "DonHang")">
                 @Html.AntiForgeryToken()
@@ -324,7 +327,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                     <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
                 </div>
             </form>
@@ -614,6 +617,39 @@
             });
             @*30/3/2025*@
 
+
+
+
+
+
+
+
+            // Khởi tạo tooltips nếu sử dụng Bootstrap 5
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+
+            // Xử lý nút hủy đơn hàng
+            $('.cancel-order-btn').on('click', function () {
+                var orderId = $(this).data('id');
+                $('#cancelOrderId').val(orderId);
+                $('#lyDoHuy').val(''); // Xóa lý do trước đó
+                $('#cancelOrderModal').modal('show');
+            });
+
+            // Kiểm tra form khi hủy đơn hàng
+            $('#cancelOrderForm').on('submit', function (e) {
+                var lyDoHuy = $('#lyDoHuy').val().trim();
+
+                if (!lyDoHuy) {
+                    e.preventDefault();
+                    alert('Vui lòng nhập lý do hủy đơn hàng!');
+                    return false;
+                }
+
+                return true;
+            });
         });
     </script>
 }
