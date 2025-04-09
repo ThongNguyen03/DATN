@@ -385,13 +385,90 @@
                             <a href="#" id="btnPrintReceipt" class="btn btn-outline-secondary w-100 mb-2">
                                 <i class="bi bi-printer"></i> In biên lai
                             </a>
-
+                            @*4/7/2025*@
+                            @if (Model.TrangThai == "Đang xử lý" || Model.TrangThai == "Chờ xác nhận")
+                            {
+                                <button type="button" class="btn btn-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#changeStatusModal">
+                                    <i class="bi bi-arrow-repeat"></i> Đổi trạng thái giao dịch
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-secondary w-100 mb-2" disabled title="Không thể đổi trạng thái giao dịch đã hoàn tất">
+                                    <i class="bi bi-arrow-repeat"></i> Đổi trạng thái giao dịch
+                                </button>
+                            }
+                            @*4/7/2025*@
                             <a href="#" class="btn btn-outline-info w-100">
                                 <i class="bi bi-envelope"></i> Gửi email thông báo
                             </a>
                         </div>
                     </div>
+                    @*4/7/2025*@
+                    <!-- Modal Đổi trạng thái -->
+                    @if (Model.TrangThai == "Đang xử lý" || Model.TrangThai == "Chờ xác nhận")
+                    {
+                        <div class="modal fade" id="changeStatusModal" tabindex="-1" aria-labelledby="changeStatusModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="changeStatusModalLabel">Đổi trạng thái giao dịch</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    @if (TempData["Success"] != null)
+                                    {
+                                        <div class="alert alert-success">@TempData["Success"]</div>
+                                    }
+                                    @if (TempData["Error"] != null)
+                                    {
+                                        <div class="alert alert-danger">@TempData["Error"]</div>
+                                    }
+                                    @using (Html.BeginForm("ChangeWalletLogStatus", "GiaoDich", FormMethod.Post))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <div class="modal-body">
+                                            <input type="hidden" name="id" value="@Model.MaGhiChep" />
 
+                                            <div class="mb-3">
+                                                <label class="form-label">Mã ghi chép:</label>
+                                                <div class="form-control-plaintext">#@Model.MaGhiChep</div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Trạng thái hiện tại:</label>
+                                                <div class="form-control-plaintext">
+                                                    <span class="badge bg-warning">@Model.TrangThai</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="newStatus" class="form-label">Trạng thái mới:</label>
+                                                <select class="form-select" id="newStatus" name="newStatus" required>
+                                                    <option value="">-- Chọn trạng thái --</option>
+                                                    <option value="Thành công">Thành công</option>
+                                                    <option value="Không thành công">Không thành công</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="ghiChu" class="form-label">Ghi chú:</label>
+                                                <textarea class="form-control" id="ghiChu" name="ghiChu" rows="3" placeholder="Nhập ghi chú về việc thay đổi trạng thái"></textarea>
+                                            </div>
+                                            <div id="statusWarning" class="alert alert-warning d-none">
+                                                <i class="bi bi-exclamation-triangle"></i> Chú ý: Chuyển trạng thái sang "Không thành công" sẽ hoàn tiền về ví người bán nếu đây là giao dịch rút tiền.
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                                        </div>
+                                    }
+
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    @*4/7/2025*@
                     <div class="card">
                         <div class="card-header">
                             <h5 class="card-title mb-0">Thông tin người dùng</h5>
@@ -445,219 +522,257 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-// Update the Script section with this code
-$(document).ready(function () {
-    // Existing code for sidebar functionality
-    if ($('#transactionSubmenu .sidebar-item.active').length > 0) {
-        $('#transactionSubmenu').addClass('show');
-        $('#transactionDropdown').addClass('expanded');
-    }
+    // Update the Script section with this code
+    $(document).ready(function () {
+        // Existing code for sidebar functionality
+        if ($('#transactionSubmenu .sidebar-item.active').length > 0) {
+            $('#transactionSubmenu').addClass('show');
+            $('#transactionDropdown').addClass('expanded');
+        }
 
-    $('#transactionDropdown').on('click', function (e) {
-        e.preventDefault();
-        $('#transactionSubmenu').toggleClass('show');
-        $(this).toggleClass('expanded');
-    });
+        $('#transactionDropdown').on('click', function (e) {
+            e.preventDefault();
+            $('#transactionSubmenu').toggleClass('show');
+            $(this).toggleClass('expanded');
+        });
 
-    // Print receipt functionality
-    $("#btnPrintReceipt").on("click", function (e) {
-        e.preventDefault();
-        printReceipt();
-    });
+        // Print receipt functionality
+        $("#btnPrintReceipt").on("click", function (e) {
+            e.preventDefault();
+            printReceipt();
+        });
 
-    function printReceipt() {
-        // Create a new window for the receipt
-        const printWindow = window.open('', '_blank', 'height=600,width=800');
 
-        // Get transaction data from the page
-        const maGhiChep = $(".card-body .info-row:contains('Mã ghi chép')").find(".col-md-8").text().trim();
-        const nguoiBan = $(".card-body .info-row:contains('Người bán')").find(".col-md-8").text().trim();
-        const loaiGiaoDich = $(".card-body .info-row:contains('Loại giao dịch')").find(".col-md-8").text().trim();
-        const moTa = $(".card-body .info-row:contains('Mô tả')").find(".col-md-8").text().trim();
-        const ngayGiaoDich = $(".card-body .info-row:contains('Ngày giao dịch')").find(".col-md-8").text().trim();
-        const trangThai = $(".card:contains('Thông tin giao dịch ví') .info-row:contains('Trạng thái')").find(".badge").text().trim();
-        const maDonHang = $(".card-body .info-row:contains('Mã đơn hàng')").find(".col-md-8 a").text().trim();
-        const soTien = $(".wallet-amount").text().trim();
+        //4/7/2025
+        // Xử lý khi người dùng thay đổi trạng thái
+        $('#newStatus').on('change', function () {
+            const selectedStatus = $(this).val();
+            if (selectedStatus === 'Không thành công') {
+                $('#statusWarning').removeClass('d-none');
+            } else {
+                $('#statusWarning').addClass('d-none');
+            }
+        });
 
-        // Current date and time for receipt printing
-        const today = new Date();
-        const printDate = today.toLocaleDateString('vi-VN');
-        const printTime = today.toLocaleTimeString('vi-VN');
+        // Xác nhận trước khi submit form thay đổi trạng thái
+        $('#changeStatusModal form').on('submit', function (e) {
+            const newStatus = $('#newStatus').val();
+            if (newStatus === '') {
+                e.preventDefault();
+                alert('Vui lòng chọn trạng thái mới!');
+                return false;
+            }
+            if (newStatus === 'Không thành công') {
+                if (!confirm('Xác nhận chuyển trạng thái giao dịch sang KHÔNG THÀNH CÔNG? Hành động này sẽ ảnh hưởng đến dữ liệu tài chính và không thể hoàn tác.')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+            return true;
+        });
 
-        // Build the receipt HTML
-        const receiptHTML = `
-            <!DOCTYPE html>
-            <html lang="vi">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Biên lai giao dịch #${maGhiChep}</title>
-                <style>
-                    body {
-                        font-family: 'Segoe UI', Arial, sans-serif;
-                        margin: 0;
-                        padding: 20px;
-                        color: #333;
-                    }
-                    .receipt {
-                        max-width: 800px;
-                        margin: 0 auto;
-                        border: 1px solid #ddd;
-                        padding: 20px;
-                    }
-                    .receipt-header {
-                        text-align: center;
-                        border-bottom: 2px solid #eee;
-                        padding-bottom: 20px;
-                        margin-bottom: 20px;
-                    }
-                    .receipt-title {
-                        font-size: 24px;
-                        font-weight: bold;
-                        margin-bottom: 5px;
-                    }
-                    .receipt-subtitle {
-                        font-size: 16px;
-                        color: #666;
-                    }
-                    .receipt-info {
-                        margin-bottom: 20px;
-                    }
-                    .receipt-row {
-                        display: flex;
-                        border-bottom: 1px solid #f0f0f0;
-                        padding: 10px 0;
-                    }
-                    .receipt-label {
-                        font-weight: 600;
-                        width: 200px;
-                    }
-                    .receipt-value {
-                        flex: 1;
-                    }
-                    .receipt-amount {
-                        font-size: 20px;
-                        font-weight: bold;
-                        text-align: center;
-                        padding: 15px 0;
-                        margin: 15px 0;
-                        background-color: #f9f9f9;
-                        border-radius: 5px;
-                    }
-                    .amount-positive {
-                        color: #198754;
-                    }
-                    .amount-negative {
-                        color: #dc3545;
-                    }
-                    .receipt-footer {
-                        text-align: center;
-                        margin-top: 30px;
-                        font-size: 14px;
-                        color: #666;
-                        border-top: 1px solid #eee;
-                        padding-top: 20px;
-                    }
-                    .print-info {
-                        font-size: 12px;
-                        color: #999;
-                        margin-top: 5px;
-                    }
-                    .status-badge {
-                        display: inline-block;
-                        padding: 5px 10px;
-                        border-radius: 20px;
-                        font-size: 14px;
-                        color: white;
-                    }
-                    .status-success {
-                        background-color: #198754;
-                    }
-                    .status-danger {
-                        background-color: #dc3545;
-                    }
-                    .status-warning {
-                        background-color: #ffc107;
-                    }
-                    media print {
+        //// Hiển thị thông báo khi có lỗi hoặc thành công
+        //if (TempData["Success"] !== null) {
+        //    toastr.success(TempData["Success"]);
+        //}
+
+        //if (TempData["Error"] !== null) {
+        //    toastr.error(TempData["Error"]);
+        //}
+        //4/7/2025
+        function printReceipt() {
+            // Create a new window for the receipt
+            const printWindow = window.open('', '_blank', 'height=600,width=800');
+
+            // Get transaction data from the page
+            const maGhiChep = $(".card-body .info-row:contains('Mã ghi chép')").find(".col-md-8").text().trim();
+            const nguoiBan = $(".card-body .info-row:contains('Người bán')").find(".col-md-8").text().trim();
+            const loaiGiaoDich = $(".card-body .info-row:contains('Loại giao dịch')").find(".col-md-8").text().trim();
+            const moTa = $(".card-body .info-row:contains('Mô tả')").find(".col-md-8").text().trim();
+            const ngayGiaoDich = $(".card-body .info-row:contains('Ngày giao dịch')").find(".col-md-8").text().trim();
+            const trangThai = $(".card:contains('Thông tin giao dịch ví') .info-row:contains('Trạng thái')").find(".badge").text().trim();
+            const maDonHang = $(".card-body .info-row:contains('Mã đơn hàng')").find(".col-md-8 a").text().trim();
+            const soTien = $(".wallet-amount").text().trim();
+
+            // Current date and time for receipt printing
+            const today = new Date();
+            const printDate = today.toLocaleDateString('vi-VN');
+            const printTime = today.toLocaleTimeString('vi-VN');
+
+            // Build the receipt HTML
+            const receiptHTML = `
+                <!DOCTYPE html>
+                <html lang="vi">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Biên lai giao dịch #${maGhiChep}</title>
+                    <style>
                         body {
-                            padding: 0;
+                            font-family: 'Segoe UI', Arial, sans-serif;
+                            margin: 0;
+                            padding: 20px;
+                            color: #333;
                         }
                         .receipt {
-                            border: none;
+                            max-width: 800px;
+                            margin: 0 auto;
+                            border: 1px solid #ddd;
+                            padding: 20px;
                         }
-                        .no-print {
-                            display: none;
+                        .receipt-header {
+                            text-align: center;
+                            border-bottom: 2px solid #eee;
+                            padding-bottom: 20px;
+                            margin-bottom: 20px;
                         }
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="receipt">
-                    <div class="receipt-header">
-                        <div class="receipt-title">BIÊN LAI GIAO DỊCH</div>
-                        <div class="receipt-subtitle">Mã ghi chép: ${maGhiChep}</div>
-                    </div>
+                        .receipt-title {
+                            font-size: 24px;
+                            font-weight: bold;
+                            margin-bottom: 5px;
+                        }
+                        .receipt-subtitle {
+                            font-size: 16px;
+                            color: #666;
+                        }
+                        .receipt-info {
+                            margin-bottom: 20px;
+                        }
+                        .receipt-row {
+                            display: flex;
+                            border-bottom: 1px solid #f0f0f0;
+                            padding: 10px 0;
+                        }
+                        .receipt-label {
+                            font-weight: 600;
+                            width: 200px;
+                        }
+                        .receipt-value {
+                            flex: 1;
+                        }
+                        .receipt-amount {
+                            font-size: 20px;
+                            font-weight: bold;
+                            text-align: center;
+                            padding: 15px 0;
+                            margin: 15px 0;
+                            background-color: #f9f9f9;
+                            border-radius: 5px;
+                        }
+                        .amount-positive {
+                            color: #198754;
+                        }
+                        .amount-negative {
+                            color: #dc3545;
+                        }
+                        .receipt-footer {
+                            text-align: center;
+                            margin-top: 30px;
+                            font-size: 14px;
+                            color: #666;
+                            border-top: 1px solid #eee;
+                            padding-top: 20px;
+                        }
+                        .print-info {
+                            font-size: 12px;
+                            color: #999;
+                            margin-top: 5px;
+                        }
+                        .status-badge {
+                            display: inline-block;
+                            padding: 5px 10px;
+                            border-radius: 20px;
+                            font-size: 14px;
+                            color: white;
+                        }
+                        .status-success {
+                            background-color: #198754;
+                        }
+                        .status-danger {
+                            background-color: #dc3545;
+                        }
+                        .status-warning {
+                            background-color: #ffc107;
+                        }
+                        media print {
+                            body {
+                                padding: 0;
+                            }
+                            .receipt {
+                                border: none;
+                            }
+                            .no-print {
+                                display: none;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="receipt">
+                        <div class="receipt-header">
+                            <div class="receipt-title">BIÊN LAI GIAO DỊCH</div>
+                            <div class="receipt-subtitle">Mã ghi chép: ${maGhiChep}</div>
+                        </div>
 
-                    <div class="receipt-amount ${soTien.includes('+') ? 'amount-positive' : 'amount-negative'}">
-                        ${soTien}
-                    </div>
+                        <div class="receipt-amount ${soTien.includes('+') ? 'amount-positive' : 'amount-negative'}">
+                            ${soTien}
+                        </div>
 
-                    <div class="receipt-info">
-                        <div class="receipt-row">
-                            <div class="receipt-label">Người bán:</div>
-                            <div class="receipt-value">${nguoiBan}</div>
-                        </div>
-                        <div class="receipt-row">
-                            <div class="receipt-label">Loại giao dịch:</div>
-                            <div class="receipt-value">${loaiGiaoDich}</div>
-                        </div>
-                        <div class="receipt-row">
-                            <div class="receipt-label">Mô tả:</div>
-                            <div class="receipt-value">${moTa}</div>
-                        </div>
-                        <div class="receipt-row">
-                            <div class="receipt-label">Ngày giao dịch:</div>
-                            <div class="receipt-value">${ngayGiaoDich}</div>
-                        </div>
-                        <div class="receipt-row">
-                            <div class="receipt-label">Trạng thái:</div>
-                            <div class="receipt-value">
-                                <span class="status-badge ${trangThai.includes('Thành công') ? 'status-success' : (trangThai.includes('Đang xử lý')  ? 'status-warning' : 'status-danger')}">
-                                    ${trangThai}
-                                </span>
+                        <div class="receipt-info">
+                            <div class="receipt-row">
+                                <div class="receipt-label">Người bán:</div>
+                                <div class="receipt-value">${nguoiBan}</div>
                             </div>
+                            <div class="receipt-row">
+                                <div class="receipt-label">Loại giao dịch:</div>
+                                <div class="receipt-value">${loaiGiaoDich}</div>
+                            </div>
+                            <div class="receipt-row">
+                                <div class="receipt-label">Mô tả:</div>
+                                <div class="receipt-value">${moTa}</div>
+                            </div>
+                            <div class="receipt-row">
+                                <div class="receipt-label">Ngày giao dịch:</div>
+                                <div class="receipt-value">${ngayGiaoDich}</div>
+                            </div>
+                            <div class="receipt-row">
+                                <div class="receipt-label">Trạng thái:</div>
+                                <div class="receipt-value">
+                                    <span class="status-badge ${trangThai.includes('Thành công') ? 'status-success' : (trangThai.includes('Đang xử lý')  ? 'status-warning' : 'status-danger')}">
+                                        ${trangThai}
+                                    </span>
+                                </div>
+                            </div>
+                            ${maDonHang ? `
+                            <div class="receipt-row">
+                                <div class="receipt-label">Mã đơn hàng:</div>
+                                <div class="receipt-value">${maDonHang}</div>
+                            </div>
+                            ` : ''}
                         </div>
-                        ${maDonHang ? `
-                        <div class="receipt-row">
-                            <div class="receipt-label">Mã đơn hàng:</div>
-                            <div class="receipt-value">${maDonHang}</div>
+
+                        <div class="receipt-footer">
+                            <div>© MedinetPro 2025 - Tất cả các quyền được bảo lưu</div>
+                            <div class="print-info">Biên lai được in ngày ${printDate} lúc ${printTime}</div>
                         </div>
-                        ` : ''}
+
+                        <div class="no-print" style="text-align: center; margin-top: 30px;">
+                            <button onclick="window.print()" style="padding: 10px 20px; background: #0d6efd; color: white; border: none; border-radius: 5px; cursor: pointer;">In biên lai</button>
+                            <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">Đóng</button>
+                        </div>
                     </div>
+                </body>
+                </html>
+            `;
 
-                    <div class="receipt-footer">
-                        <div>© MedinetPro 2025 - Tất cả các quyền được bảo lưu</div>
-                        <div class="print-info">Biên lai được in ngày ${printDate} lúc ${printTime}</div>
-                    </div>
+            // Write to the new window and print
+            printWindow.document.open();
+            printWindow.document.write(receiptHTML);
+            printWindow.document.close();
 
-                    <div class="no-print" style="text-align: center; margin-top: 30px;">
-                        <button onclick="window.print()" style="padding: 10px 20px; background: #0d6efd; color: white; border: none; border-radius: 5px; cursor: pointer;">In biên lai</button>
-                        <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">Đóng</button>
-                    </div>
-                </div>
-            </body>
-            </html>
-        `;
-
-        // Write to the new window and print
-        printWindow.document.open();
-        printWindow.document.write(receiptHTML);
-        printWindow.document.close();
-
-        // Focus on the new window
-        printWindow.focus();
-    }
-});
+            // Focus on the new window
+            printWindow.focus();
+        }
+    });
     </script>
 }

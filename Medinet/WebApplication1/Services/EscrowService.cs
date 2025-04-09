@@ -673,6 +673,96 @@ namespace WebApplication1.Services
         /// <param name="maDonHang">Mã đơn hàng cần hoàn tiền</param>
         /// <param name="lyDoHuy">Lý do hủy đơn hàng</param>
         /// <returns>Kết quả hoàn tiền (true/false)</returns>
+        //public async Task<bool> ProcessOrderCancellationAsync(int maDonHang, string lyDoHuy)
+        //{
+        //    using (var db = new MedinetDATN())
+        //    {
+        //        using (var dbTransaction = db.Database.BeginTransaction())
+        //        {
+        //            try
+        //            {
+        //                // Lấy thông tin đơn hàng
+        //                var donHang = await db.DonHangs.FindAsync(maDonHang);
+        //                if (donHang == null)
+        //                    throw new Exception($"Không tìm thấy đơn hàng với mã {maDonHang}");
+
+        //                // Lấy thông tin ký quỹ
+        //                var escrow = await db.Escrows
+        //                    .FirstOrDefaultAsync(e => e.MaDonHang == maDonHang);
+
+        //                if (escrow == null)
+        //                {
+        //                    // Nếu không có ký quỹ (có thể đơn hàng chưa được xử lý), vẫn tiếp tục xử lý hủy đơn hàng
+        //                    System.Diagnostics.Debug.WriteLine($"Không tìm thấy ký quỹ cho đơn hàng {maDonHang}, tiếp tục xử lý hủy");
+        //                }
+        //                else if (escrow.TrangThai != "Đang giữ")
+        //                {
+        //                    // Nếu ký quỹ đã được xử lý, cảnh báo nhưng vẫn tiếp tục
+        //                    System.Diagnostics.Debug.WriteLine($"Ký quỹ đã được xử lý trước đó, trạng thái hiện tại: {escrow.TrangThai}");
+        //                }
+        //                else
+        //                {
+        //                    // Cập nhật trạng thái ký quỹ
+        //                    escrow.TrangThai = "Đã hoàn tiền";
+        //                    escrow.NgayGiaiNgan = DateTime.Now;
+        //                    db.Entry(escrow).State = EntityState.Modified;
+
+        //                    // Nếu là COD, hoàn trả tiền đặt cọc cho người bán
+        //                    if (donHang.PhuongThucThanhToan == "COD")
+        //                    {
+        //                        var nguoiBan = await db.NguoiBans.FindAsync(donHang.MaNguoiBan);
+        //                        if (nguoiBan != null)
+        //                        {
+        //                            decimal depositAmount = CalculateRequiredDeposit(donHang.TongSoTien);
+
+        //                            // Hoàn trả tiền đặt cọc
+        //                            nguoiBan.SoDuVi += depositAmount;
+        //                            db.Entry(nguoiBan).State = EntityState.Modified;
+
+        //                            // Tạo ghi chép ví
+        //                            var ghiChep = new GhiChepVi
+        //                            {
+        //                                MaNguoiBan = nguoiBan.MaNguoiBan,
+        //                                MaDonHang = maDonHang,
+        //                                SoTien = depositAmount,
+        //                                LoaiGiaoDich = "Hoàn trả đặt cọc",
+        //                                MoTa = $"Hoàn trả tiền đặt cọc cho đơn hàng #{maDonHang} (đã hủy)",
+        //                                NgayGiaoDich = DateTime.Now,
+        //                                TrangThai = "Thành công"
+        //                            };
+        //                            db.GhiChepVis.Add(ghiChep);
+
+        //                            System.Diagnostics.Debug.WriteLine($"Đã hoàn trả tiền đặt cọc {depositAmount:N0}đ cho người bán ID {nguoiBan.MaNguoiBan}");
+        //                        }
+        //                    }
+        //                    // Nếu là VNPAY, thêm vào hàng đợi hoàn tiền cho người mua
+        //                    else if (donHang.PhuongThucThanhToan == "VNPAY")
+        //                    {
+        //                        await RefundEscrow(maDonHang);
+        //                    }
+        //                }
+
+        //                // Cập nhật trạng thái đơn hàng
+        //                donHang.TrangThaiDonHang = "Đã hủy";
+        //                donHang.NgayHuy = DateTime.Now;
+        //                donHang.LyDoHuy = lyDoHuy;
+        //                donHang.NgayCapNhat = DateTime.Now;
+
+        //                // Lưu thay đổi
+        //                await db.SaveChangesAsync();
+        //                dbTransaction.Commit();
+
+        //                return true;
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                dbTransaction.Rollback();
+        //                System.Diagnostics.Debug.WriteLine($"Lỗi khi xử lý hủy đơn hàng: {ex.Message}");
+        //                throw;
+        //            }
+        //        }
+        //    }
+        //}
         public async Task<bool> ProcessOrderCancellationAsync(int maDonHang, string lyDoHuy)
         {
             using (var db = new MedinetDATN())
@@ -707,20 +797,22 @@ namespace WebApplication1.Services
                             escrow.NgayGiaiNgan = DateTime.Now;
                             db.Entry(escrow).State = EntityState.Modified;
 
-                            // Nếu là COD, hoàn trả tiền đặt cọc cho người bán
+                            // Nếu là COD, hoàn trả tiền đặt cọc và phí nền tảng cho người bán
                             if (donHang.PhuongThucThanhToan == "COD")
                             {
                                 var nguoiBan = await db.NguoiBans.FindAsync(donHang.MaNguoiBan);
                                 if (nguoiBan != null)
                                 {
                                     decimal depositAmount = CalculateRequiredDeposit(donHang.TongSoTien);
+                                    decimal platformFee = CalculateRequiredDeposit(donHang.TongSoTien); // Phí nền tảng bằng với phí đặt cọc (10%)
+                                    decimal totalRefundAmount = depositAmount + platformFee; // Tổng số tiền hoàn trả
 
-                                    // Hoàn trả tiền đặt cọc
-                                    nguoiBan.SoDuVi += depositAmount;
+                                    // Hoàn trả tiền đặt cọc và phí nền tảng
+                                    nguoiBan.SoDuVi += totalRefundAmount;
                                     db.Entry(nguoiBan).State = EntityState.Modified;
 
-                                    // Tạo ghi chép ví
-                                    var ghiChep = new GhiChepVi
+                                    // Tạo ghi chép ví cho việc hoàn trả đặt cọc
+                                    var ghiChepDepositRefund = new GhiChepVi
                                     {
                                         MaNguoiBan = nguoiBan.MaNguoiBan,
                                         MaDonHang = maDonHang,
@@ -730,9 +822,38 @@ namespace WebApplication1.Services
                                         NgayGiaoDich = DateTime.Now,
                                         TrangThai = "Thành công"
                                     };
-                                    db.GhiChepVis.Add(ghiChep);
+                                    db.GhiChepVis.Add(ghiChepDepositRefund);
 
-                                    System.Diagnostics.Debug.WriteLine($"Đã hoàn trả tiền đặt cọc {depositAmount:N0}đ cho người bán ID {nguoiBan.MaNguoiBan}");
+                                    // Tạo ghi chép ví cho việc hoàn trả phí nền tảng
+                                    var ghiChepPlatformFeeRefund = new GhiChepVi
+                                    {
+                                        MaNguoiBan = nguoiBan.MaNguoiBan,
+                                        MaDonHang = maDonHang,
+                                        SoTien = platformFee,
+                                        LoaiGiaoDich = "Hoàn trả phí nền tảng",
+                                        MoTa = $"Hoàn trả phí nền tảng cho đơn hàng #{maDonHang} (đã hủy)",
+                                        NgayGiaoDich = DateTime.Now,
+                                        TrangThai = "Thành công"
+                                    };
+                                    db.GhiChepVis.Add(ghiChepPlatformFeeRefund);
+
+                                    System.Diagnostics.Debug.WriteLine($"Đã hoàn trả tiền đặt cọc và phí nền tảng, tổng cộng {totalRefundAmount:N0}đ cho người bán ID {nguoiBan.MaNguoiBan}");
+
+                                    // Cập nhật trạng thái các giao dịch liên quan
+                                    var relatedTransactions = await db.GhiChepVis
+                                        .Where(g => g.MaDonHang == maDonHang && g.LoaiGiaoDich.Contains("Đặt cọc") || g.LoaiGiaoDich.Contains("Phí nền tảng"))
+                                        .ToListAsync();
+
+                                    foreach (var transaction in relatedTransactions)
+                                    {
+                                        // Không đổi trạng thái của giao dịch hoàn tiền mới tạo
+                                        if (transaction.LoaiGiaoDich != "Hoàn trả đặt cọc" && transaction.LoaiGiaoDich != "Hoàn trả phí nền tảng")
+                                        {
+                                            transaction.TrangThai = "Không thành công";
+                                            transaction.NgayGiaoDich = DateTime.Now;
+                                            db.Entry(transaction).State = EntityState.Modified;
+                                        }
+                                    }
                                 }
                             }
                             // Nếu là VNPAY, thêm vào hàng đợi hoàn tiền cho người mua
@@ -763,7 +884,6 @@ namespace WebApplication1.Services
                 }
             }
         }
-
         /// <summary>
         /// Hoàn tiền cho người mua nếu hủy đơn hàng
         /// </summary>

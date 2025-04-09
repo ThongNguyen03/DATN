@@ -262,7 +262,7 @@ namespace WebApplication1.Controllers
             var allData = db.GhiChepVis;
             ViewBag.TotalGiaoDich = allData.Count();
             ViewBag.TotalNapVao = allData.Where(g => g.LoaiGiaoDich == "Nạp tiền ví").Sum(g => (decimal?)g.SoTien) ?? 0;
-            ViewBag.TotalRutRa = Math.Abs(allData.Where(g => g.LoaiGiaoDich == "Rút tiền").Sum(g => (decimal?)g.SoTien) ?? 0);
+            ViewBag.TotalRutRa = Math.Abs(allData.Where(g => g.LoaiGiaoDich == "Rút tiền" && (g.TrangThai == "Thành công")).Sum(g => (decimal?)g.SoTien) ?? 0);
             ViewBag.TotalThanhToan = allData.Where(g => g.LoaiGiaoDich == "Thanh toán đơn hàng").Sum(g => (decimal?)g.SoTien) ?? 0;
 
             return View(pagedData);
@@ -322,6 +322,137 @@ namespace WebApplication1.Controllers
             return View();
         }
 
+
+        //7/4/2025
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> ChangeWalletLogStatus(int id, string newStatus, string ghiChu)
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine($"Nhận yêu cầu: ID={id}, Trạng thái={newStatus}, Ghi chú={ghiChu}");
+
+                // Kiểm tra quyền truy cập - giả sử chỉ admin mới có quyền thay đổi trạng thái
+                //if (!User.IsInRole("Admin"))
+                //{
+                //    System.Diagnostics.Debug.WriteLine("Người dùng không có quyền Admin");
+                //    TempData["Error"] = "Bạn không có quyền thực hiện chức năng này!";
+                //    return RedirectToAction("WalletLogDetails", new { id = id });
+                //}
+
+                // Lấy thông tin ghi chép ví
+                System.Diagnostics.Debug.WriteLine($"Đang tìm ghi chép ví với ID={id}");
+                var ghiChepVi = await db.GhiChepVis.FindAsync(id);
+                if (ghiChepVi == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Không tìm thấy ghi chép ví với ID={id}");
+                    return HttpNotFound();
+                }
+                System.Diagnostics.Debug.WriteLine($"Đã tìm thấy ghi chép ví: ID={id}, TrangThai={ghiChepVi.TrangThai}");
+
+                // Kiểm tra điều kiện thay đổi trạng thái
+                if (ghiChepVi.TrangThai != "Đang xử lý" && ghiChepVi.TrangThai != "Chờ xác nhận")
+                {
+                    System.Diagnostics.Debug.WriteLine($"Không thể thay đổi trạng thái vì giao dịch đã hoàn tất: {ghiChepVi.TrangThai}");
+                    TempData["Error"] = "Không thể thay đổi trạng thái của giao dịch đã hoàn tất!";
+                    return RedirectToAction("WalletLogDetails", new { id = id });
+                }
+
+                // Kiểm tra giá trị trạng thái mới hợp lệ
+                if (newStatus != "Thành công" && newStatus != "Không thành công")
+                {
+                    System.Diagnostics.Debug.WriteLine($"Trạng thái mới không hợp lệ: {newStatus}");
+                    TempData["Error"] = "Trạng thái mới không hợp lệ!";
+                    return RedirectToAction("WalletLogDetails", new { id = id });
+                }
+
+                // Lưu trạng thái cũ để ghi log
+                string oldStatus = ghiChepVi.TrangThai;
+                System.Diagnostics.Debug.WriteLine($"Trạng thái cũ: {oldStatus}, Trạng thái mới: {newStatus}");
+
+                // Cập nhật trạng thái ghi chép ví hiện tại
+                System.Diagnostics.Debug.WriteLine("Đang cập nhật trạng thái ghi chép ví");
+                ghiChepVi.TrangThai = newStatus;
+                db.Entry(ghiChepVi).State = EntityState.Modified;
+                await db.SaveChangesAsync();
+                System.Diagnostics.Debug.WriteLine($"Đã cập nhật trạng thái ghi chép ví thành: {ghiChepVi.TrangThai}");
+
+                // Xử lý khi giao dịch không thành công
+                if (newStatus == "Không thành công")
+                {
+                    System.Diagnostics.Debug.WriteLine("Xử lý giao dịch không thành công");
+
+                    // Nếu là giao dịch rút tiền, hoàn tiền lại cho người bán
+                    if (ghiChepVi.LoaiGiaoDich.Contains("Rút tiền"))
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Đây là giao dịch rút tiền, MaNguoiBan={ghiChepVi.MaNguoiBan}");
+                        var nguoiBan = await db.NguoiBans.FindAsync(ghiChepVi.MaNguoiBan);
+                        if (nguoiBan != null)
+                        {
+                            // Lấy số tiền cần hoàn lại (đổi dấu vì giao dịch rút tiền thường là số âm)
+                            decimal refundAmount = Math.Abs(ghiChepVi.SoTien);
+                            System.Diagnostics.Debug.WriteLine($"Đã tìm thấy người bán, số dư hiện tại={nguoiBan.SoDuVi}, số tiền hoàn={refundAmount}");
+
+                            // Cập nhật số dư ví
+                            nguoiBan.SoDuVi += refundAmount;
+                            db.Entry(nguoiBan).State = EntityState.Modified;
+                            System.Diagnostics.Debug.WriteLine($"Đã cập nhật số dư ví người bán thành {nguoiBan.SoDuVi}");
+
+                            // Tạo ghi chép hoàn tiền mới
+                            var refundRecord = new GhiChepVi
+                            {
+                                MaNguoiBan = nguoiBan.MaNguoiBan,
+                                SoTien = refundAmount, // Số tiền dương (hoàn lại)
+                                LoaiGiaoDich = "Hoàn tiền rút",
+                                MoTa = $"Hoàn tiền từ giao dịch rút tiền #{ghiChepVi.MaGhiChep} không thành công" +
+                                (!string.IsNullOrEmpty(ghiChu) ? $" vì: {ghiChu}" : ""),
+                                NgayGiaoDich = DateTime.Now,
+                                TrangThai = "Thành công",
+                                IP = Request.UserHostAddress
+                            };
+                            db.GhiChepVis.Add(refundRecord);
+                            await db.SaveChangesAsync();
+                            System.Diagnostics.Debug.WriteLine("Đã tạo ghi chép hoàn tiền mới");
+
+                            // Ghi log thông tin hoàn tiền
+                            System.Diagnostics.Debug.WriteLine($"Đã hoàn {refundAmount:N0}đ cho người bán ID {nguoiBan.MaNguoiBan} từ giao dịch rút tiền không thành công");
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Không tìm thấy người bán với ID={ghiChepVi.MaNguoiBan}");
+                        }
+                    }
+                    // Xử lý các loại giao dịch khác khi không thành công nếu cần...
+                }
+
+                // Kiểm tra lại sau khi xử lý
+                var checkRecord = await db.GhiChepVis.FindAsync(id);
+                System.Diagnostics.Debug.WriteLine($"Kiểm tra sau khi xử lý: ID={id}, TrangThai={checkRecord?.TrangThai ?? "NULL"}");
+
+                TempData["Success"] = $"Đã cập nhật trạng thái ghi chép ví thành {newStatus}!";
+                System.Diagnostics.Debug.WriteLine("Đã hoàn thành xử lý, chuyển hướng về trang chi tiết");
+                return RedirectToAction("WalletLogDetails", new { id = id });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Lỗi khi cập nhật trạng thái ghi chép ví: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+
+                TempData["Error"] = "Đã xảy ra lỗi khi cập nhật trạng thái ghi chép ví. Vui lòng thử lại sau!";
+                return RedirectToAction("WalletLogDetails", new { id = id });
+            }
+        }
+        //7/4/2025
+
+
+        //9/4/2025
+
+
+        //9/4/2025
         protected override void Dispose(bool disposing)
         {
             if (disposing)

@@ -857,6 +857,16 @@ namespace WebApplication1.Controllers
                 db.Entry(donHang).State = EntityState.Modified;
                 await db.SaveChangesAsync();
 
+                // Cập nhật trạng thái giao dịch liên quan
+                var giaoDich = await db.GiaoDichs.FirstOrDefaultAsync(g => g.MaDonHang == id);
+                if (giaoDich != null)
+                {
+                    giaoDich.TrangThaiGiaoDich = "Không thành công";
+                    giaoDich.NgayGiaoDich = DateTime.Now;
+                    db.Entry(giaoDich).State = EntityState.Modified;
+                    await db.SaveChangesAsync();
+                }
+
                 // Hoàn tiền đặt cọc cho người bán
                 var escrowService = new EscrowService();
                 await escrowService.ProcessOrderCancellationAsync(id, lyDoHuy);
@@ -922,7 +932,15 @@ namespace WebApplication1.Controllers
 
                 db.Entry(donHang).State = EntityState.Modified;
                 await db.SaveChangesAsync();
-
+                // Cập nhật trạng thái giao dịch liên quan
+                var giaoDich = await db.GiaoDichs.FirstOrDefaultAsync(g => g.MaDonHang == id);
+                if (giaoDich != null)
+                {
+                    giaoDich.TrangThaiGiaoDich = "Không thành công";
+                    giaoDich.NgayGiaoDich = DateTime.Now;
+                    db.Entry(giaoDich).State = EntityState.Modified;
+                    await db.SaveChangesAsync();
+                }
                 // Xử lý hoàn tiền đặt cọc nếu cần
                 var escrowService = new EscrowService();
                 await escrowService.ProcessOrderCancellationAsync(id, lyDoHuy);
@@ -976,7 +994,15 @@ namespace WebApplication1.Controllers
 
                 db.Entry(donHang).State = EntityState.Modified;
                 await db.SaveChangesAsync();
-
+                // Cập nhật trạng thái giao dịch liên quan
+                var giaoDich = await db.GiaoDichs.FirstOrDefaultAsync(g => g.MaDonHang == id);
+                if (giaoDich != null)
+                {
+                    giaoDich.TrangThaiGiaoDich = "Không thành công";
+                    giaoDich.NgayGiaoDich = DateTime.Now;
+                    db.Entry(giaoDich).State = EntityState.Modified;
+                    await db.SaveChangesAsync();
+                }
                 // Xử lý hoàn tiền đặt cọc nếu cần
                 var escrowService = new EscrowService();
                 await escrowService.ProcessOrderCancellationAsync(id, lyDoHuy);

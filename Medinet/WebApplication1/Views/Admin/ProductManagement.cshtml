@@ -344,9 +344,12 @@
                                                 <td><span class="badge @statusClass">@item.TrangThai</span></td>
                                                 <td>@item.NgayTao.ToString("dd/MM/yyyy")</td>
                                                 <td class="d-flex gap-1">
-                                                    <a href="@Url.Action("ProductDetails", "Admin", new { id = item.MaSanPham })" class="btn btn-sm btn-secondary">Xem</a>
-                                                    <button class="btn btn-sm btn-danger delete-product-btn" data-id="@item.MaSanPham">Xóa</button>
-
+                                                    <a href="@Url.Action("ProductDetails", "Admin", new { id = item.MaSanPham })" class="btn btn-sm btn-primary" title="Xem chi tiết">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                    <button class="btn btn-sm btn-danger delete-product-btn" data-id="@item.MaSanPham" title="Xóa sản phẩm">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
                                                 </td>
                                             </tr>
                                         }

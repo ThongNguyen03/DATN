@@ -1162,7 +1162,7 @@ namespace WebApplication1.Controllers
 
                 // Statistics for Orders
                 viewModel.TotalOrders = db.DonHangs.Count();
-                viewModel.NewOrders = db.DonHangs.Count(o => o.TrangThaiDonHang == "Đang chờ xử lý");
+                viewModel.NewOrders = db.DonHangs.Count(o => o.TrangThaiDonHang == "Đang chờ xử lý" || o.TrangThaiDonHang == "Chờ thanh toán" || o.TrangThaiDonHang == "Đã thanh toán"|| o.TrangThaiDonHang == "Đã vận chuyển"|| o.TrangThaiDonHang == "Đã xác nhận nhận hàng");
                 viewModel.DeliveredOrders = db.DonHangs.Count(o => o.TrangThaiDonHang == "Đã giao" || o.TrangThaiDonHang == "Đã hoàn thành");
                 viewModel.CancelledOrders = db.DonHangs.Count(o => o.TrangThaiDonHang == "Đã hủy");
 
@@ -1173,18 +1173,31 @@ namespace WebApplication1.Controllers
                 // Calculate the end date explicitly to avoid using AddDays in LINQ
                 DateTime endDatePlusOne = today.AddDays(1);
 
-                // Get all orders within the range
+                // Lấy tất cả đơn hàng trong khoảng thời gian
                 var allOrdersInRange = db.DonHangs
                     .Where(o => o.NgayTao >= startDate && o.NgayTao <= endDatePlusOne)
                     .ToList();
 
-                // Calculate chart data
-                var ordersByDate = allOrdersInRange
+                // Nhóm đơn hàng theo ngày và tính toán số lượng đơn hàng
+                var orderCountByDate = allOrdersInRange
                     .GroupBy(o => o.NgayTao.Date)
                     .Select(g => new
                     {
                         Date = g.Key,
-                        Count = g.Count(),
+                        Count = g.Count()
+                    })
+                    .OrderBy(x => x.Date)
+                    .ToList();
+
+                // Tính doanh thu chỉ từ đơn hàng hợp lệ (đã thanh toán, đã giao hoặc đã hoàn thành)
+                var revenueByDate = allOrdersInRange
+                    .Where(o => 
+                                o.TrangThaiDonHang == "Đã giao" ||
+                                o.TrangThaiDonHang == "Đã hoàn thành")
+                    .GroupBy(o => o.NgayTao.Date)
+                    .Select(g => new
+                    {
+                        Date = g.Key,
                         Revenue = g.Sum(o => o.TongSoTien)
                     })
                     .OrderBy(x => x.Date)
@@ -1200,15 +1213,16 @@ namespace WebApplication1.Controllers
 
                 foreach (var day in last7Days)
                 {
-                    var dayData = ordersByDate.FirstOrDefault(o => o.Date.Date == day.Date);
+                    var countData = orderCountByDate.FirstOrDefault(o => o.Date.Date == day.Date);
+                    var revenueData = revenueByDate.FirstOrDefault(o => o.Date.Date == day.Date);
+
                     viewModel.OrderChartData.Add(new ChartDataViewModel
                     {
                         Date = day.ToString("dd/MM"),
-                        Count = dayData?.Count ?? 0,
-                        Revenue = dayData?.Revenue ?? 0
+                        Count = countData?.Count ?? 0,
+                        Revenue = revenueData?.Revenue ?? 0
                     });
                 }
-
                 // Doanh thu nên là tổng giá trị đơn hàng đã hoàn thành
                 viewModel.TotalRevenue = db.DonHangs
                     .Where(o => o.TrangThaiDonHang == "Đã hoàn thành" || o.TrangThaiDonHang == "Đã giao")
@@ -1424,7 +1438,6 @@ namespace WebApplication1.Controllers
                         break;
                     case "all":
                         // Lấy ngày đầu tiên từ cơ sở dữ liệu hoặc một ngày cố định trong quá khứ
-                        // Ví dụ: lấy ngày tạo đơn hàng đầu tiên hoặc mặc định 1 năm
                         var firstOrderDate = db.DonHangs.OrderBy(o => o.NgayTao).Select(o => o.NgayTao).FirstOrDefault();
 
                         // Nếu không có đơn hàng nào, mặc định lấy 1 năm
@@ -1457,60 +1470,75 @@ namespace WebApplication1.Controllers
                     .Where(o => o.NgayTao >= startDate && o.NgayTao <= endDatePlusOne)
                     .ToList();
 
-                // Tính toán dữ liệu theo ngày
-                var ordersByDate = allOrdersInRange
+                // Tính toán số lượng đơn hàng theo ngày
+                var orderCountByDate = allOrdersInRange
                     .GroupBy(o => o.NgayTao.Date)
                     .Select(g => new
                     {
                         Date = g.Key,
-                        Count = g.Count(),
+                        Count = g.Count()
+                    })
+                    .OrderBy(x => x.Date)
+                    .ToList();
+
+                // Tính toán doanh thu theo ngày - chỉ với đơn hàng hợp lệ
+                var revenueByDate = allOrdersInRange
+                    .Where(o => 
+                                o.TrangThaiDonHang == "Đã giao" ||
+                                o.TrangThaiDonHang == "Đã hoàn thành")
+                    .GroupBy(o => o.NgayTao.Date)
+                    .Select(g => new
+                    {
+                        Date = g.Key,
                         Revenue = g.Sum(o => o.TongSoTien)
                     })
                     .OrderBy(x => x.Date)
                     .ToList();
 
-                // Điều chỉnh tạo danh sách các ngày trong khoảng thời gian
-                var dateRange = new List<DateTime>();
+                // Tạo danh sách các ngày cần hiển thị
+                List<DateTime> dateRange = new List<DateTime>();
 
                 // Với trường hợp "all", có thể có nhiều ngày nên chúng ta cần phân nhóm theo tháng/tuần
-                if (timeRange == "all")
+                if (timeRange == "all" && (endDate - startDate).TotalDays > 90)
                 {
                     // Nếu khoảng thời gian dài hơn 90 ngày, nhóm theo tháng
-                    if ((endDate - startDate).TotalDays > 90)
+                    var currentDate = new DateTime(startDate.Year, startDate.Month, 1);
+                    while (currentDate <= endDate)
                     {
-                        var currentDate = new DateTime(startDate.Year, startDate.Month, 1);
-                        while (currentDate <= endDate)
-                        {
-                            dateRange.Add(currentDate);
-                            currentDate = currentDate.AddMonths(1);
-                        }
-
-                        // Nhóm dữ liệu theo tháng
-                        var ordersByMonth = allOrdersInRange
-                            .GroupBy(o => new { o.NgayTao.Year, o.NgayTao.Month })
-                            .Select(g => new
-                            {
-                                Date = new DateTime(g.Key.Year, g.Key.Month, 1),
-                                Count = g.Count(),
-                                Revenue = g.Sum(o => o.TongSoTien)
-                            })
-                            .OrderBy(x => x.Date)
-                            .ToList();
-
-                        ordersByDate = ordersByMonth;
+                        dateRange.Add(currentDate);
+                        currentDate = currentDate.AddMonths(1);
                     }
-                    else
-                    {
-                        // Thêm từng ngày vào khoảng thời gian
-                        for (var date = startDate; date <= endDate; date = date.AddDays(1))
+
+                    // Nhóm dữ liệu theo tháng
+                    var orderCountByMonth = allOrdersInRange
+                        .GroupBy(o => new { o.NgayTao.Year, o.NgayTao.Month })
+                        .Select(g => new
                         {
-                            dateRange.Add(date);
-                        }
-                    }
+                            Date = new DateTime(g.Key.Year, g.Key.Month, 1),
+                            Count = g.Count()
+                        })
+                        .OrderBy(x => x.Date)
+                        .ToList();
+
+                    var revenueByMonth = allOrdersInRange
+                        .Where(o =>
+                                    o.TrangThaiDonHang == "Đã giao" ||
+                                    o.TrangThaiDonHang == "Đã hoàn thành")
+                        .GroupBy(o => new { o.NgayTao.Year, o.NgayTao.Month })
+                        .Select(g => new
+                        {
+                            Date = new DateTime(g.Key.Year, g.Key.Month, 1),
+                            Revenue = g.Sum(o => o.TongSoTien)
+                        })
+                        .OrderBy(x => x.Date)
+                        .ToList();
+
+                    orderCountByDate = orderCountByMonth;
+                    revenueByDate = revenueByMonth;
                 }
                 else
                 {
-                    // Với các trường hợp khác, sử dụng phương pháp hiện tại
+                    // Thêm từng ngày vào khoảng thời gian
                     for (var date = startDate; date <= endDate; date = date.AddDays(1))
                     {
                         dateRange.Add(date);
@@ -1525,28 +1553,35 @@ namespace WebApplication1.Controllers
                 foreach (var date in dateRange)
                 {
                     var dateFormatString = timeRange == "all" && (endDate - startDate).TotalDays > 90
-                        ? "MM/yyyy" // Định dạng tháng/năm cho khoảng thời gian dài
-                        : "dd/MM"; // Định dạng ngày/tháng cho khoảng thời gian ngắn
+                        ? "MM/yyyy"
+                        : "dd/MM";
 
-                    var dayData = ordersByDate.FirstOrDefault(o =>
+                    var countData = orderCountByDate.FirstOrDefault(o =>
+                        timeRange == "all" && (endDate - startDate).TotalDays > 90
+                            ? o.Date.Month == date.Month && o.Date.Year == date.Year
+                            : o.Date.Date == date.Date);
+
+                    var revenueItem = revenueByDate.FirstOrDefault(o =>
                         timeRange == "all" && (endDate - startDate).TotalDays > 90
                             ? o.Date.Month == date.Month && o.Date.Year == date.Year
                             : o.Date.Date == date.Date);
 
                     chartLabels.Add(date.ToString(dateFormatString));
-                    orderData.Add(dayData?.Count ?? 0);
-                    revenueData.Add(dayData?.Revenue ?? 0);
+                    orderData.Add(countData?.Count ?? 0);
+                    revenueData.Add(revenueItem?.Revenue ?? 0);
                 }
 
                 // Statistics for Orders trong khoảng thời gian đã chọn
                 int totalOrders = allOrdersInRange.Count;
-                int newOrders = allOrdersInRange.Count(o => o.TrangThaiDonHang == "Đang chờ xử lý");
+                int newOrders = allOrdersInRange.Count(o => o.TrangThaiDonHang == "Đang chờ xử lý" || o.TrangThaiDonHang == "Chờ thanh toán" || o.TrangThaiDonHang == "Đã thanh toán" || o.TrangThaiDonHang == "Đã vận chuyển" || o.TrangThaiDonHang == "Đã xác nhận nhận hàng");
                 int deliveredOrders = allOrdersInRange.Count(o => o.TrangThaiDonHang == "Đã giao" || o.TrangThaiDonHang == "Đã hoàn thành");
                 int cancelledOrders = allOrdersInRange.Count(o => o.TrangThaiDonHang == "Đã hủy");
 
                 // Tính doanh thu chỉ từ đơn hàng đã hoàn thành/đã giao
                 decimal totalRevenue = allOrdersInRange
-                    .Where(o => o.TrangThaiDonHang == "Đã hoàn thành" || o.TrangThaiDonHang == "Đã giao")
+                    .Where(o => 
+                                o.TrangThaiDonHang == "Đã giao" ||
+                                o.TrangThaiDonHang == "Đã hoàn thành")
                     .Sum(o => o.TongSoTien);
 
                 // Lấy tất cả các bản ghi Escrow đã giải ngân

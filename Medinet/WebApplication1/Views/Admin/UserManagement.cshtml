@@ -305,39 +305,55 @@
                                                 <td>@item.Email</td>
                                                 <td><span class="badge @statusClass">@item.TrangThai</span></td>
                                                 <td class="d-flex gap-1">
-                                                    <a href="@Url.Action("UserDetails", "Admin", new { id = item.MaNguoiDung })" class="btn btn-sm btn-secondary">Xem</a>
-
+                                                    <a href="@Url.Action("UserDetails", "Admin", new { id = item.MaNguoiDung })" class="btn btn-sm btn-primary" title="Xem chi tiết">
+                                                        <i class="bi bi-eye fs-5"></i>
+                                                    </a>
                                                     @if (item.TrangThai == "Active")
                                                     {
-                                                        <button class="btn btn-sm btn-warning lock-user-btn" data-id="@item.MaNguoiDung">Khóa</button>
-
+                                                        <button class="btn btn-sm btn-warning lock-user-btn" data-id="@item.MaNguoiDung" title="Khóa tài khoản">
+                                                            <i class="bi bi-lock fs-5"></i>
+                                                        </button>
                                                         if (item.VaiTro != "Admin")
                                                         {
-                                                            <button class="btn btn-sm btn-danger delete-user-btn" data-id="@item.MaNguoiDung">Xóa</button>
+                                                            <button class="btn btn-sm btn-danger delete-user-btn" data-id="@item.MaNguoiDung" title="Xóa người dùng">
+                                                                <i class="bi bi-trash fs-5"></i>
+                                                            </button>
                                                         }
                                                     }
                                                     else if (item.TrangThai == "Banned")
                                                     {
-                                                        <button class="btn btn-sm btn-info unlock-user-btn" data-id="@item.MaNguoiDung">Mở khóa</button>
-
+                                                        <button class="btn btn-sm btn-info unlock-user-btn" data-id="@item.MaNguoiDung" title="Mở khóa tài khoản">
+                                                            <i class="bi bi-unlock fs-5"></i>
+                                                        </button>
                                                         if (item.VaiTro != "Admin")
                                                         {
-                                                            <button class="btn btn-sm btn-danger delete-user-btn" data-id="@item.MaNguoiDung">Xóa</button>
+                                                            <button class="btn btn-sm btn-danger delete-user-btn" data-id="@item.MaNguoiDung" title="Xóa người dùng">
+                                                                <i class="bi bi-trash fs-5"></i>
+                                                            </button>
                                                         }
                                                     }
                                                     else if (item.TrangThai == "Inactive")
                                                     {
-                                                        <button class="btn btn-sm btn-success restore-user-btn" data-id="@item.MaNguoiDung">Khôi phục</button>
+                                                        <button class="btn btn-sm btn-success restore-user-btn" data-id="@item.MaNguoiDung" title="Khôi phục tài khoản">
+                                                            <i class="bi bi-arrow-counterclockwise fs-5"></i>
+                                                        </button>
                                                     }
                                                     else if (item.TrangThai == "Upgrade")
                                                     {
-                                                        <button class="btn btn-sm btn-primary upgrade-seller-btn" data-id="@item.MaNguoiDung">Nâng cấp</button>
-                                                        <button class="btn btn-sm btn-danger reject-upgrade-btn" data-id="@item.MaNguoiDung">Từ chối</button>
-                                                        <button class="btn btn-sm btn-warning lock-user-btn" data-id="@item.MaNguoiDung">Khóa</button>
-
+                                                        <button class="btn btn-sm btn-success restore-user-btn" data-id="@item.MaNguoiDung" title="Nâng cấp thành người bán">
+                                                            <i class="bi bi-arrow-up-circle fs-5"></i>
+                                                        </button>
+                                                        <button class="btn btn-sm btn-danger reject-upgrade-btn" data-id="@item.MaNguoiDung" title="Từ chối yêu cầu nâng cấp">
+                                                            <i class="bi bi-x-circle fs-5"></i>
+                                                        </button>
+                                                        <button class="btn btn-sm btn-warning lock-user-btn" data-id="@item.MaNguoiDung" title="Khóa tài khoản">
+                                                            <i class="bi bi-lock fs-5"></i>
+                                                        </button>
                                                         if (item.VaiTro != "Admin")
                                                         {
-                                                            <button class="btn btn-sm btn-danger delete-user-btn" data-id="@item.MaNguoiDung">Xóa</button>
+                                                            <button class="btn btn-sm btn-danger delete-user-btn" data-id="@item.MaNguoiDung" title="Xóa người dùng">
+                                                                <i class="bi bi-trash fs-5"></i>
+                                                            </button>
                                                         }
                                                     }
                                                 </td>

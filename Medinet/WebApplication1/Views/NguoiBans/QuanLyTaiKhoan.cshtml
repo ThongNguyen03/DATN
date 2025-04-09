@@ -414,13 +414,17 @@
                                                         {
                                                             <span class="badge badge-platform-fee">Phí nền tảng</span>
                                                         }
-                                                        else if (giaoDich.LoaiGiaoDich == "Hoàn trả đặt cọc")
+                                                        else if (giaoDich.LoaiGiaoDich == "Hoàn trả đặt cọc" || giaoDich.LoaiGiaoDich == "Hoàn trả phí nền tảng")
                                                         {
                                                             <span class="badge badge-refund">Hoàn trả</span>
                                                         }
                                                         else if (giaoDich.LoaiGiaoDich == "Thanh toán đơn hàng")
                                                         {
                                                             <span class="badge badge-payment">Thanh toán</span>
+                                                        }
+                                                        else if (giaoDich.LoaiGiaoDich == "Hoàn tiền rút")
+                                                        {
+                                                            <span class="badge badge-deposit">Hoàn tiền rút</span>
                                                         }
                                                         else
                                                         {
@@ -457,13 +461,17 @@
                                                     {
                                                         <span class="badge badge-platform-fee">Phí nền tảng</span>
                                                     }
-                                                    else if (giaoDich.LoaiGiaoDich == "Hoàn trả đặt cọc")
+                                                    else if (giaoDich.LoaiGiaoDich == "Hoàn trả đặt cọc" || giaoDich.LoaiGiaoDich == "Hoàn trả phí nền tảng")
                                                     {
                                                         <span class="badge badge-refund">Hoàn trả</span>
                                                     }
                                                     else if (giaoDich.LoaiGiaoDich == "Thanh toán đơn hàng")
                                                     {
                                                         <span class="badge badge-payment">Thanh toán</span>
+                                                    }
+                                                    else if (giaoDich.LoaiGiaoDich == "Hoàn tiền rút")
+                                                    {
+                                                        <span class="badge badge-deposit">Hoàn tiền rút</span>
                                                     }
                                                     else
                                                     {
@@ -552,7 +560,7 @@
                     <div class="form-group">
                         <label for="soTien">Số tiền muốn nạp</label>
                         <div class="input-group">
-                            <input type="number" class="form-control" id="soTien" name="soTien" min="10000"  required>
+                            <input type="number" class="form-control" id="soTien" name="soTien" min="10000" required>
                             <div class="input-group-append">
                                 <span class="input-group-text">VNĐ</span>
                             </div>
@@ -592,6 +600,7 @@
             <form action="@Url.Action("RutTienVi", "NguoiBans")" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="maNguoiBan" value="@Model.MaNguoiBan" />
+                <input type="hidden" name="thongTinTaiKhoan" id="fullAccountInfo" />
                 <div class="modal-body">
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle mr-1"></i> Số dư khả dụng: <strong>@String.Format("{0:N0} VNĐ", Model.SoDuVi)</strong>
@@ -599,7 +608,7 @@
                     <div class="form-group">
                         <label for="soTienRut">Số tiền rút</label>
                         <div class="input-group">
-                            <input type="number" class="form-control" id="soTienRut" name="soTien" min="50000" max="@Model.SoDuVi"  required>
+                            <input type="number" class="form-control" id="soTienRut" name="soTien" min="50000" max="@Model.SoDuVi" required>
                             <div class="input-group-append">
                                 <span class="input-group-text">VNĐ</span>
                             </div>
@@ -607,8 +616,63 @@
                         <small class="form-text text-muted">Số tiền tối thiểu là 50,000 VNĐ</small>
                     </div>
                     <div class="form-group">
-                        <label for="thongTinTaiKhoan">Thông tin tài khoản nhận tiền</label>
-                        <textarea class="form-control" id="thongTinTaiKhoan" name="thongTinTaiKhoan" rows="3" required placeholder="Nhập thông tin tài khoản nhận tiền (Số tài khoản, tên ngân hàng, chủ tài khoản)"></textarea>
+                        <label for="tenNganHang">Tên ngân hàng</label>
+                        <select class="form-control account-info" id="tenNganHang" required>
+                            <option value="">-- Chọn ngân hàng --</option>
+                            <option value="Ngân hàng TMCP Á Châu (ACB)">Ngân hàng TMCP Á Châu (ACB)</option>
+                            <option value="Ngân hàng TMCP Bắc Á (BacABank)">Ngân hàng TMCP Bắc Á (BacABank)</option>
+                            <option value="Ngân hàng TMCP Bảo Việt (BaoVietBank)">Ngân hàng TMCP Bảo Việt (BaoVietBank)</option>
+                            <option value="Ngân hàng TMCP Đầu tư và Phát triển Việt Nam (BIDV)">Ngân hàng TMCP Đầu tư và Phát triển Việt Nam (BIDV)</option>
+                            <option value="Ngân hàng TMCP Hàng Hải (MSB)">Ngân hàng TMCP Hàng Hải (MSB)</option>
+                            <option value="Ngân hàng TMCP Quân Đội (MB)">Ngân hàng TMCP Quân Đội (MB)</option>
+                            <option value="Ngân hàng TMCP Ngoại thương Việt Nam (Vietcombank)">Ngân hàng TMCP Ngoại thương Việt Nam (Vietcombank)</option>
+                            <option value="Ngân hàng TMCP Công thương Việt Nam (VietinBank)">Ngân hàng TMCP Công thương Việt Nam (VietinBank)</option>
+                            <option value="Ngân hàng TMCP Kỹ thương Việt Nam (Techcombank)">Ngân hàng TMCP Kỹ thương Việt Nam (Techcombank)</option>
+                            <option value="Ngân hàng TMCP Sài Gòn Thương Tín (Sacombank)">Ngân hàng TMCP Sài Gòn Thương Tín (Sacombank)</option>
+                            <option value="Ngân hàng TMCP Việt Nam Thịnh Vượng (VPBank)">Ngân hàng TMCP Việt Nam Thịnh Vượng (VPBank)</option>
+                            <option value="Ngân hàng TMCP Xuất Nhập khẩu Việt Nam (Eximbank)">Ngân hàng TMCP Xuất Nhập khẩu Việt Nam (Eximbank)</option>
+                            <option value="Ngân hàng TMCP Tiên Phong (TPBank)">Ngân hàng TMCP Tiên Phong (TPBank)</option>
+                            <option value="Ngân hàng TMCP Quốc Tế (VIB)">Ngân hàng TMCP Quốc Tế (VIB)</option>
+                            <option value="Ngân hàng TMCP Phương Đông (OCB)">Ngân hàng TMCP Phương Đông (OCB)</option>
+                            <option value="Ngân hàng TMCP Sài Gòn - Hà Nội (SHB)">Ngân hàng TMCP Sài Gòn - Hà Nội (SHB)</option>
+                            <option value="Ngân hàng TMCP Đông Nam Á (SeABank)">Ngân hàng TMCP Đông Nam Á (SeABank)</option>
+                            <option value="Ngân hàng TMCP Phát triển TP. Hồ Chí Minh (HDBank)">Ngân hàng TMCP Phát triển TP. Hồ Chí Minh (HDBank)</option>
+                            <option value="Ngân hàng TMCP An Bình (ABBank)">Ngân hàng TMCP An Bình (ABBank)</option>
+                            <option value="Ngân hàng TMCP Nam Á (NamABank)">Ngân hàng TMCP Nam Á (NamABank)</option>
+                            <option value="Ngân hàng TMCP Bưu Điện Liên Việt (LienVietPostBank)">Ngân hàng TMCP Bưu Điện Liên Việt (LienVietPostBank)</option>
+                            <option value="Ngân hàng TMCP Việt Á (VietABank)">Ngân hàng TMCP Việt Á (VietABank)</option>
+                            <option value="Ngân hàng TMCP Sài Gòn (SCB)">Ngân hàng TMCP Sài Gòn (SCB)</option>
+                            <option value="Ngân hàng TMCP Đại Chúng Việt Nam (PVcomBank)">Ngân hàng TMCP Đại Chúng Việt Nam (PVcomBank)</option>
+                            <option value="Ngân hàng TMCP Kiên Long (KienLongBank)">Ngân hàng TMCP Kiên Long (KienLongBank)</option>
+                            <option value="Ngân hàng TMCP Việt Nam Thương Tín (VietBank)">Ngân hàng TMCP Việt Nam Thương Tín (VietBank)</option>
+                            <option value="Ngân hàng TMCP Bản Việt (VietCapitalBank)">Ngân hàng TMCP Bản Việt (VietCapitalBank)</option>
+                            <option value="Ngân hàng Nông nghiệp và Phát triển Nông thôn Việt Nam (Agribank)">Ngân hàng Nông nghiệp và Phát triển Nông thôn Việt Nam (Agribank)</option>
+                            <option value="Ngân hàng TMCP Xăng dầu Petrolimex (PG Bank)">Ngân hàng TMCP Xăng dầu Petrolimex (PG Bank)</option>
+                            <option value="Ngân hàng Chính sách Xã hội (VBSP)">Ngân hàng Chính sách Xã hội (VBSP)</option>
+                            <option value="Ngân hàng Hợp tác xã Việt Nam (Co-opBank)">Ngân hàng Hợp tác xã Việt Nam (Co-opBank)</option>
+                            <option value="Ngân hàng TNHH MTV HSBC Việt Nam">Ngân hàng TNHH MTV HSBC Việt Nam</option>
+                            <option value="Ngân hàng TNHH MTV Standard Chartered Việt Nam">Ngân hàng TNHH MTV Standard Chartered Việt Nam</option>
+                            <option value="Ngân hàng TNHH MTV Shinhan Việt Nam">Ngân hàng TNHH MTV Shinhan Việt Nam</option>
+                            <option value="Ngân hàng TNHH MTV ANZ Việt Nam">Ngân hàng TNHH MTV ANZ Việt Nam</option>
+                            <option value="Ngân hàng TNHH MTV UOB Việt Nam">Ngân hàng TNHH MTV UOB Việt Nam</option>
+                            <option value="Ngân hàng TNHH MTV Woori Việt Nam">Ngân hàng TNHH MTV Woori Việt Nam</option>
+                            <option value="Ngân hàng TNHH MTV Hong Leong Việt Nam">Ngân hàng TNHH MTV Hong Leong Việt Nam</option>
+                            <option value="Ngân hàng Đầu tư và Phát triển Campuchia (BIDC)">Ngân hàng Đầu tư và Phát triển Campuchia (BIDC)</option>
+                            <option value="Ngân hàng Public Bank Vietnam">Ngân hàng Public Bank Vietnam</option>
+                            <option value="Ngân hàng khác">Ngân hàng khác</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="otherBankGroup" style="display: none;">
+                        <label for="otherBank">Tên ngân hàng khác</label>
+                        <input type="text" class="form-control" id="otherBank" placeholder="Nhập tên ngân hàng">
+                    </div>
+                    <div class="form-group">
+                        <label for="soTaiKhoan">Số tài khoản</label>
+                        <input type="text" class="form-control account-info" id="soTaiKhoan" required placeholder="Nhập số tài khoản" maxlength="16" pattern="[0-9]*" inputmode="numeric">
+                    </div>
+                    <div class="form-group">
+                        <label for="tenChuTaiKhoan">Tên chủ tài khoản</label>
+                        <input type="text" class="form-control account-info" id="tenChuTaiKhoan" required placeholder="Nhập tên chủ tài khoản">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -726,10 +790,42 @@
                 }
             });
 
-            // Validate form rút tiền
+            // Xử lý định dạng số tiền trong input
+            $('.currency-input').each(function() {
+                setupCurrencyInput(this);
+            });
+
+            // Tự động áp dụng cho #soTien và #soTienRut nếu có
+            setupCurrencyInput('#soTien');
+            setupCurrencyInput('#soTienRut');
+            //9/4/2025
+            // Lắng nghe sự kiện thay đổi của dropdown ngân hàng
+            $('#tenNganHang').change(function () {
+                if ($(this).val() === "Ngân hàng khác") {
+                    $('#otherBankGroup').show();
+                    $('#otherBank').attr('required', true);
+                } else {
+                    $('#otherBankGroup').hide();
+                    $('#otherBank').attr('required', false);
+                }
+            });
+
+            //9/4/2025
+            // Xử lý form rút tiền
             $('#withdrawModal form').on('submit', function(e) {
+                // Xóa dấu phẩy khỏi giá trị trước khi submit
+                $('#soTienRut').val(function(i, val) {
+                    return val.replace(/,/g, '');
+                });
+
                 var soTienRut = parseFloat($('#soTienRut').val());
                 var soDuVi = parseFloat('@Model.SoDuVi');
+
+                if (isNaN(soTienRut) || soTienRut <= 0) {
+                    e.preventDefault();
+                    alert('Vui lòng nhập số tiền hợp lệ!');
+                    return false;
+                }
 
                 if (soTienRut > soDuVi) {
                     e.preventDefault();
@@ -737,6 +833,26 @@
                     return false;
                 }
 
+
+                //9/4/2025
+                // Xác định tên ngân hàng (từ dropdown hoặc input "ngân hàng khác")
+                var bankName = $('#tenNganHang').val();
+                if (bankName === "Ngân hàng khác") {
+                    bankName = $('#otherBank').val();
+                    if (!bankName.trim()) {
+                        e.preventDefault();
+                        alert('Vui lòng nhập tên ngân hàng khác!');
+                        return false;
+                    }
+                }
+
+                var accountNumber = $('#soTaiKhoan').val();
+                var accountHolder = $('#tenChuTaiKhoan').val();
+
+                // Ghép thông tin vào input ẩn
+                var fullInfo = bankName + ' - ' + accountNumber + ' - ' + accountHolder;
+                $('#fullAccountInfo').val(fullInfo);
+                //9/4/2025
                 return true;
             });
 
@@ -759,15 +875,18 @@
                 console.log("Đã bấm nút Thu gọn");
             });
 
-
-
             // Xử lý khi bấm nút nạp tiền
             $(".btn-nap-tien").click(function () {
                 $("#depositModal").modal("show");
             });
 
-            // Validate form nạp tiền
+            // Cập nhật phần xử lý form submit
             $('#depositModal form').on('submit', function (e) {
+                // Xóa dấu phẩy trước khi submit
+                $('#soTien').val(function (i, val) {
+                    return val.replace(/,/g, '');
+                });
+
                 var soTien = parseFloat($('#soTien').val());
                 var minAmount = 10000;
 
@@ -792,5 +911,68 @@
                 $("#soTien").focus();
             });
         });
+
+        // Function định dạng số tiền với dấu phẩy phân cách hàng nghìn
+        function formatCurrency(value) {
+            // Loại bỏ tất cả các ký tự không phải số
+            value = value.replace(/\D/g, '');
+
+            //// Kiểm tra giá trị tối thiểu
+            //if (value && parseInt(value) < 10000) {
+            //    value = '10000';
+            //}
+
+            // Định dạng số với dấu phẩy phân cách hàng nghìn
+            if (value) {
+                return new Intl.NumberFormat('en-US').format(parseInt(value));
+            }
+            return '';
+        }
+
+        // Function thiết lập xử lý input tiền tệ
+        function setupCurrencyInput(inputSelector) {
+            var input = $(inputSelector);
+            if (input.length === 0) return;
+
+            // Đảm bảo input là text, không phải number
+            input.attr('type', 'text');
+
+            // Xử lý sự kiện khi người dùng nhập
+            input.on('input', function(e) {
+                // Lưu vị trí con trỏ
+                const start = this.selectionStart;
+                const oldLength = this.value.length;
+
+                // Định dạng giá trị
+                this.value = formatCurrency(this.value);
+
+                // Điều chỉnh vị trí con trỏ sau khi định dạng
+                const newLength = this.value.length;
+                const position = start + (newLength - oldLength);
+                this.setSelectionRange(position, position);
+            });
+
+            // Xử lý khi form được submit để loại bỏ dấu phẩy
+            var form = input.closest('form');
+            if (form.length) {
+                form.on('submit', function() {
+                    input.val(function(i, val) {
+                        // Lưu giá trị gốc vào một hidden field nếu cần
+                        var numericValue = val.replace(/,/g, '');
+                        if (!input.siblings('input[name="' + input.attr('name') + '_numeric"]').length) {
+                            input.after('<input type="hidden" name="' + input.attr('name') + '_numeric" value="' + numericValue + '">');
+                        } else {
+                            input.siblings('input[name="' + input.attr('name') + '_numeric"]').val(numericValue);
+                        }
+                        return val; // Giữ nguyên giá trị hiển thị có dấu phẩy
+                    });
+                });
+            }
+
+            // Định dạng giá trị ban đầu nếu có
+            if (input.val()) {
+                input.val(formatCurrency(input.val()));
+            }
+        }
     </script>
 }
