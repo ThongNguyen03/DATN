@@ -1,0 +1,987 @@
+﻿@model WebApplication1.Controllers.NguoiBanViTienViewModel
+@{
+    ViewBag.Title = "Ví của tôi";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Sidebar styles */
+    .seller-sidebar {
+        background-color: #ffffff;
+        border: 1px solid #e9ecef;
+    }
+
+        .seller-sidebar .card-header {
+            background-color: #f8f9fa;
+            color: #212529;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .seller-sidebar .list-group-item {
+            background-color: transparent;
+            color: #212529;
+            border-color: #e9ecef;
+        }
+
+            .seller-sidebar .list-group-item:hover {
+                background-color: #f8f9fa;
+            }
+
+            .seller-sidebar .list-group-item.active {
+                background-color: #007bff;
+                border-color: #007bff;
+                color: #ffffff;
+            }
+
+    /* Filter Form styles */
+    .filter-form {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid #e9ecef;
+    }
+
+        .filter-form .form-control {
+            border-radius: 4px;
+        }
+
+        .filter-form .btn {
+            border-radius: 4px;
+        }
+
+    /* Transaction table */
+    .wallet-table th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        font-weight: 600;
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .wallet-table td {
+        vertical-align: middle;
+        padding: 0.75rem;
+    }
+
+    /* Status badges */
+    .transaction-status-badge {
+        padding: 0.4rem 0.6rem;
+        border-radius: 30px;
+        font-weight: 500;
+        font-size: 0.85rem;
+    }
+
+    .badge-success {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .badge-warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
+
+    .badge-danger {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .badge-info {
+        background-color: #17a2b8;
+        color: white;
+    }
+
+    .badge-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    /* Stats cards */
+    .stat-card {
+        border-radius: 8px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-bottom: 20px;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+    .bg-primary-light {
+        background-color: rgba(0, 123, 255, 0.1);
+        color: #007bff;
+    }
+
+    .bg-success-light {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+
+    .bg-warning-light {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+    }
+
+    .bg-info-light {
+        background-color: rgba(23, 162, 184, 0.1);
+        color: #17a2b8;
+    }
+
+    .bg-danger-light {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .stat-icon {
+        font-size: 2rem;
+        opacity: 0.7;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin-bottom: 0;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        opacity: 0.8;
+        margin-bottom: 0;
+    }
+
+    /* Pagination Styling */
+    .pagination > li {
+        display: inline-block;
+        margin-right: 5px;
+    }
+
+        .pagination > li > a,
+        .pagination > li > span {
+            color: #007bff;
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 3px;
+            padding: 0.5rem 0.75rem;
+        }
+
+    .pagination > .active > a,
+    .pagination > .active > span {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+    }
+
+    .pagination > .disabled > a,
+    .pagination > .disabled > span {
+        color: #6c757d;
+        pointer-events: none;
+        background-color: #fff;
+    }
+
+    /* Wallet card */
+    .wallet-card {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 8px 16px rgba(0, 123, 255, 0.3);
+        margin-bottom: 25px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .wallet-balance {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .wallet-label {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        margin-bottom: 5px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .wallet-sub-label {
+        font-size: 0.95rem;
+        opacity: 0.8;
+        position: relative;
+        z-index: 2;
+    }
+
+    .wallet-icon {
+        font-size: 8rem;
+        opacity: 0.1;
+        position: absolute;
+        right: -20px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .wallet-actions {
+        margin-top: 20px;
+        position: relative;
+        z-index: 2;
+    }
+
+        .wallet-actions .btn {
+            margin-right: 10px;
+            border-radius: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 8px 20px;
+            font-weight: 500;
+        }
+
+    /* Transaction Type Styles */
+    .transaction-type {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .transaction-deposit {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+        border: 1px solid rgba(40, 167, 69, 0.2);
+    }
+
+    .transaction-withdraw {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.2);
+    }
+
+    .transaction-escrow {
+        background-color: rgba(23, 162, 184, 0.1);
+        color: #17a2b8;
+        border: 1px solid rgba(23, 162, 184, 0.2);
+    }
+
+    .transaction-refund {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+        border: 1px solid rgba(255, 193, 7, 0.2);
+    }
+
+    /* Transaction Amount */
+    .amount-positive {
+        color: #28a745;
+        font-weight: 600;
+    }
+
+    .amount-negative {
+        color: #dc3545;
+        font-weight: 600;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card seller-sidebar">
+                <div class="card-header text-black">
+                    <h5 class="mb-0">Trang người bán</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="@Url.Action("EditSellerProfile", "NguoiDungs")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-store mr-2"></i> Thông tin cửa hàng
+                    </a>
+                    <a href="@Url.Action("QuanLySanPham", "NguoiBans", new { id = Model.MaNguoiBan })" class="list-group-item list-group-item-action">
+                        <i class="fas fa-box mr-2"></i> Sản phẩm
+                    </a>
+                    <a href="@Url.Action("DonHangNguoiMua", "DonHang")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shopping-cart mr-2"></i> Đơn hàng
+                    </a>
+                    <a href="@Url.Action("GiaoDichNguoiBan", "GiaoDich")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-exchange-alt mr-2"></i> Lịch sử giao dịch
+                    </a>
+                    <a href="@Url.Action("ViNguoiBan", "GiaoDich")" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-wallet mr-2"></i> Ví của tôi
+                    </a>
+                    <a href="@Url.Action("QuanLyDanhGia", "NguoiBans", new { id = Model.MaNguoiBan })" class="list-group-item list-group-item-action ">
+                        <i class="fas fa-star mr-2"></i> Đánh giá
+                    </a>
+                    <a href="@Url.Action("QuanLyTaiKhoan", "NguoiBans",new { id = Model.MaNguoiBan })" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-line mr-2"></i> Thống kê
+                    </a>
+                    <a href="@Url.Action("DangXuat", "DangNhap")" class="list-group-item list-group-item-action text-danger">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Đăng xuất
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="col-md-9">
+            <!-- Wallet Summary Card -->
+            <div class="wallet-card position-relative">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5 class="wallet-label">Số dư hiện tại</h5>
+                        <h2 class="wallet-balance">@string.Format("{0:N0} VNĐ", Model.SoDuVi)</h2>
+                        <p class="wallet-sub-label mb-0">Tài khoản người bán #@Model.MaNguoiBan</p>
+                    </div>
+                </div>
+                <i class="fas fa-wallet wallet-icon"></i>
+                <div class="wallet-actions">
+                    <button type="button" class="btn btn-light" data-toggle="modal" data-target="#napTienModal">
+                        <i class="fas fa-plus-circle mr-1"></i> Nạp tiền
+                    </button>
+                    <button type="button" class="btn btn-light" data-toggle="modal" data-target="#rutTienModal">
+                        <i class="fas fa-minus-circle mr-1"></i> Rút tiền
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Lịch sử giao dịch ví</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Filter Form -->
+                    @using (Html.BeginForm("ViNguoiBan", "GiaoDich", FormMethod.Get, new { @class = "filter-form" }))
+                    {
+                        <div class="row">
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label><i class="fas fa-calendar-alt mr-1"></i> Từ ngày</label>
+                                    @Html.TextBoxFor(m => m.TuNgay, "{0:yyyy-MM-dd}", new
+                                    {
+                                        @class = "form-control",
+                                        type = "date",
+                                        max = DateTime.Now.ToString("yyyy-MM-dd"),
+                                        onchange = "validateDates()"
+                                    })
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label><i class="fas fa-calendar-alt mr-1"></i> Đến ngày</label>
+                                    @Html.TextBoxFor(m => m.DenNgay, "{0:yyyy-MM-dd}", new
+                                    {
+                                        @class = "form-control",
+                                        type = "date",
+                                        max = DateTime.Now.ToString("yyyy-MM-dd"),
+                                        onchange = "validateDates()"
+                                    })
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label><i class="fas fa-filter mr-1"></i> Loại giao dịch</label>
+                                    @Html.DropDownListFor(m => m.LoaiGiaoDich,
+                                        new SelectList(new List<SelectListItem>
+                                        {
+                                            new SelectListItem { Text = "Tất cả", Value = "" },
+                                            new SelectListItem { Text = "Thanh toán đơn hàng", Value = "Thanh toán đơn hàng" },
+                                            new SelectListItem { Text = "Đặt cọc", Value = "Đặt cọc" },
+                                            new SelectListItem { Text = "Phí nền tảng", Value = "Phí nền tảng" },
+                                            new SelectListItem { Text = "Hoàn trả đặt cọc", Value = "Hoàn trả đặt cọc" },
+                                            new SelectListItem { Text = "Hoàn trả phí nền tảng", Value = "Hoàn trả phí nền tảng" },
+                                            new SelectListItem { Text = "Nạp tiền ví", Value = "Nạp tiền ví" },
+                                            new SelectListItem { Text = "Rút tiền", Value = "Rút tiền" },
+                                            new SelectListItem { Text = "Hoàn tiền rút", Value = "Hoàn tiền rút" }
+                                        }, "Value", "Text"), new { @class = "form-control" })
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right" style="margin-top:10px">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search mr-1"></i> Tìm kiếm
+                            </button>
+                            <a href="@Url.Action("ViNguoiBan", "GiaoDich")" class="btn btn-outline-secondary">
+                                <i class="fas fa-redo mr-1"></i> Đặt lại
+                            </a>
+                        </div>
+                    }
+
+                    <!-- Stats Summary -->
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <div class="card stat-card">
+                                <div class="card-body d-flex justify-content-between">
+                                    <div>
+                                        <h3 class="stat-value">@Model.TongGiaoDich</h3>
+                                        <p class="stat-label">Tổng giao dịch</p>
+                                    </div>
+                                    <div class="stat-icon">
+                                        <i class="fas fa-exchange-alt"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card stat-card bg-success-light">
+                                <div class="card-body d-flex justify-content-between">
+                                    <div>
+                                        <h3 class="stat-value">@string.Format("{0:N0}", Model.TongNap)</h3>
+                                        <p class="stat-label">Tổng nạp vào</p>
+                                    </div>
+                                    <div class="stat-icon">
+                                        <i class="fas fa-arrow-down"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card stat-card bg-danger-light">
+                                <div class="card-body d-flex justify-content-between">
+                                    <div>
+                                        <h3 class="stat-value">@string.Format("{0:N0}", Model.TongRut)</h3>
+                                        <p class="stat-label">Tổng rút ra</p>
+                                    </div>
+                                    <div class="stat-icon">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Wallet Transactions List -->
+                    <div class="table-responsive mt-4">
+                        <table class="table table-hover wallet-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã GD</th>
+                                    <th>Ngày giao dịch</th>
+                                    <th>Loại giao dịch</th>
+                                    <th>Số tiền</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.DanhSachGhiChep != null && Model.DanhSachGhiChep.Any())
+                                {
+                                    foreach (var ghiChep in Model.DanhSachGhiChep)
+                                    {
+                                        <tr>
+                                            <td class="text-center">
+                                                <span class="font-weight-bold">@ghiChep.MaGhiChep</span>
+                                            </td>
+                                            <td class="text-center">
+                                                @ghiChep.NgayGiaoDich.ToString("dd/MM/yyyy HH:mm")
+                                            </td>
+                                            <td class="text-center">
+                                                @{
+                                                    string badgeClass = "";
+                                                    if (ghiChep.LoaiGiaoDich == "Nạp tiền ví" || ghiChep.LoaiGiaoDich == "Hoàn tiền rút" ||
+                                                        ghiChep.LoaiGiaoDich == "Hoàn trả đặt cọc" || ghiChep.LoaiGiaoDich == "Hoàn trả phí nền tảng" ||
+                                                        ghiChep.LoaiGiaoDich == "Thanh toán đơn hàng")
+                                                    {
+                                                        badgeClass = "transaction-deposit";
+                                                    }
+                                                    else if (ghiChep.LoaiGiaoDich == "Rút tiền" || ghiChep.LoaiGiaoDich == "Đặt cọc" ||
+                                                             ghiChep.LoaiGiaoDich == "Phí nền tảng")
+                                                    {
+                                                        badgeClass = "transaction-withdraw";
+                                                    }
+                                                }
+                                                <span class="transaction-type @badgeClass">
+                                                    @ghiChep.LoaiGiaoDich
+                                                </span>
+                                            </td>
+                                            <td class="text-right">
+                                                @{
+                                                    bool isPositive = ghiChep.LoaiGiaoDich == "Nạp tiền ví" ||
+                                                                      ghiChep.LoaiGiaoDich == "Hoàn tiền rút" ||
+                                                                      ghiChep.LoaiGiaoDich == "Hoàn trả đặt cọc" ||
+                                                                      ghiChep.LoaiGiaoDich == "Hoàn trả phí nền tảng" ||
+                                                                      ghiChep.LoaiGiaoDich == "Thanh toán đơn hàng" ||
+                                                                      (ghiChep.SoTien > 0);
+
+                                                    string amountClass = isPositive ? "amount-positive" : "amount-negative";
+                                                    string amountPrefix = isPositive ? "+" : "-";
+                                                }
+                                                <span class="@amountClass">
+                                                    @amountPrefix @string.Format("{0:N0} VNĐ", Math.Abs(ghiChep.SoTien))
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                @if (ghiChep.TrangThai == "Thành công")
+                                                {
+                                                    <span class="badge badge-success transaction-status-badge">
+                                                        <i class="fas fa-check-circle mr-1"></i> Thành công
+                                                    </span>
+                                                }
+                                                else if (ghiChep.TrangThai == "Đang xử lý")
+                                                {
+                                                    <span class="badge badge-warning transaction-status-badge">
+                                                        <i class="fas fa-clock mr-1"></i> Đang xử lý
+                                                    </span>
+                                                }
+                                                else if (ghiChep.TrangThai == "Đã hủy" || ghiChep.TrangThai == "Thất bại")
+                                                {
+                                                    <span class="badge badge-danger transaction-status-badge">
+                                                        <i class="fas fa-times-circle mr-1"></i> @ghiChep.TrangThai
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge badge-secondary transaction-status-badge">
+                                                        <i class="fas fa-info-circle mr-1"></i> @ghiChep.TrangThai
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td class="text-center">
+                                                <a href="@Url.Action("ChiTietGhiChepViNguoiBan", "GiaoDich", new { id = ghiChep.MaGhiChep })" class="btn btn-sm btn-outline-info">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center py-3">
+                                            <div class="alert alert-info mb-0">
+                                                <i class="fas fa-info-circle mr-2"></i> Không có giao dịch ví nào phù hợp với bộ lọc
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    @if (Model.TongTrang > 1)
+                    {
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <div>
+                                <span>Hiển thị @(Model.DanhSachGhiChep != null ? Model.DanhSachGhiChep.Count() : 0) trên tổng số @Model.TongGiaoDich giao dịch</span>
+                            </div>
+                            <div>
+                                <ul class="pagination mb-0">
+                                    @if (Model.TrangHienTai > 1)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" href="@Url.Action("ViNguoiBan", "GiaoDich", new { tuNgay = Model.TuNgay, denNgay = Model.DenNgay, loaiGiaoDich = Model.LoaiGiaoDich, page = Model.TrangHienTai - 1 })">
+                                                <i class="fas fa-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+                                        </li>
+                                    }
+
+                                    @{
+                                        const int maxPagesToShow = 5;
+                                        int startPage = Math.Max(1, Model.TrangHienTai - maxPagesToShow / 2);
+                                        int endPage = Math.Min(Model.TongTrang, startPage + maxPagesToShow - 1);
+
+                                        // Điều chỉnh lại startPage nếu cần thiết
+                                        if (endPage - startPage + 1 < maxPagesToShow)
+                                        {
+                                            startPage = Math.Max(1, endPage - maxPagesToShow + 1);
+                                        }
+                                    }
+
+                                    @for (int i = startPage; i <= endPage; i++)
+                                    {
+                                        if (i == Model.TrangHienTai)
+                                        {
+                                            <li class="page-item active">
+                                                <span class="page-link">@i</span>
+                                            </li>
+                                        }
+                                        else
+                                        {
+                                            <li class="page-item">
+                                                <a class="page-link" href="@Url.Action("ViNguoiBan", "GiaoDich", new { tuNgay = Model.TuNgay, denNgay = Model.DenNgay, loaiGiaoDich = Model.LoaiGiaoDich, page = i })">@i</a>
+                                            </li>
+                                        }
+                                    }
+
+                                    @if (Model.TrangHienTai < Model.TongTrang)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" href="@Url.Action("ViNguoiBan", "GiaoDich", new { tuNgay = Model.TuNgay, denNgay = Model.DenNgay, loaiGiaoDich = Model.LoaiGiaoDich, page = Model.TrangHienTai + 1 })">
+                                                <i class="fas fa-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nạp tiền -->
+<div class="modal fade" id="napTienModal" tabindex="-1" role="dialog" aria-labelledby="napTienModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="napTienModalLabel">Nạp tiền vào ví</h5>
+                <button type="button" class="close text-black" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="@Url.Action("NapTienVi", "NguoiBans")" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="maNguoiBan" value="@Model.MaNguoiBan" />
+                <div class="modal-body">
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-info-circle mr-1"></i> Số dư hiện tại: <strong>@String.Format("{0:N0} VNĐ", Model.SoDuVi)</strong>
+                    </div>
+                    <div class="form-group">
+                        <label for="soTien">Số tiền muốn nạp</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="soTien" name="soTien" min="10000" required>
+                            <div class="input-group-append">
+                                <span class="input-group-text">VNĐ</span>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">Số tiền tối thiểu là 10,000 VNĐ</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="phuongThucThanhToan">Phương thức thanh toán</label>
+                        <select class="form-control" id="phuongThucThanhToan" name="phuongThucThanhToan" required>
+                            <option value="VNPAY">VNPAY</option>
+                            <option value="Chuyển khoản">Chuyển khoản ngân hàng</option>
+                            <option value="Momo">Ví Momo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check mr-1"></i> Tiếp tục thanh toán
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Rút tiền -->
+<div class="modal fade" id="rutTienModal" tabindex="-1" role="dialog" aria-labelledby="rutTienModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="rutTienModalLabel">Rút tiền từ ví</h5>
+                <button type="button" class="close text-black" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="@Url.Action("RutTienVi", "NguoiBans")" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="maNguoiBan" value="@Model.MaNguoiBan" />
+                <input type="hidden" name="thongTinTaiKhoan" id="fullAccountInfo" />
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle mr-1"></i> Số dư khả dụng: <strong>@String.Format("{0:N0} VNĐ", Model.SoDuVi)</strong>
+                    </div>
+                    <div class="form-group">
+                        <label for="soTienRut">Số tiền rút</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="soTienRut" name="soTien" min="50000" max="@Model.SoDuVi" required>
+                            <div class="input-group-append">
+                                <span class="input-group-text">VNĐ</span>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">Số tiền tối thiểu là 50,000 VNĐ</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="tenNganHang">Tên ngân hàng</label>
+                        <select class="form-control account-info" id="tenNganHang" required>
+                            <option value="">-- Chọn ngân hàng --</option>
+                            <option value="Ngân hàng TMCP Á Châu (ACB)">Ngân hàng TMCP Á Châu (ACB)</option>
+                            <option value="Ngân hàng TMCP Bắc Á (BacABank)">Ngân hàng TMCP Bắc Á (BacABank)</option>
+                            <option value="Ngân hàng TMCP Bảo Việt (BaoVietBank)">Ngân hàng TMCP Bảo Việt (BaoVietBank)</option>
+                            <option value="Ngân hàng TMCP Đầu tư và Phát triển Việt Nam (BIDV)">Ngân hàng TMCP Đầu tư và Phát triển Việt Nam (BIDV)</option>
+                            <option value="Ngân hàng TMCP Hàng Hải (MSB)">Ngân hàng TMCP Hàng Hải (MSB)</option>
+                            <option value="Ngân hàng TMCP Quân Đội (MB)">Ngân hàng TMCP Quân Đội (MB)</option>
+                            <option value="Ngân hàng TMCP Ngoại thương Việt Nam (Vietcombank)">Ngân hàng TMCP Ngoại thương Việt Nam (Vietcombank)</option>
+                            <option value="Ngân hàng TMCP Công thương Việt Nam (VietinBank)">Ngân hàng TMCP Công thương Việt Nam (VietinBank)</option>
+                            <option value="Ngân hàng TMCP Kỹ thương Việt Nam (Techcombank)">Ngân hàng TMCP Kỹ thương Việt Nam (Techcombank)</option>
+                            <option value="Ngân hàng TMCP Sài Gòn Thương Tín (Sacombank)">Ngân hàng TMCP Sài Gòn Thương Tín (Sacombank)</option>
+                            <option value="Ngân hàng TMCP Việt Nam Thịnh Vượng (VPBank)">Ngân hàng TMCP Việt Nam Thịnh Vượng (VPBank)</option>
+                            <option value="Ngân hàng TMCP Xuất Nhập khẩu Việt Nam (Eximbank)">Ngân hàng TMCP Xuất Nhập khẩu Việt Nam (Eximbank)</option>
+                            <option value="Ngân hàng TMCP Tiên Phong (TPBank)">Ngân hàng TMCP Tiên Phong (TPBank)</option>
+                            <option value="Ngân hàng TMCP Quốc Tế (VIB)">Ngân hàng TMCP Quốc Tế (VIB)</option>
+                            <option value="Ngân hàng TMCP Phương Đông (OCB)">Ngân hàng TMCP Phương Đông (OCB)</option>
+                            <option value="Ngân hàng TMCP Sài Gòn - Hà Nội (SHB)">Ngân hàng TMCP Sài Gòn - Hà Nội (SHB)</option>
+                            <option value="Ngân hàng TMCP Đông Nam Á (SeABank)">Ngân hàng TMCP Đông Nam Á (SeABank)</option>
+                            <option value="Ngân hàng TMCP Phát triển TP. Hồ Chí Minh (HDBank)">Ngân hàng TMCP Phát triển TP. Hồ Chí Minh (HDBank)</option>
+                            <option value="Ngân hàng TMCP An Bình (ABBank)">Ngân hàng TMCP An Bình (ABBank)</option>
+                            <option value="Ngân hàng TMCP Nam Á (NamABank)">Ngân hàng TMCP Nam Á (NamABank)</option>
+                            <option value="Ngân hàng TMCP Bưu Điện Liên Việt (LienVietPostBank)">Ngân hàng TMCP Bưu Điện Liên Việt (LienVietPostBank)</option>
+                            <option value="Ngân hàng TMCP Việt Á (VietABank)">Ngân hàng TMCP Việt Á (VietABank)</option>
+                            <option value="Ngân hàng TMCP Sài Gòn (SCB)">Ngân hàng TMCP Sài Gòn (SCB)</option>
+                            <option value="Ngân hàng TMCP Đại Chúng Việt Nam (PVcomBank)">Ngân hàng TMCP Đại Chúng Việt Nam (PVcomBank)</option>
+                            <option value="Ngân hàng TMCP Kiên Long (KienLongBank)">Ngân hàng TMCP Kiên Long (KienLongBank)</option>
+                            <option value="Ngân hàng TMCP Việt Nam Thương Tín (VietBank)">Ngân hàng TMCP Việt Nam Thương Tín (VietBank)</option>
+                            <option value="Ngân hàng TMCP Bản Việt (VietCapitalBank)">Ngân hàng TMCP Bản Việt (VietCapitalBank)</option>
+                            <option value="Ngân hàng Nông nghiệp và Phát triển Nông thôn Việt Nam (Agribank)">Ngân hàng Nông nghiệp và Phát triển Nông thôn Việt Nam (Agribank)</option>
+                            <option value="Ngân hàng TMCP Xăng dầu Petrolimex (PG Bank)">Ngân hàng TMCP Xăng dầu Petrolimex (PG Bank)</option>
+                            <option value="Ngân hàng Chính sách Xã hội (VBSP)">Ngân hàng Chính sách Xã hội (VBSP)</option>
+                            <option value="Ngân hàng Hợp tác xã Việt Nam (Co-opBank)">Ngân hàng Hợp tác xã Việt Nam (Co-opBank)</option>
+                            <option value="Ngân hàng TNHH MTV HSBC Việt Nam">Ngân hàng TNHH MTV HSBC Việt Nam</option>
+                            <option value="Ngân hàng TNHH MTV Standard Chartered Việt Nam">Ngân hàng TNHH MTV Standard Chartered Việt Nam</option>
+                            <option value="Ngân hàng TNHH MTV Shinhan Việt Nam">Ngân hàng TNHH MTV Shinhan Việt Nam</option>
+                            <option value="Ngân hàng TNHH MTV ANZ Việt Nam">Ngân hàng TNHH MTV ANZ Việt Nam</option>
+                            <option value="Ngân hàng TNHH MTV UOB Việt Nam">Ngân hàng TNHH MTV UOB Việt Nam</option>
+                            <option value="Ngân hàng TNHH MTV Woori Việt Nam">Ngân hàng TNHH MTV Woori Việt Nam</option>
+                            <option value="Ngân hàng TNHH MTV Hong Leong Việt Nam">Ngân hàng TNHH MTV Hong Leong Việt Nam</option>
+                            <option value="Ngân hàng Đầu tư và Phát triển Campuchia (BIDC)">Ngân hàng Đầu tư và Phát triển Campuchia (BIDC)</option>
+                            <option value="Ngân hàng Public Bank Vietnam">Ngân hàng Public Bank Vietnam</option>
+                            <option value="Ngân hàng khác">Ngân hàng khác</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="otherBankGroup" style="display: none;">
+                        <label for="otherBank">Tên ngân hàng khác</label>
+                        <input type="text" class="form-control" id="otherBank" placeholder="Nhập tên ngân hàng">
+                    </div>
+                    <div class="form-group">
+                        <label for="soTaiKhoan">Số tài khoản</label>
+                        <input type="text" class="form-control account-info" id="soTaiKhoan" required placeholder="Nhập số tài khoản" maxlength="16" pattern="[0-9]*" inputmode="numeric">
+                    </div>
+                    <div class="form-group">
+                        <label for="tenChuTaiKhoan">Tên chủ tài khoản</label>
+                        <input type="text" class="form-control account-info" id="tenChuTaiKhoan" required placeholder="Nhập tên chủ tài khoản">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check mr-1"></i> Rút tiền
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Đặt giá trị mặc định cho form filter nếu chưa có
+            if (!$("#TuNgay").val()) {
+                var defaultDate = new Date();
+                defaultDate.setMonth(defaultDate.getMonth() - 1);
+                $("#TuNgay").val(defaultDate.toISOString().split('T')[0]);
+            }
+
+            if (!$("#DenNgay").val()) {
+                var today = new Date();
+                $("#DenNgay").val(today.toISOString().split('T')[0]);
+            }
+
+            // Xử lý định dạng số tiền trong input
+            $('.currency-input').each(function() {
+                setupCurrencyInput(this);
+            });
+
+            // Tự động áp dụng cho #soTien và #soTienRut nếu có
+            setupCurrencyInput('#soTien');
+            setupCurrencyInput('#soTienRut');
+
+            // Lắng nghe sự kiện thay đổi của dropdown ngân hàng
+            $('#tenNganHang').change(function () {
+                if ($(this).val() === "Ngân hàng khác") {
+                    $('#otherBankGroup').show();
+                    $('#otherBank').attr('required', true);
+                } else {
+                    $('#otherBankGroup').hide();
+                    $('#otherBank').attr('required', false);
+                }
+            });
+
+            // Xử lý form rút tiền
+            $('#rutTienModal form').on('submit', function(e) {
+                // Xóa dấu phẩy khỏi giá trị trước khi submit
+                $('#soTienRut').val(function(i, val) {
+                    return val.replace(/,/g, '');
+                });
+
+                var soTienRut = parseFloat($('#soTienRut').val());
+                var soDuVi = parseFloat('@Model.SoDuVi');
+
+                if (isNaN(soTienRut) || soTienRut <= 0) {
+                    e.preventDefault();
+                    alert('Vui lòng nhập số tiền hợp lệ!');
+                    return false;
+                }
+
+                if (soTienRut > soDuVi) {
+                    e.preventDefault();
+                    alert('Số tiền rút không được vượt quá số dư ví!');
+                    return false;
+                }
+
+                // Xác định tên ngân hàng (từ dropdown hoặc input "ngân hàng khác")
+                var bankName = $('#tenNganHang').val();
+                if (bankName === "Ngân hàng khác") {
+                    bankName = $('#otherBank').val();
+                    if (!bankName.trim()) {
+                        e.preventDefault();
+                        alert('Vui lòng nhập tên ngân hàng khác!');
+                        return false;
+                    }
+                }
+
+                var accountNumber = $('#soTaiKhoan').val();
+                var accountHolder = $('#tenChuTaiKhoan').val();
+
+                // Ghép thông tin vào input ẩn
+                var fullInfo = bankName + ' - ' + accountNumber + ' - ' + accountHolder;
+                $('#fullAccountInfo').val(fullInfo);
+
+                return true;
+            });
+
+            // Xử lý form nạp tiền
+            $('#napTienModal form').on('submit', function (e) {
+                // Xóa dấu phẩy trước khi submit
+                $('#soTien').val(function (i, val) {
+                    return val.replace(/,/g, '');
+                });
+
+                var soTien = parseFloat($('#soTien').val());
+                var minAmount = 10000;
+
+                if (isNaN(soTien) || soTien < minAmount) {
+                    e.preventDefault();
+                    alert('Số tiền nạp phải ít nhất ' + minAmount.toLocaleString('vi-VN') + ' VNĐ!');
+                    return false;
+                }
+
+                if (soTien > 100000000) {
+                    if (!confirm('Bạn đang nạp một số tiền lớn: ' + soTien.toLocaleString('vi-VN') + ' VNĐ. Xác nhận tiếp tục?')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            // Đảm bảo modal được khởi tạo đúng
+            $("#napTienModal").on("shown.bs.modal", function () {
+                $("#soTien").focus();
+            });
+
+            $("#rutTienModal").on("shown.bs.modal", function () {
+                $("#soTienRut").focus();
+            });
+        });
+
+        // Function định dạng số tiền với dấu phẩy phân cách hàng nghìn
+        function formatCurrency(value) {
+            // Loại bỏ tất cả các ký tự không phải số
+            value = value.replace(/\D/g, '');
+
+            // Định dạng số với dấu phẩy phân cách hàng nghìn
+            if (value) {
+                return new Intl.NumberFormat('en-US').format(parseInt(value));
+            }
+            return '';
+        }
+
+        // Function thiết lập xử lý input tiền tệ
+        function setupCurrencyInput(inputSelector) {
+            var input = $(inputSelector);
+            if (input.length === 0) return;
+
+            // Đảm bảo input là text, không phải number
+            input.attr('type', 'text');
+
+            // Xử lý sự kiện khi người dùng nhập
+            input.on('input', function(e) {
+                // Lưu vị trí con trỏ
+                const start = this.selectionStart;
+                const oldLength = this.value.length;
+
+                // Định dạng giá trị
+                this.value = formatCurrency(this.value);
+
+                // Điều chỉnh vị trí con trỏ sau khi định dạng
+                const newLength = this.value.length;
+                const position = start + (newLength - oldLength);
+                this.setSelectionRange(position, position);
+            });
+
+            // Xử lý khi form được submit để loại bỏ dấu phẩy
+            var form = input.closest('form');
+            if (form.length) {
+                form.on('submit', function() {
+                    input.val(function(i, val) {
+                        // Lưu giá trị gốc vào một hidden field nếu cần
+                        var numericValue = val.replace(/,/g, '');
+                        if (!input.siblings('input[name="' + input.attr('name') + '_numeric"]').length) {
+                            input.after('<input type="hidden" name="' + input.attr('name') + '_numeric" value="' + numericValue + '">');
+                        } else {
+                            input.siblings('input[name="' + input.attr('name') + '_numeric"]').val(numericValue);
+                        }
+                        return val; // Giữ nguyên giá trị hiển thị có dấu phẩy
+                    });
+                });
+            }
+
+            // Định dạng giá trị ban đầu nếu có
+            if (input.val()) {
+                input.val(formatCurrency(input.val()));
+            }
+        }
+
+            function validateDates() {
+        var tuNgay = document.getElementById('@Html.IdFor(m => m.TuNgay)');
+        var denNgay = document.getElementById('@Html.IdFor(m => m.DenNgay)');
+
+        if (tuNgay.value && denNgay.value) {
+            // Nếu từ ngày > đến ngày thì set đến ngày = từ ngày
+            if (new Date(tuNgay.value) > new Date(denNgay.value)) {
+                denNgay.value = tuNgay.value;
+            }
+        }
+
+        // Set max của từ ngày là đến ngày hoặc ngày hiện tại (nếu đến ngày chưa chọn)
+        if (denNgay.value) {
+            tuNgay.max = denNgay.value;
+        } else {
+            tuNgay.max = new Date().toISOString().split('T')[0];
+        }
+
+        // Set min của đến ngày là từ ngày
+        if (tuNgay.value) {
+            denNgay.min = tuNgay.value;
+        } else {
+            denNgay.min = "";
+        }
+    }
+
+    // Gọi hàm khi trang được load
+    document.addEventListener('DOMContentLoaded', function() {
+        validateDates();
+    });
+    </script>
+}

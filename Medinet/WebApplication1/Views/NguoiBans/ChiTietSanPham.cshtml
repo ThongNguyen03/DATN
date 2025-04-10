@@ -821,7 +821,7 @@
                     <div class="review-item mb-4">
                         <div class="reviewer-info">
                             <div class="reviewer-avatar">
-                                <img src="~/Content/images/avatar-default.png" alt="Avatar" class="img-circle" />
+                                <img src="@(string.IsNullOrEmpty(danhGia.NguoiDung.AnhDaiDien) ? "~/Content/Images/default-avatar.png" : Url.Content(danhGia.NguoiDung.AnhDaiDien))" alt="Avatar" class="img-circle" />
                             </div>
                             <div>
                                 <span class="reviewer-name">@danhGia.NguoiDung.TenNguoiDung</span>

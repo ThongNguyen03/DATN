@@ -168,6 +168,12 @@
                     <a href="@Url.Action("DonHangNguoiMua", "DonHang")" class="list-group-item list-group-item-action active">
                         <i class="fas fa-shopping-cart mr-2"></i> Đơn hàng
                     </a>
+                    <a href="@Url.Action("GiaoDichNguoiBan", "GiaoDich")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-exchange-alt mr-2"></i> Lịch sử giao dịch
+                    </a>
+                    <a href="@Url.Action("ViNguoiBan", "GiaoDich")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-wallet mr-2"></i> Ví của tôi
+                    </a>
                     <a href="@Url.Action("QuanLyDanhGia", "NguoiBans", new { id = Model.MaNguoiBan })" class="list-group-item list-group-item-action ">
                         <i class="fas fa-star mr-2"></i> Đánh giá
                     </a>
@@ -245,7 +251,7 @@
                     {
                         <div class="alert alert-warning mt-3">
                             <div class="d-flex align-items-center">
-                                <div class="mr-3">
+                                <div class="mr-3" style="margin-right:10px">
                                     <i class="fas fa-exclamation-triangle fa-2x"></i>
                                 </div>
                                 <div>

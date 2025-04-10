@@ -217,6 +217,12 @@
                     <a href="@Url.Action("DonHangNguoiMua", "DonHang")" class="list-group-item list-group-item-action">
                         <i class="fas fa-shopping-cart mr-2"></i> Đơn hàng
                     </a>
+                    <a href="@Url.Action("GiaoDichNguoiBan", "GiaoDich")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-exchange-alt mr-2"></i> Lịch sử giao dịch
+                    </a>
+                    <a href="@Url.Action("ViNguoiBan", "GiaoDich")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-wallet mr-2"></i> Ví của tôi
+                    </a>
                     <a href="@Url.Action("QuanLyDanhGia", "NguoiBans", new { id = Model.MaNguoiBan })" class="list-group-item list-group-item-action ">
                         <i class="fas fa-star mr-2"></i> Đánh giá
                     </a>
@@ -373,7 +379,7 @@
 
                     <div class="card">
                         <div class="card-header">
-                            <h5 class="mb-0">Lịch sử giao dịch</h5>
+                            <h5 class="mb-0">Lịch sử giao dịch ví</h5>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
@@ -487,8 +493,11 @@
                                 </table>
                             </div>
                             <div class="card-footer text-center">
-                                <button class="btn btn-link" id="xemTatCaBtn" type="button">Xem tất cả giao dịch</button>
-                                <button class="btn btn-link" id="anBotBtn" style="display:none;" type="button">Thu gọn</button>
+                                @*<button class="btn btn-link" id="xemTatCaBtn" type="button">Xem tất cả giao dịch</button>
+                                 <button class="btn btn-link" id="anBotBtn" style="display:none;" type="button">Thu gọn</button>*@
+                                <a href="@Url.Action("ViNguoiBan", "GiaoDich")">
+                                    Xem tất cả giao dịch
+                                </a>
                             </div>
                         </div>
                     </div>

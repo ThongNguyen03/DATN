@@ -1,0 +1,552 @@
+﻿@model WebApplication1.Controllers.NguoiBanGiaoDichViewModel
+@{
+    ViewBag.Title = "Lịch sử giao dịch";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Sidebar styles */
+    .seller-sidebar {
+        background-color: #ffffff;
+        border: 1px solid #e9ecef;
+    }
+
+        .seller-sidebar .card-header {
+            background-color: #f8f9fa;
+            color: #212529;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .seller-sidebar .list-group-item {
+            background-color: transparent;
+            color: #212529;
+            border-color: #e9ecef;
+        }
+
+            .seller-sidebar .list-group-item:hover {
+                background-color: #f8f9fa;
+            }
+
+            .seller-sidebar .list-group-item.active {
+                background-color: #007bff;
+                border-color: #007bff;
+                color: #ffffff;
+            }
+
+    /* Filter Form styles */
+    .filter-form {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid #e9ecef;
+    }
+
+        .filter-form .form-control {
+            border-radius: 4px;
+        }
+
+        .filter-form .btn {
+            border-radius: 4px;
+        }
+
+    /* Transaction table */
+    .transaction-table th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        font-weight: 600;
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .transaction-table td {
+        vertical-align: middle;
+        padding: 0.75rem;
+    }
+
+    /* Status badges */
+    .transaction-status-badge {
+        padding: 0.4rem 0.6rem;
+        border-radius: 30px;
+        font-weight: 500;
+        font-size: 0.85rem;
+    }
+
+    .badge-success {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .badge-warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
+
+    .badge-danger {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .badge-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    /* Stats cards */
+    .stat-card {
+        border-radius: 8px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-bottom: 20px;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+    .bg-primary-light {
+        background-color: rgba(0, 123, 255, 0.1);
+        color: #007bff;
+    }
+
+    .bg-success-light {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+
+    .bg-warning-light {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+    }
+
+    .bg-info-light {
+        background-color: rgba(23, 162, 184, 0.1);
+        color: #17a2b8;
+    }
+
+    .stat-icon {
+        font-size: 2rem;
+        opacity: 0.7;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin-bottom: 0;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        opacity: 0.8;
+        margin-bottom: 0;
+    }
+
+    /* Pagination Styling */
+    .pagination > li {
+        display: inline-block;
+        margin-right: 5px;
+    }
+
+        .pagination > li > a,
+        .pagination > li > span {
+            color: #007bff;
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 3px;
+            padding: 0.5rem 0.75rem;
+        }
+
+    .pagination > .active > a,
+    .pagination > .active > span {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+    }
+
+    .pagination > .disabled > a,
+    .pagination > .disabled > span {
+        color: #6c757d;
+        pointer-events: none;
+        background-color: #fff;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card seller-sidebar">
+                <div class="card-header text-black">
+                    <h5 class="mb-0">Trang người bán</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="@Url.Action("EditSellerProfile", "NguoiDungs")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-store mr-2"></i> Thông tin cửa hàng
+                    </a>
+                    <a href="@Url.Action("QuanLySanPham", "NguoiBans", new { id = Model.MaNguoiBan })" class="list-group-item list-group-item-action">
+                        <i class="fas fa-box mr-2"></i> Sản phẩm
+                    </a>
+                    <a href="@Url.Action("DonHangNguoiMua", "DonHang")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shopping-cart mr-2"></i> Đơn hàng
+                    </a>
+                    <a href="@Url.Action("GiaoDichNguoiBan", "GiaoDich")" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-exchange-alt mr-2"></i> Lịch sử giao dịch
+                    </a>
+                    <a href="@Url.Action("ViNguoiBan", "GiaoDich")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-wallet mr-2"></i> Ví của tôi
+                    </a>
+                    <a href="@Url.Action("QuanLyDanhGia", "NguoiBans", new { id = Model.MaNguoiBan })" class="list-group-item list-group-item-action ">
+                        <i class="fas fa-star mr-2"></i> Đánh giá
+                    </a>
+                    <a href="@Url.Action("QuanLyTaiKhoan", "NguoiBans",new { id = Model.MaNguoiBan })" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-line mr-2"></i> Thống kê
+                    </a>
+                    <a href="@Url.Action("DangXuat", "DangNhap")" class="list-group-item list-group-item-action text-danger">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Đăng xuất
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Lịch sử giao dịch</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Wallet Summary -->
+                    <div class="alert alert-primary d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <strong><i class="fas fa-wallet mr-2"></i> Số dư ví:</strong>
+                            <span class="font-weight-bold">@string.Format("{0:N0} VNĐ", Model.SoDuVi)</span>
+                        </div>
+                        <a href="@Url.Action("ViNguoiBan", "GiaoDich")" class="btn btn-sm btn-primary">
+                            <i class="fas fa-eye mr-1"></i> Chi tiết ví
+                        </a>
+                    </div>
+
+                    <!-- Filter Form -->
+                    @using (Html.BeginForm("GiaoDichNguoiBan", "GiaoDich", FormMethod.Get, new { @class = "filter-form" }))
+                    {
+                        <div class="row">
+
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label><i class="fas fa-calendar-alt mr-1"></i> Từ ngày</label>
+                                    @Html.TextBoxFor(m => m.TuNgay, "{0:yyyy-MM-dd}", new
+                                    {
+                                        @class = "form-control",
+                                        type = "date",
+                                        max = DateTime.Now.ToString("yyyy-MM-dd"),
+                                        onchange = "validateDates()"
+                                    })
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label><i class="fas fa-calendar-alt mr-1"></i> Đến ngày</label>
+                                    @Html.TextBoxFor(m => m.DenNgay, "{0:yyyy-MM-dd}", new
+                                    {
+                                        @class = "form-control",
+                                        type = "date",
+                                        max = DateTime.Now.ToString("yyyy-MM-dd"),
+                                        onchange = "validateDates()"
+                                    })
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label><i class="fas fa-filter mr-1"></i> Trạng thái</label>
+                                    @Html.DropDownListFor(m => m.TrangThai,
+                                        new SelectList(new List<SelectListItem>
+                                        {
+                                            new SelectListItem { Text = "Tất cả", Value = "" },
+                                            new SelectListItem { Text = "Đã hoàn thành", Value = "Đã hoàn thành" },
+                                            new SelectListItem { Text = "Đang chờ xử lý", Value = "Đang chờ xử lý" },
+                                            new SelectListItem { Text = "Không thành công", Value = "Không thành công" }
+                                        }, "Value", "Text"), new { @class = "form-control" })
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label><i class="fas fa-credit-card mr-1"></i> Phương thức</label>
+                                    @Html.DropDownListFor(m => m.PhuongThuc,
+                                        new SelectList(new List<SelectListItem>
+                                        {
+                                            new SelectListItem { Text = "Tất cả", Value = "" },
+                                            new SelectListItem { Text = "VNPAY", Value = "VNPAY" },
+                                            new SelectListItem { Text = "COD", Value = "COD" }
+                                        }, "Value", "Text"), new { @class = "form-control" })
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right" style="margin-top:10px">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search mr-1"></i> Tìm kiếm
+                            </button>
+                            <a href="@Url.Action("GiaoDichNguoiBan", "GiaoDich")" class="btn btn-outline-secondary">
+                                <i class="fas fa-redo mr-1"></i> Đặt lại
+                            </a>
+                        </div>
+                    }
+
+                    <!-- Stats Summary -->
+                    <div class="row mt-4">
+                        <div class="col-md-3">
+                            <div class="card stat-card bg-info-light">
+                                <div class="card-body d-flex justify-content-between">
+                                    <div>
+                                        <h3 class="stat-value">@Model.TongGiaoDich</h3>
+                                        <p class="stat-label">Tổng giao dịch</p>
+                                    </div>
+                                    <div class="stat-icon">
+                                        <i class="fas fa-exchange-alt"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card stat-card bg-success-light">
+                                <div class="card-body d-flex justify-content-between">
+                                    <div>
+                                        <h3 class="stat-value">@Model.GiaoDichHoanThanh</h3>
+                                        <p class="stat-label">Đã hoàn thành</p>
+                                    </div>
+                                    <div class="stat-icon">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card stat-card bg-warning-light">
+                                <div class="card-body d-flex justify-content-between">
+                                    <div>
+                                        <h3 class="stat-value">@Model.GiaoDichDangXuLy</h3>
+                                        <p class="stat-label">Đang xử lý</p>
+                                    </div>
+                                    <div class="stat-icon">
+                                        <i class="fas fa-hourglass-half"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card stat-card">
+                                <div class="card-body d-flex justify-content-between">
+                                    <div>
+                                        <h3 class="stat-value">@string.Format("{0:N0}", Model.TongDoanhThu)</h3>
+                                        <p class="stat-label">Tổng doanh thu</p>
+                                    </div>
+                                    <div class="stat-icon">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transactions List -->
+                    <div class="table-responsive mt-4">
+                        <table class="table table-hover transaction-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã GD</th>
+                                    <th>Đơn hàng</th>
+                                    <th>Ngày giao dịch</th>
+                                    <th>Phương thức</th>
+                                    <th>Số tiền</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.TatCaGiaoDich != null && Model.TatCaGiaoDich.Any())
+                                {
+                                    foreach (var giaoDich in Model.TatCaGiaoDich)
+                                    {
+                                        <tr>
+                                            <td class="text-center">
+                                                <span class="font-weight-bold">@giaoDich.MaGiaoDich</span>
+                                            </td>
+                                            <td class="text-center">
+                                                @giaoDich.DonHang.MaDonHang
+                                            </td>
+                                            <td class="text-center">
+                                                @giaoDich.NgayGiaoDich.ToString("dd/MM/yyyy HH:mm")
+                                            </td>
+                                            <td class="text-center">
+                                                @giaoDich.PhuongThucThanhToan
+                                            </td>
+                                            <td class="text-right">
+                                                @string.Format("{0:N0} VNĐ", giaoDich.TongTien)
+                                            </td>
+                                            <td class="text-center">
+                                                @if (giaoDich.TrangThaiGiaoDich == "Đã hoàn thành")
+                                                {
+                                                    <span class="badge badge-success transaction-status-badge">
+                                                        <i class="fas fa-check-circle mr-1"></i> Đã hoàn thành
+                                                    </span>
+                                                }
+                                                else if (giaoDich.TrangThaiGiaoDich == "Đang chờ xử lý")
+                                                {
+                                                    <span class="badge badge-warning transaction-status-badge">
+                                                        <i class="fas fa-clock mr-1"></i> Đang chờ xử lý
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge badge-secondary transaction-status-badge">
+                                                        <i class="fas fa-info-circle mr-1"></i> @giaoDich.TrangThaiGiaoDich
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td class="text-center">
+                                                <a href="@Url.Action("ChiTietGiaoDichNguoiBan", "GiaoDich", new { id = giaoDich.MaGiaoDich })" class="btn btn-sm btn-outline-info">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="7" class="text-center py-3">
+                                            <div class="alert alert-info mb-0">
+                                                <i class="fas fa-info-circle mr-2"></i> Không có giao dịch nào phù hợp với bộ lọc
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    @if (Model.TongTrang > 1)
+                    {
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <div>
+                                <span>Hiển thị @(Model.TatCaGiaoDich != null ? Model.TatCaGiaoDich.Count() : 0) trên tổng số @Model.TongGiaoDich giao dịch</span>
+                            </div>
+                            <div>
+                                <ul class="pagination mb-0">
+                                    @if (Model.TrangHienTai > 1)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" href="@Url.Action("GiaoDichNguoiBan", "GiaoDich", new { tuNgay = Model.TuNgay, denNgay = Model.DenNgay, trangThai = Model.TrangThai, phuongThuc = Model.PhuongThuc, page = Model.TrangHienTai - 1 })">
+                                                <i class="fas fa-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+                                        </li>
+                                    }
+
+                                    @{
+                                        const int maxPagesToShow = 5;
+                                        int startPage = Math.Max(1, Model.TrangHienTai - maxPagesToShow / 2);
+                                        int endPage = Math.Min(Model.TongTrang, startPage + maxPagesToShow - 1);
+
+                                        // Điều chỉnh lại startPage nếu cần thiết
+                                        if (endPage - startPage + 1 < maxPagesToShow)
+                                        {
+                                            startPage = Math.Max(1, endPage - maxPagesToShow + 1);
+                                        }
+                                    }
+
+                                    @for (int i = startPage; i <= endPage; i++)
+                                    {
+                                        if (i == Model.TrangHienTai)
+                                        {
+                                            <li class="page-item active">
+                                                <span class="page-link">@i</span>
+                                            </li>
+                                        }
+                                        else
+                                        {
+                                            <li class="page-item">
+                                                <a class="page-link" href="@Url.Action("GiaoDichNguoiBan", "GiaoDich", new { tuNgay = Model.TuNgay, denNgay = Model.DenNgay, trangThai = Model.TrangThai, phuongThuc = Model.PhuongThuc, page = i })">@i</a>
+                                            </li>
+                                        }
+                                    }
+
+                                    @if (Model.TrangHienTai < Model.TongTrang)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" href="@Url.Action("GiaoDichNguoiBan", "GiaoDich", new { tuNgay = Model.TuNgay, denNgay = Model.DenNgay, trangThai = Model.TrangThai, phuongThuc = Model.PhuongThuc, page = Model.TrangHienTai + 1 })">
+                                                <i class="fas fa-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Đặt giá trị mặc định cho form filter nếu chưa có
+            if (!$("#TuNgay").val()) {
+                var defaultDate = new Date();
+                defaultDate.setMonth(defaultDate.getMonth() - 1);
+                $("#TuNgay").val(defaultDate.toISOString().split('T')[0]);
+            }
+
+            if (!$("#DenNgay").val()) {
+                var today = new Date();
+                $("#DenNgay").val(today.toISOString().split('T')[0]);
+            }
+        });
+
+            function validateDates() {
+        var tuNgay = document.getElementById('@Html.IdFor(m => m.TuNgay)');
+        var denNgay = document.getElementById('@Html.IdFor(m => m.DenNgay)');
+
+        if (tuNgay.value && denNgay.value) {
+            // Nếu từ ngày > đến ngày thì set đến ngày = từ ngày
+            if (new Date(tuNgay.value) > new Date(denNgay.value)) {
+                denNgay.value = tuNgay.value;
+            }
+        }
+
+        // Set max của từ ngày là đến ngày hoặc ngày hiện tại (nếu đến ngày chưa chọn)
+        if (denNgay.value) {
+            tuNgay.max = denNgay.value;
+        } else {
+            tuNgay.max = new Date().toISOString().split('T')[0];
+        }
+
+        // Set min của đến ngày là từ ngày
+        if (tuNgay.value) {
+            denNgay.min = tuNgay.value;
+        } else {
+            denNgay.min = "";
+        }
+    }
+
+    // Gọi hàm khi trang được load
+    document.addEventListener('DOMContentLoaded', function() {
+        validateDates();
+    });
+    </script>
+}

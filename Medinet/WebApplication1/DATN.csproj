@@ -399,6 +399,10 @@
     <Content Include="Views\GiaoDich\WalletLogDetails.cshtml" />
     <Content Include="Views\GiaoDich\Dashboard.cshtml" />
     <Content Include="Views\Admin\Dashboard.cshtml" />
+    <Content Include="Views\GiaoDich\GiaoDichNguoiBan.cshtml" />
+    <Content Include="Views\GiaoDich\ViNguoiBan.cshtml" />
+    <Content Include="Views\GiaoDich\ChiTietGhiChepViNguoiBan.cshtml" />
+    <Content Include="Views\GiaoDich\ChiTietGiaoDichNguoiBan.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

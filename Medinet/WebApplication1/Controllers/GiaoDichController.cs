@@ -451,7 +451,241 @@ namespace WebApplication1.Controllers
 
         //9/4/2025
 
+        // GET: GiaoDich/GiaoDichNguoiBan
+        [Authorize]
+        public ActionResult GiaoDichNguoiBan(DateTime? tuNgay = null, DateTime? denNgay = null, string trangThai = null, string phuongThuc = null, int page = 1)
+        {
+            int maNguoiBan = LayMaNguoiBanHienTai();
+            var nguoiBan = db.NguoiBans.Find(maNguoiBan);
 
+            if (nguoiBan == null)
+            {
+                return HttpNotFound();
+            }
+
+            var viewModel = new NguoiBanGiaoDichViewModel();
+
+            // Thông tin người bán
+            viewModel.MaNguoiBan = maNguoiBan;
+            viewModel.TenNguoiBan = nguoiBan.TenCuaHang;
+            viewModel.SoDuVi = nguoiBan.SoDuVi;
+
+            // Thiết lập bộ lọc
+            if (!tuNgay.HasValue)
+            {
+                tuNgay = DateTime.Now.AddMonths(-1);
+            }
+            if (!denNgay.HasValue)
+            {
+                denNgay = DateTime.Now;
+            }
+
+            // Điều chỉnh denNgay để bao gồm cả ngày cuối
+            DateTime denNgayKetThuc = denNgay.Value.Date.AddDays(1).AddSeconds(-1);
+
+            viewModel.TuNgay = tuNgay;
+            viewModel.DenNgay = denNgay;
+            viewModel.TrangThai = trangThai;
+            viewModel.PhuongThuc = phuongThuc;
+
+            // Lấy dữ liệu đã lọc
+            var filteredData = db.GiaoDichs
+                .Include(g => g.DonHang)
+                .Where(g => g.DonHang.MaNguoiBan == maNguoiBan &&
+                       g.NgayGiaoDich >= tuNgay && g.NgayGiaoDich <= denNgayKetThuc);
+
+            if (!string.IsNullOrEmpty(trangThai))
+            {
+                filteredData = filteredData.Where(g => g.TrangThaiGiaoDich == trangThai);
+            }
+
+            if (!string.IsNullOrEmpty(phuongThuc))
+            {
+                filteredData = filteredData.Where(g => g.PhuongThucThanhToan == phuongThuc);
+            }
+
+            // Thống kê
+            viewModel.TongGiaoDich = filteredData.Count();
+            viewModel.GiaoDichHoanThanh = filteredData.Count(g => g.TrangThaiGiaoDich == "Đã hoàn thành");
+            viewModel.GiaoDichDangXuLy = filteredData.Count(g => g.TrangThaiGiaoDich == "Đang chờ xử lý");
+            viewModel.TongDoanhThu = filteredData.Where(g => g.TrangThaiGiaoDich == "Đã hoàn thành").Sum(g => (decimal?)g.TongTien) ?? 0;
+
+            // Phân trang
+            int pageSize = 10;
+            int totalItems = filteredData.Count();
+            int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+            // Điều chỉnh page hiện tại nếu nằm ngoài phạm vi
+            if (page < 1)
+                page = 1;
+            if (page > totalPages && totalPages > 0)
+                page = totalPages;
+
+            viewModel.TatCaGiaoDich = filteredData
+                .OrderByDescending(g => g.NgayGiaoDich)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            viewModel.TrangHienTai = page;
+            viewModel.TongTrang = totalPages;
+
+            return View(viewModel);
+        }
+
+        // GET: GiaoDich/ViNguoiBan
+        [Authorize]
+        public ActionResult ViNguoiBan(DateTime? tuNgay = null, DateTime? denNgay = null, string loaiGiaoDich = "", int page = 1)
+        {
+            int maNguoiBan = LayMaNguoiBanHienTai();
+            var nguoiBan = db.NguoiBans.Find(maNguoiBan);
+
+            if (nguoiBan == null)
+            {
+                return HttpNotFound();
+            }
+
+            var viewModel = new NguoiBanViTienViewModel();
+
+            // Thông tin người bán
+            viewModel.MaNguoiBan = maNguoiBan;
+            viewModel.SoDuVi = nguoiBan.SoDuVi;
+
+            // Thiết lập bộ lọc
+            if (!tuNgay.HasValue)
+            {
+                tuNgay = DateTime.Now.AddMonths(-1);
+            }
+            if (!denNgay.HasValue)
+            {
+                denNgay = DateTime.Now;
+            }
+
+            // Điều chỉnh denNgay để bao gồm cả ngày cuối
+            DateTime denNgayKetThuc = denNgay.Value.Date.AddDays(1).AddSeconds(-1);
+
+            viewModel.TuNgay = tuNgay;
+            viewModel.DenNgay = denNgay;
+            viewModel.LoaiGiaoDich = loaiGiaoDich;
+
+            // Lấy dữ liệu đã lọc
+            var filteredData = db.GhiChepVis
+                .Where(g => g.MaNguoiBan == maNguoiBan &&
+                        g.NgayGiaoDich >= tuNgay && g.NgayGiaoDich <= denNgayKetThuc);
+
+            if (!string.IsNullOrEmpty(loaiGiaoDich))
+            {
+                filteredData = filteredData.Where(g => g.LoaiGiaoDich == loaiGiaoDich);
+            }
+
+            // Thống kê
+            viewModel.TongGiaoDich = filteredData.Count();
+            viewModel.TongNap = filteredData.Where(g => g.LoaiGiaoDich == "Nạp tiền ví" || g.LoaiGiaoDich == "Giải ngân escrow" || g.LoaiGiaoDich == "Hoàn tiền rút")
+                                            .Sum(g => (decimal?)g.SoTien) ?? 0;
+            viewModel.TongRut = Math.Abs(filteredData.Where(g => g.LoaiGiaoDich == "Rút tiền" && (g.TrangThai == "Thành công" || g.TrangThai == "Đang xử lý"))
+                                                  .Sum(g => (decimal?)g.SoTien) ?? 0);
+
+            // Phân trang
+            int pageSize = 10;
+            int totalItems = filteredData.Count();
+            int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+            // Điều chỉnh page hiện tại nếu nằm ngoài phạm vi
+            if (page < 1)
+                page = 1;
+            if (page > totalPages && totalPages > 0)
+                page = totalPages;
+
+            viewModel.DanhSachGhiChep = filteredData
+                .OrderByDescending(g => g.NgayGiaoDich)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            viewModel.TrangHienTai = page;
+            viewModel.TongTrang = totalPages;
+
+            return View(viewModel);
+        }
+
+        // GET: GiaoDich/ChiTietGiaoDichNguoiBan/5
+        [Authorize]
+        public ActionResult ChiTietGiaoDichNguoiBan(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+
+            int maNguoiBan = LayMaNguoiBanHienTai();
+
+            GiaoDich giaoDich = db.GiaoDichs
+                .Include(g => g.DonHang)
+                .FirstOrDefault(g => g.MaGiaoDich == id && g.DonHang.MaNguoiBan == maNguoiBan);
+
+            if (giaoDich == null)
+            {
+                return HttpNotFound();
+            }
+            ViewBag.MaNguoiBan = maNguoiBan;
+            return View(giaoDich);
+        }
+
+        // GET: GiaoDich/ChiTietGhiChepViNguoiBan/5
+        [Authorize]
+        public ActionResult ChiTietGhiChepViNguoiBan(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+
+            int maNguoiBan = LayMaNguoiBanHienTai();
+
+            GhiChepVi ghiChepVi = db.GhiChepVis
+                .Include(g => g.DonHang)
+                .FirstOrDefault(g => g.MaGhiChep == id && g.MaNguoiBan == maNguoiBan);
+
+            if (ghiChepVi == null)
+            {
+                return HttpNotFound();
+            }
+
+            return View(ghiChepVi);
+        }
+
+        // Helper method để lấy ID người bán hiện tại
+        private int LayMaNguoiBanHienTai()
+        {
+            // Lấy username hoặc user id của người đăng nhập hiện tại
+            string tenDangNhap = User.Identity.Name;
+
+            // Tìm thông tin người bán dựa vào username
+            var nguoiBan = db.NguoiBans.FirstOrDefault(n => n.NguoiDung.Email == tenDangNhap);
+
+            if (nguoiBan == null)
+            {
+                throw new InvalidOperationException("Không tìm thấy thông tin người bán");
+            }
+
+            return nguoiBan.MaNguoiBan;
+        }
+
+        private int GetCurrentUserId()
+        {
+            // Lấy username của người đăng nhập
+            string tenDangNhap = User.Identity.Name;
+
+            // Tìm mã người dùng
+            var nguoiDung = db.NguoiDungs.FirstOrDefault(n => n.Email == tenDangNhap);
+
+            if (nguoiDung == null)
+            {
+                throw new InvalidOperationException("Không tìm thấy thông tin người dùng");
+            }
+
+            return nguoiDung.MaNguoiDung;
+        }
         //9/4/2025
         protected override void Dispose(bool disposing)
         {
@@ -462,4 +696,100 @@ namespace WebApplication1.Controllers
             base.Dispose(disposing);
         }
     }
+
+    //9/4/2025
+    public class NguoiBanGiaoDichViewModel
+    {
+        // Thông tin người bán
+        public int MaNguoiBan { get; set; }
+        public string TenNguoiBan { get; set; }
+        public decimal SoDuVi { get; set; }
+
+        // Thông tin ngân hàng
+        public string ThongTinNganHang { get; set; }
+        public string SoTaiKhoan { get; set; }
+        public string TenChuTaiKhoan { get; set; }
+
+        // Thống kê
+        public int TongGiaoDich { get; set; }
+        public int GiaoDichHoanThanh { get; set; }
+        public int GiaoDichDangXuLy { get; set; }
+        public decimal TongDoanhThu { get; set; }
+        public int TongKyQuy { get; set; }
+        public int KyQuyDangGiu { get; set; }
+        public decimal TongPhiNenTang { get; set; }
+
+        // Dữ liệu cho biểu đồ
+        public List<string> ThangDoanhThu { get; set; }
+        public List<decimal> DoanhThu { get; set; }
+
+        // Danh sách giao dịch
+        public List<GiaoDich> GiaoDichGanDay { get; set; }
+        public List<GiaoDich> TatCaGiaoDich { get; set; }
+
+        // Dữ liệu phân trang
+        public int TongTrang { get; set; }
+        public int TrangHienTai { get; set; }
+
+        // Bộ lọc
+        public DateTime? TuNgay { get; set; }
+        public DateTime? DenNgay { get; set; }
+        public string TrangThai { get; set; }
+        public string PhuongThuc { get; set; }
+    }
+
+    public class NguoiBanKyQuyViewModel
+    {
+        public int MaNguoiBan { get; set; }
+        public decimal SoDuVi { get; set; }
+
+        // Thống kê
+        public int TongKyQuy { get; set; }
+        public int DangGiu { get; set; }
+        public int DaGiaiNgan { get; set; }
+        public int DaHoanTien { get; set; }
+        public decimal TongTien { get; set; }
+        public decimal TongPhiNenTang { get; set; }
+
+        // Danh sách ký quỹ
+        public List<Escrow> DanhSachKyQuy { get; set; }
+
+        // Dữ liệu phân trang
+        public int TongTrang { get; set; }
+        public int TrangHienTai { get; set; }
+
+        // Bộ lọc
+        public DateTime? TuNgay { get; set; }
+        public DateTime? DenNgay { get; set; }
+        public string TrangThai { get; set; }
+    }
+
+    public class NguoiBanViTienViewModel
+    {
+        public int MaNguoiBan { get; set; }
+        public decimal SoDuVi { get; set; }
+
+        // Thông tin ngân hàng
+        public string ThongTinNganHang { get; set; }
+        public string SoTaiKhoan { get; set; }
+        public string TenChuTaiKhoan { get; set; }
+
+        // Thống kê
+        public int TongGiaoDich { get; set; }
+        public decimal TongNap { get; set; }
+        public decimal TongRut { get; set; }
+
+        // Danh sách ghi chép ví
+        public List<GhiChepVi> DanhSachGhiChep { get; set; }
+
+        // Dữ liệu phân trang
+        public int TongTrang { get; set; }
+        public int TrangHienTai { get; set; }
+
+        // Bộ lọc
+        public DateTime? TuNgay { get; set; }
+        public DateTime? DenNgay { get; set; }
+        public string LoaiGiaoDich { get; set; }
+    }
+    //9/4/2025
 }
