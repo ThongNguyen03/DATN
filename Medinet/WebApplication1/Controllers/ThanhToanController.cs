@@ -364,6 +364,44 @@ namespace WebApplication1.Controllers
                         }
                     }
 
+                    // Tạo thông báo cho người mua về đơn hàng
+                    foreach (var donHang in danhSachDonHang)
+                    {
+                        // Tạo thông báo cho người mua
+                        var thongBaoNguoiMua = new ThongBao
+                        {
+                            MaNguoiDung = maNguoiDung,
+                            LoaiThongBao = "DonHang",
+                            TieuDe = "Đặt hàng thành công",
+                            TinNhan = $"Đơn hàng #{donHang.MaDonHang} với tổng giá trị {donHang.TongSoTien:N0} VNĐ đã được đặt thành công. Đơn hàng của bạn đang chờ xử lý.",
+                            MucDoQuanTrong = 1, // Thông báo thông thường
+                            DuongDanChiTiet = "/DonHang/ChiTiet/" + donHang.MaDonHang,
+                            NgayTao = DateTime.Now
+                        };
+                        db.ThongBaos.Add(thongBaoNguoiMua);
+
+                        var nguoiban = db.NguoiBans.Find(donHang.MaNguoiBan);
+                        if (nguoiban != null)
+                        {
+                            // Tạo thông báo cho người bán
+                            var thongBaoNguoiBan = new ThongBao
+                            {
+                                MaNguoiDung = nguoiban.MaNguoiDung,
+                                LoaiThongBao = "DonHang",
+                                TieuDe = "Đơn hàng mới",
+                                TinNhan = $"Bạn có đơn hàng mới #{donHang.MaDonHang} với tổng giá trị {donHang.TongSoTien:N0} VNĐ. Vui lòng xác nhận và xử lý đơn hàng.",
+                                MucDoQuanTrong = 2, // Thông báo quan trọng
+                                DuongDanChiTiet = "/DonHang/ChiTietDonHangNguoiMua/" + donHang.MaDonHang,
+                                NgayTao = DateTime.Now
+                            };
+                            db.ThongBaos.Add(thongBaoNguoiBan);
+                        }
+
+                    }
+
+                    // Lưu thông báo vào cơ sở dữ liệu
+                    await db.SaveChangesAsync();
+
                     // Check payment method
                     if (model.PhuongThucThanhToan == "VNPAY")
                     {
@@ -812,6 +850,39 @@ namespace WebApplication1.Controllers
                                             db.SaveChanges();
 
                                             System.Diagnostics.Debug.WriteLine($"Updated transaction for order {maDonHang} successfully");
+
+                                            // Tạo thông báo cho người mua và người bán
+                                            var nguoiMua = db.NguoiDungs.Find(donHang.MaNguoiDung);
+                                            var nguoiBan = db.NguoiBans.Find(donHang.MaNguoiBan);
+
+                                            // Tạo thông báo cho người mua
+                                            var thongBaoNguoiMua = new ThongBao
+                                            {
+                                                MaNguoiDung = nguoiMua.MaNguoiDung,
+                                                LoaiThongBao = "DonHang",
+                                                TieuDe = "Thanh toán thành công",
+                                                TinNhan = $"Đơn hàng #{donHang.MaDonHang} với số tiền {donHang.TongSoTien:N0} VNĐ đã được thanh toán thành công qua VNPAY. Cảm ơn bạn đã mua sắm!",
+                                                MucDoQuanTrong = 1, // Thông báo thông thường
+                                                DuongDanChiTiet = "/DonHang/ChiTiet/" + donHang.MaDonHang,
+                                                NgayTao = DateTime.Now
+                                            };
+                                            db.ThongBaos.Add(thongBaoNguoiMua);
+
+                                            // Tạo thông báo cho người bán
+                                            var thongBaoNguoiBan = new ThongBao
+                                            {
+                                                MaNguoiDung = nguoiBan.MaNguoiDung,
+                                                LoaiThongBao = "DonHang",
+                                                TieuDe = "Đơn hàng đã được thanh toán",
+                                                TinNhan = $"Đơn hàng #{donHang.MaDonHang} với tổng giá trị {donHang.TongSoTien:N0} VNĐ đã được thanh toán qua VNPAY. Vui lòng xử lý đơn hàng.",
+                                                MucDoQuanTrong = 2, // Thông báo quan trọng
+                                                DuongDanChiTiet = "/DonHang/ChiTietDonHangNguoiMua/" + donHang.MaDonHang,
+                                                NgayTao = DateTime.Now
+                                            };
+                                            db.ThongBaos.Add(thongBaoNguoiBan);
+
+                                            // Lưu thông báo vào cơ sở dữ liệu
+                                            db.SaveChanges();
                                         }
 
 

@@ -46,6 +46,34 @@
         position: relative;
     }
 
+    /* Cải tiến CSS cho status badges */
+    .transaction-status {
+        position: absolute;
+        top: 25px;
+        right: 25px;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .status-success {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .status-pending {
+        background-color: #ffc107;
+        color: #212529;
+    }
+
+    .status-failed {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    /* Cải tiến màu sắc cho header */
     .header-deposit {
         background: linear-gradient(135deg, #28a745, #20c997);
         color: white;
@@ -62,7 +90,7 @@
     }
 
     .header-refund {
-        background: linear-gradient(135deg, #ffc107, #ffda8a);
+        background: linear-gradient(135deg, #ffc107, #fad776);
         color: #212529;
     }
 
@@ -91,31 +119,6 @@
         opacity: 0.9;
     }
 
-    .transaction-status {
-        position: absolute;
-        top: 25px;
-        right: 25px;
-        padding: 8px 15px;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.85rem;
-    }
-
-    .status-success {
-        background-color: rgba(255, 255, 255, 0.2);
-        color: white;
-    }
-
-    .status-pending {
-        background-color: rgba(255, 255, 255, 0.2);
-        color: white;
-    }
-
-    .status-failed {
-        background-color: rgba(255, 255, 255, 0.2);
-        color: white;
-    }
-
     .transaction-body {
         padding: 25px;
     }
@@ -132,11 +135,13 @@
     }
 
     .amount-positive {
-        color: #28a745;
+        color: #28a745; /* Màu xanh lá cho số tiền dương */
+/*        font-weight: 600;*/
     }
 
     .amount-negative {
-        color: #dc3545;
+        color: #dc3545; /* Màu đỏ cho số tiền âm */
+/*        font-weight: 600;*/
     }
 
     .amount-label {
@@ -388,7 +393,9 @@
                             string headerClass = "header-default";
                             string iconClass = "fas fa-exchange-alt";
                             bool isPositive = false;
-                            
+                            string statusClass = "";
+
+                            // Xác định loại giao dịch và thiết lập màu sắc header
                             if (Model.LoaiGiaoDich == "Nạp tiền ví" || Model.LoaiGiaoDich == "Giải ngân escrow" || Model.LoaiGiaoDich == "Hoàn tiền rút")
                             {
                                 headerClass = "header-deposit";
@@ -413,65 +420,87 @@
                                 iconClass = "fas fa-undo";
                                 isPositive = true;
                             }
-                            
+
+                            // Xác định trạng thái và thiết lập class cho badge trạng thái
+                            if (Model.TrangThai.ToLower() == "thành công")
+                            {
+                                statusClass = "status-success";
+                            }
+                            else if (Model.TrangThai.ToLower() == "đang xử lý")
+                            {
+                                statusClass = "status-pending";
+                            }
+                            else
+                            {
+                                statusClass = "status-failed";
+                            }
+
                             string amountClass = isPositive ? "amount-positive" : "amount-negative";
                             string amountPrefix = isPositive ? "+" : "-";
                         }
-                        
                         <div class="transaction-header @headerClass">
                             <div class="transaction-title">
                                 <i class="@iconClass mr-2"></i> @Model.LoaiGiaoDich
                             </div>
                             <div class="transaction-id">Mã giao dịch: #@Model.MaGhiChep</div>
                             <div class="transaction-date">@Model.NgayGiaoDich.ToString("dd/MM/yyyy HH:mm:ss")</div>
-                            
-                            <div class="transaction-status status-@(Model.TrangThai.ToLower() == "thành công" ? "success" : (Model.TrangThai.ToLower() == "đang xử lý" ? "pending" : "failed"))">
+
+                            <div class="transaction-status @statusClass">
+                                @if (Model.TrangThai.ToLower() == "thành công")
+                                {
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                }
+                                else if (Model.TrangThai.ToLower() == "đang xử lý")
+                                {
+                                    <i class="fas fa-clock mr-1"></i>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-times-circle mr-1"></i>
+                                }
                                 @Model.TrangThai
                             </div>
                         </div>
-                        
+
                         <div class="transaction-body">
                             <div class="transaction-amount">
-                                <div class="amount-value @amountClass">
-                                    @amountPrefix@string.Format("{0:N0} VNĐ", Math.Abs(Model.SoTien))
+                                @{
+                                    bool isPositives = Model.LoaiGiaoDich == "Nạp tiền ví" ||
+                                                      Model.LoaiGiaoDich == "Hoàn tiền rút" ||
+                                                      Model.LoaiGiaoDich == "Hoàn trả đặt cọc" ||
+                                                      Model.LoaiGiaoDich == "Hoàn trả phí nền tảng" ||
+                                                      Model.LoaiGiaoDich == "Thanh toán đơn hàng" ||
+                                                      (Model.SoTien > 0);
+
+                                    string amountClasss = isPositives ? "amount-positive" : "amount-negative";
+                                    string amountPrefixs = isPositives ? "+" : "-";
+                                }
+
+                                <div class="amount-value @amountClasss">
+                                    @amountPrefixs@string.Format("{0:N0} VNĐ", Math.Abs(Model.SoTien))
                                 </div>
                                 <div class="amount-label">Số tiền giao dịch</div>
                             </div>
-                            
+
                             <div class="transaction-info">
                                 <div class="info-title">Thông tin giao dịch</div>
-                                
+
                                 <div class="info-item">
                                     <div class="info-label">Loại giao dịch</div>
                                     <div class="info-value">@Model.LoaiGiaoDich</div>
                                 </div>
-                                
+
                                 <div class="info-item">
                                     <div class="info-label">Trạng thái</div>
                                     <div class="info-value">@Model.TrangThai</div>
                                 </div>
-                                
+
                                 <div class="info-item">
                                     <div class="info-label">Thời gian</div>
                                     <div class="info-value">@Model.NgayGiaoDich.ToString("dd/MM/yyyy HH:mm:ss")</div>
                                 </div>
-                                
-                                @*@if (!string.IsNullOrEmpty(Model.))
-                                {
-                                    <div class="info-item">
-                                        <div class="info-label">Phương thức</div>
-                                        <div class="info-value">@Model.PhuongThucThanhToan</div>
-                                    </div>
-                                }
-                                
-                                @if (Model.LoaiGiaoDich == "Rút tiền" && !string.IsNullOrEmpty(Model.ThongTinTaiKhoan))
-                                {
-                                    <div class="info-item">
-                                        <div class="info-label">Tài khoản nhận</div>
-                                        <div class="info-value">@Model.ThongTinTaiKhoan</div>
-                                    </div>
-                                }*@
-                                
+
+
                                 @if (!string.IsNullOrEmpty(Model.MoTa))
                                 {
                                     <div class="transaction-notes">
@@ -480,27 +509,27 @@
                                     </div>
                                 }
                             </div>
-                            
+
                             @if (Model.DonHang != null)
                             {
                                 <div class="transaction-info">
                                     <div class="info-title">Thông tin đơn hàng</div>
-                                    
+
                                     <div class="info-item">
                                         <div class="info-label">Mã đơn hàng</div>
                                         <div class="info-value">#@Model.DonHang.MaDonHang</div>
                                     </div>
-                                    
+
                                     <div class="info-item">
                                         <div class="info-label">Tổng tiền đơn hàng</div>
                                         <div class="info-value">@string.Format("{0:N0} VNĐ", Model.DonHang.TongSoTien)</div>
                                     </div>
-                                    
+
                                     <div class="info-item">
                                         <div class="info-label">Trạng thái đơn hàng</div>
                                         <div class="info-value">@Model.DonHang.TrangThaiDonHang</div>
                                     </div>
-                                    
+
                                     <div class="text-center mt-3">
                                         <a href="@Url.Action("ChiTietDonHang", "DonHang", new { id = Model.DonHang.MaDonHang })" class="btn btn-outline-primary btn-sm">
                                             <i class="fas fa-external-link-alt mr-1"></i> Xem chi tiết đơn hàng
@@ -509,7 +538,7 @@
                                 </div>
                             }
                         </div>
-                        
+
                         <div class="transaction-footer">
                             <div class="row">
                                 <div class="col-md-6">
@@ -518,7 +547,7 @@
                                     </a>
                                 </div>
                                 <div class="col-md-6">
-                                    <button class="btn btn-outline-primary btn-block" onclick="window.print();">
+                                    <button class="btn btn-outline-primary btn-block" onclick="printReceipt();">
                                         <i class="fas fa-print mr-1"></i> In biên lai
                                     </button>
                                 </div>
@@ -529,71 +558,79 @@
                 
                 <div class="col-lg-5">
                     <!-- Biên lai giao dịch -->
-                    <div class="receipt-paper">
-                        <div class="receipt-header">
-                            <div class="receipt-logo">
-                                <img src="~/Content/images/medinet-logo.png" alt="Logo" height="40">
+                    <div class="transaction-receipt">
+                        <div class="receipt-paper">
+                            <div class="receipt-header">
+                                <div class="receipt-logo">
+                                    <img src="~/Content/images/medinet-logo.png" alt="Logo" height="40">
+                                </div>
+                                <div class="receipt-title">Biên lai giao dịch</div>
+                                <div class="receipt-subtitle">Mã giao dịch: #@Model.MaGhiChep</div>
+                                <div class="receipt-date">@Model.NgayGiaoDich.ToString("dd/MM/yyyy HH:mm:ss")</div>
                             </div>
-                            <div class="receipt-title">Biên lai giao dịch</div>
-                            <div class="receipt-subtitle">Mã giao dịch: #@Model.MaGhiChep</div>
-                            <div class="receipt-date">@Model.NgayGiaoDich.ToString("dd/MM/yyyy HH:mm:ss")</div>
-                        </div>
-                        
-                        <div class="receipt-body">
-                            <div class="receipt-row">
-                                <div class="receipt-label">Loại giao dịch</div>
-                                <div class="receipt-value">@Model.LoaiGiaoDich</div>
-                            </div>
-                            
-                            <div class="receipt-row">
-                                <div class="receipt-label">Trạng thái</div>
-                                <div class="receipt-value">@Model.TrangThai</div>
-                            </div>
-                            
-                            <div class="receipt-row">
-                                <div class="receipt-label">Khách hàng</div>
-                                <div class="receipt-value">@Model.NguoiBan.TenCuaHang</div>
-                            </div>
-                            
-                            <div class="receipt-row">
-                                <div class="receipt-label">Mã ví</div>
-                                <div class="receipt-value">W-@Model.MaNguoiBan.ToString("D6")</div>
-                            </div>
-                            
-                            @*@if (!string.IsNullOrEmpty(Model.PhuongThucThanhToan))
-                            {
+
+                            <div class="receipt-body">
                                 <div class="receipt-row">
-                                    <div class="receipt-label">Phương thức</div>
-                                    <div class="receipt-value">@Model.PhuongThucThanhToan</div>
+                                    <div class="receipt-label">Loại giao dịch</div>
+                                    <div class="receipt-value">@Model.LoaiGiaoDich</div>
                                 </div>
-                            }*@
-                            
-                            @if (Model.DonHang != null)
-                            {
+
                                 <div class="receipt-row">
-                                    <div class="receipt-label">Mã đơn hàng</div>
-                                    <div class="receipt-value">#@Model.DonHang.MaDonHang</div>
+                                    <div class="receipt-label">Trạng thái</div>
+                                    <div class="receipt-value">@Model.TrangThai</div>
                                 </div>
-                            }
-                            
-                            <div class="receipt-total">
-                                <div class="total-label">Số tiền</div>
-                                <div class="total-value @amountClass">
-                                    @amountPrefix@string.Format("{0:N0} VNĐ", Math.Abs(Model.SoTien))
+
+                                <div class="receipt-row">
+                                    <div class="receipt-label">Khách hàng</div>
+                                    <div class="receipt-value">@Model.NguoiBan.TenCuaHang</div>
+                                </div>
+
+                                <div class="receipt-row">
+                                    <div class="receipt-label">Mã ví</div>
+                                    <div class="receipt-value">W-@Model.MaNguoiBan.ToString("D6")</div>
+                                </div>
+
+                                @if (Model.DonHang != null)
+                                {
+                                    <div class="receipt-row">
+                                        <div class="receipt-label">Mã đơn hàng</div>
+                                        <div class="receipt-value">#@Model.DonHang.MaDonHang</div>
+                                    </div>
+                                }
+
+                                @{
+                                    // Xác định giao dịch là cộng tiền hay trừ tiền
+                                    bool isPositive2 = Model.LoaiGiaoDich == "Nạp tiền ví" ||
+                                                      Model.LoaiGiaoDich == "Hoàn tiền rút" ||
+                                                      Model.LoaiGiaoDich == "Hoàn trả đặt cọc" ||
+                                                      Model.LoaiGiaoDich == "Hoàn trả phí nền tảng" ||
+                                                      Model.LoaiGiaoDich == "Thanh toán đơn hàng" ||
+                                                      (Model.SoTien > 0);
+
+                                    // Định nghĩa các biến CSS và dấu cộng/trừ
+                                    string amountClass2 = isPositive2 ? "amount-positive" : "amount-negative";
+                                    string amountPrefix2 = isPositive2 ? "+" : "-";
+                                }
+                                <div class="receipt-total">
+                                    <div class="total-label">Số tiền</div>
+                                    <div class="total-value @amountClass2">
+                                        @string.Format("{0:N0} VNĐ", Math.Abs(Model.SoTien))
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="receipt-footer">
-                            <div class="receipt-barcode">
-                                <img src="https://barcode.tec-it.com/barcode.ashx?data=@Model.MaGhiChep&code=Code128&multiplebarcodes=false&translate-esc=false&unit=Fit&dpi=96&imagetype=Gif&rotation=0&color=%23000000&bgcolor=%23ffffff&codepage=Default&qunit=Mm&quiet=0" alt="Barcode">
-                            </div>
-                            <div class="receipt-message">
-                                Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!
+
+                            <div class="receipt-footer">
+                                <div class="receipt-barcode">
+                                    <img src="https://barcode.tec-it.com/barcode.ashx?data=@Model.MaGhiChep&code=Code128&multiplebarcodes=false&translate-esc=false&unit=Fit&dpi=96&imagetype=Gif&rotation=0&color=%23000000&bgcolor=%23ffffff&codepage=Default&qunit=Mm&quiet=0" alt="Barcode">
+                                </div>
+                                <div class="receipt-message">
+                                    Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!
+                                </div>
                             </div>
                         </div>
                     </div>
-                    
+
+
                     <!-- Thông tin trạng thái và hướng dẫn -->
                     @if (Model.LoaiGiaoDich == "Rút tiền" && Model.TrangThai == "Đang xử lý")
                     {
@@ -651,7 +688,7 @@
                         </div>
                         <div class="card-body">
                             <p class="small mb-0">
-                                <i class="fas fa-info-circle mr-1 text-muted"></i> 
+                                <i class="fas fa-info-circle mr-1 text-muted"></i>
                                 Mã giao dịch #@Model.MaGhiChep được xác thực trên hệ thống.
                                 Biên lai điện tử này có giá trị pháp lý và có thể được sử dụng để đối soát khi cần thiết.
                             </p>
@@ -662,3 +699,225 @@
         </div>
     </div>
 </div>
+
+<script>
+function printReceipt() {
+    // Tạo một iframe tạm thời để in
+    const printIframe = document.createElement('iframe');
+    printIframe.style.position = 'absolute';
+    printIframe.style.top = '-9999px';
+    printIframe.style.left = '-9999px';
+    document.body.appendChild(printIframe);
+
+    // Lấy thông tin cần thiết cho biên lai
+    const maGiaoDich = '@Model.MaGhiChep';
+    const ngayGiaoDich = '@Model.NgayGiaoDich.ToString("dd/MM/yyyy HH:mm:ss")';
+    const loaiGiaoDich = '@Model.LoaiGiaoDich';
+    const trangThai = '@Model.TrangThai';
+    const tenKhachHang = '@Model.NguoiBan.TenCuaHang';
+    const maVi = 'W-@Model.MaNguoiBan.ToString("D6")';
+    const maDonHang = '@(Model.MaDonHang != null ? "#" + Model.MaDonHang : "")';
+    const soTien = '@string.Format("{0:N0} VNĐ", Math.Abs(Model.SoTien))';
+    const isPositive = @(isPositive.ToString().ToLower());
+
+    // Tạo nội dung biên lai theo định dạng mới
+    const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Biên lai giao dịch</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    background-color: #f5f5f5;
+                    padding: 20px;
+                    margin: 0;
+                    display: flex;
+                    justify-content: center;
+                }
+
+                .receipt-container {
+                    background-color: white;
+                    width: 350px;
+                    padding: 25px;
+                    border-radius: 10px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                    position: relative;
+                }
+
+                .receipt-container::before {
+                    content: "";
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: 20px;
+                    background-image: linear-gradient(45deg, white 25%, transparent 25%),
+                                      linear-gradient(-45deg, white 25%, transparent 25%);
+                    background-size: 20px 20px;
+                    border-top-left-radius: 10px;
+                    border-top-right-radius: 10px;
+                }
+
+                .receipt-logo {
+                    text-align: center;
+                    margin-bottom: 20px;
+                }
+
+                .receipt-logo img {
+                    height: 40px;
+                }
+
+                .receipt-title {
+                    text-align: center;
+                    font-size: 22px;
+                    font-weight: bold;
+                    color: #333;
+                    margin-bottom: 10px;
+                }
+
+                .receipt-id {
+                    text-align: center;
+                    color: #666;
+                    margin-bottom: 5px;
+                }
+
+                .receipt-date {
+                    text-align: center;
+                    color: #666;
+                    margin-bottom: 25px;
+                }
+
+                .receipt-row {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 12px 0;
+                    border-bottom: 1px solid #eee;
+                }
+
+                .receipt-label {
+                    color: #666;
+                    font-weight: normal;
+                }
+
+                .receipt-value {
+                    text-align: right;
+                    font-weight: 600;
+                    color: #333;
+                }
+
+                .receipt-total {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 20px 0;
+                    border-bottom: 1px solid #eee;
+                    margin-top: 15px;
+                }
+
+                .total-label {
+                    font-weight: bold;
+                    font-size: 18px;
+                }
+
+                .total-value {
+                    font-weight: bold;
+                    font-size: 18px;
+                    color: #28a745;
+                }
+
+                .receipt-barcode {
+                    text-align: center;
+                    margin: 25px 0;
+                }
+
+                .receipt-message {
+                    text-align: center;
+                    color: #666;
+                    font-size: 14px;
+                }
+
+                media print {
+                    body {
+                        background: none;
+                        padding: 0;
+                    }
+
+                    .receipt-container {
+                        box-shadow: none;
+                        padding: 15px;
+                        width: 100%;
+                        max-width: 350px;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="receipt-container">
+
+                <div class="receipt-title">Biên lai giao dịch</div>
+                <div class="receipt-id">Mã giao dịch: #${maGiaoDich}</div>
+                <div class="receipt-date">${ngayGiaoDich}</div>
+
+                <div class="receipt-row">
+                    <div class="receipt-label">Loại giao dịch</div>
+                    <div class="receipt-value">${loaiGiaoDich}</div>
+                </div>
+
+                <div class="receipt-row">
+                    <div class="receipt-label">Trạng thái</div>
+                    <div class="receipt-value">${trangThai}</div>
+                </div>
+
+                <div class="receipt-row">
+                    <div class="receipt-label">Khách hàng</div>
+                    <div class="receipt-value">${tenKhachHang}</div>
+                </div>
+
+                <div class="receipt-row">
+                    <div class="receipt-label">Mã ví</div>
+                    <div class="receipt-value">${maVi}</div>
+                </div>
+
+                ${maDonHang ? `
+                <div class="receipt-row">
+                    <div class="receipt-label">Mã đơn hàng</div>
+                    <div class="receipt-value">${maDonHang}</div>
+                </div>
+                ` : ''}
+
+                <div class="receipt-total">
+                    <div class="total-label">Số tiền</div>
+                    <div class="total-value" style="color: ${isPositive ? '#28a745' : '#dc3545'}">
+                       ${soTien}
+                    </div>
+                </div>
+
+                <div class="receipt-barcode">
+                    <img src="https://barcode.tec-it.com/barcode.ashx?data=${maGiaoDich}&code=Code128&multiplebarcodes=false&translate-esc=false&unit=Fit&dpi=96&imagetype=Gif&rotation=0&color=%23000000&bgcolor=%23ffffff&codepage=Default&qunit=Mm&quiet=0" alt="Barcode">
+                </div>
+
+                <div class="receipt-message">
+                    Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+
+    // Ghi nội dung vào iframe
+    printIframe.contentDocument.open();
+    printIframe.contentDocument.write(printContent);
+    printIframe.contentDocument.close();
+
+    // Đợi load xong
+    printIframe.onload = function() {
+        // In
+        printIframe.contentWindow.print();
+
+        // Xóa iframe sau khi in
+        setTimeout(function() {
+            document.body.removeChild(printIframe);
+        }, 500);
+    };
+}
+</script>

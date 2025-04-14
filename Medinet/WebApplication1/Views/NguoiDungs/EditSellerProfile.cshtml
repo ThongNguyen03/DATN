@@ -207,7 +207,7 @@
                                 <div class="form-group row mb-4">
                                     <label class="col-sm-3 col-form-label">Số điện thoại</label>
                                     <div class="col-sm-9">
-                                        @Html.TextBoxFor(model => model.SoDienThoai, new { @class = "form-control" })
+                                        @Html.TextBoxFor(model => model.SoDienThoai, new { @class = "form-control", maxlength = "10" })
                                         @Html.ValidationMessageFor(model => model.SoDienThoai, "", new { @class = "text-danger" })
                                     </div>
                                 </div>

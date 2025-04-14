@@ -1,0 +1,311 @@
+﻿@model IEnumerable<WebApplication1.Models.ThongBao>
+@{
+    ViewBag.Title = "Thông báo";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    /* CSS cho tabs chưa active */
+    .nav-tabs .nav-link {
+        color: #6c757d; /* Màu xám cho các tab chưa được chọn */
+        background-color: transparent;
+        border-bottom: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+        /* CSS cho tab đang active */
+        .nav-tabs .nav-link.active {
+            color: #0d6efd; /* Màu xanh cho tab đang active */
+            background-color: transparent;
+            border-bottom: 2px solid #0d6efd;
+            font-weight: 500;
+        }
+
+        /* Hover effect */
+        .nav-tabs .nav-link:hover:not(.active) {
+            color: #0d6efd;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+    /* CSS cho sidebar item active */
+    .list-group-item.active-account {
+        color: #0d6efd !important;
+        background-color: rgba(13, 110, 253, 0.1);
+        font-weight: 500;
+    }
+
+    /* CSS cho thông báo */
+    .notification-item {
+        border-left: 3px solid transparent;
+        transition: all 0.2s ease;
+    }
+
+        .notification-item:hover {
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+
+        .notification-item.unread {
+            border-left-color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+
+    .notification-time {
+        font-size: 0.8rem;
+        color: #6c757d;
+        min-width: 200px;
+    }
+
+    .notification-title {
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+
+    .notification-message {
+        color: #495057;
+        margin-bottom: 0;
+        max-width: 90%;
+    }
+
+    .notification-badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .notification-badge-important {
+        background-color: #dc3545;
+    }
+
+    .notification-badge-normal {
+        background-color: #0d6efd;
+    }
+
+    .notification-badge-low {
+        background-color: #6c757d;
+    }
+
+    .no-notifications {
+        padding: 60px 0;
+    }
+    /* CSS cho nút đánh dấu tất cả đã đọc */
+    .mark-all-read-btn {
+        font-size: 0.9rem;
+        padding: 0.5rem 1.25rem; /* Tăng padding để nút rộng hơn */
+        color: #0d6efd;
+        background-color: transparent;
+        border: 1px solid #0d6efd;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        min-width: 200px; /* Thiết lập chiều rộng tối thiểu */
+        text-align: center; /* Căn giữa nội dung */
+        white-space: nowrap; /* Không ngắt dòng text */
+    }
+
+        .mark-all-read-btn:hover {
+            background-color: #0d6efd;
+            color: white;
+        }
+    /* Toast notification */
+    .toast-notification {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #198754;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        z-index: 9999;
+    }
+</style>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <img src="@(string.IsNullOrEmpty(Session["AnhDaiDien"]?.ToString()) ? "~/Content/Images/default-avatar.png" : Url.Content(Session["AnhDaiDien"].ToString()))"
+                         alt="Ảnh đại diện" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
+                    
+                    <h5 class="mb-0">@(Session["TenNguoiDung"]?.ToString() ?? User.Identity.Name)</h5>
+                    <p class="text-muted"><a href="@Url.Action("Profile", "NguoiDungs")" class="text-decoration-none"><img src="~/Content/Images/edit-icon.png" width="16" height="16" class="me-1">Sửa thông tin</a></p>
+                </div>
+            </div>
+
+            <div class="list-group mb-4">
+                <a href="@Url.Action("Profile", "NguoiDungs")" class="list-group-item list-group-item-action d-flex align-items-center">
+                    <i class="fas fa-user me-3"></i>Tài khoản của tôi
+                </a>
+                <a href="@Url.Action("Index", "ThongBao")" class="list-group-item list-group-item-action d-flex align-items-center active-account">
+                    <i class="fas fa-bell me-3"></i>Thông báo
+                </a>
+                <a href="@Url.Action("DonHangCuaToi", "DonHang")" class="list-group-item list-group-item-action d-flex align-items-center">
+                    <i class="fas fa-shopping-bag me-3"></i>Đơn mua
+                </a>
+                <a href="@Url.Action("DangXuat", "DangNhap")" class="list-group-item list-group-item-action d-flex align-items-center text-danger">
+                    <i class="fas fa-sign-out-alt me-3"></i>Đăng xuất
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header bg-white p-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Thông báo của tôi</h5>
+                    <div class="d-flex align-items-center">
+                        <!-- Nút đánh dấu tất cả đã đọc -->
+                        <button id="markAllReadBtn" class="mark-all-read-btn me-3">
+                            <i class="fas fa-check-double me-1"></i>Đánh dấu tất cả đã đọc
+                        </button>
+                        <select class="form-select form-select-sm" id="filterNotifications">
+                            <option value="all">Tất cả thông báo</option>
+                            <option value="unread">Chưa đọc</option>
+                            <option value="read">Đã đọc</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    @if (Model.Any())
+                    {
+                        <div class="list-group list-group-flush" id="notificationList">
+                            @foreach (var item in Model)
+                            {
+                                var isUnread = item.TrangThai == "Chưa đọc";
+                                var badgeClass = "";
+
+                                switch (item.MucDoQuanTrong)
+                                {
+                                    case 1:
+                                        badgeClass = "notification-badge-important";
+                                        break;
+                                    case 2:
+                                        badgeClass = "notification-badge-normal";
+                                        break;
+                                    default:
+                                        badgeClass = "notification-badge-low";
+                                        break;
+                                }
+
+                                <div class="notification-item list-group-item list-group-item-action p-3 @(isUnread ? "unread" : "")"
+                                     data-id="@item.MaThongBao" data-status="@item.TrangThai.ToLower()">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <div class="notification-title">@item.TieuDe</div>
+                                            <p class="notification-message">@item.TinNhan</p>
+                                        </div>
+                                        <div class="d-flex flex-column align-items-end">
+                                            <span class="badge rounded-pill mb-2 @badgeClass">@item.LoaiThongBao</span>
+                                            <small class="notification-time">@item.NgayTao.ToString("HH:mm - dd/MM/yyyy")</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center no-notifications">
+                            <i class="fas fa-bell fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Bạn chưa có thông báo nào</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Xử lý lọc thông báo
+            $("#filterNotifications").change(function () {
+                var filterValue = $(this).val();
+
+                if (filterValue === "all") {
+                    $(".notification-item").show();
+                } else if (filterValue === "unread") {
+                    $(".notification-item").hide();
+                    $(".notification-item[data-status='chưa đọc']").show();
+                } else if (filterValue === "read") {
+                    $(".notification-item").hide();
+                    $(".notification-item[data-status='đã đọc']").show();
+                }
+            });
+
+            // Xử lý khi click vào thông báo
+            $(".notification-item").click(function () {
+                var notificationId = $(this).data("id");
+                var $notificationItem = $(this);
+
+                // Đánh dấu thông báo đã đọc
+                $.ajax({
+                    url: '@Url.Action("MarkAsRead", "ThongBao")',
+                    type: 'POST',
+                    data: { id: notificationId },
+                    success: function (result) {
+                        if (result.success) {
+                            // Đổi trạng thái UI
+                            $notificationItem.removeClass("unread");
+                            $notificationItem.attr("data-status", "đã đọc");
+
+                            // Nếu có đường dẫn, chuyển hướng đến trang chi tiết
+                            if (result.duongDanChiTiet) {
+                                window.location.href = result.duongDanChiTiet;
+                            }
+                        }
+                    },
+                    error: function () {
+                        console.log("Lỗi khi đánh dấu thông báo đã đọc");
+                    }
+                });
+            });
+            // Hàm hiển thị thông báo toast
+function showToast(message) {
+    // Kiểm tra nếu đã có toast, xóa đi
+    $('.toast-notification').remove();
+
+    // Tạo toast mới
+    var toast = $('<div class="toast-notification">' + message + '</div>');
+
+    // Thêm vào body
+    $('body').append(toast);
+
+    // Tự động ẩn sau 3 giây
+    setTimeout(function() {
+        toast.fadeOut(300, function() {
+            $(this).remove();
+        });
+    }, 3000);
+}
+
+// Xử lý khi click vào nút đánh dấu tất cả đã đọc
+$("#markAllReadBtn").click(function() {
+    // Kiểm tra xem có thông báo chưa đọc không
+    if ($(".notification-item.unread").length === 0) {
+        showToast("Không có thông báo nào chưa đọc");
+        return;
+    }
+
+    $.ajax({
+        url: '@Url.Action("MarkAllAsRead", "ThongBao")',
+        type: 'POST',
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                // Cập nhật giao diện: loại bỏ lớp unread từ tất cả thông báo
+                $(".notification-item.unread").removeClass("unread").attr("data-status", "đã đọc");
+
+                // Hiển thị thông báo thành công
+                showToast("Đã đánh dấu tất cả thông báo là đã đọc");
+            } else {
+                showToast("Có lỗi xảy ra: " + response.message);
+            }
+        },
+        error: function(error) {
+            console.error('Lỗi khi đánh dấu tất cả thông báo đã đọc:', error);
+            showToast("Có lỗi xảy ra khi đánh dấu tất cả thông báo đã đọc");
+        }
+    });
+});
+        });
+    </script>
+}

@@ -69,6 +69,67 @@ namespace WebApplication1.Services
                             var escrowService = new EscrowService();
                             await escrowService.ReleaseEscrow(donHang.MaDonHang);
 
+                            // Thêm thông báo cho người mua
+                            var thongBaoNguoiMua = new ThongBao
+                            {
+                                MaNguoiDung = donHang.MaNguoiDung,
+                                LoaiThongBao = "DonHang",
+                                TieuDe = "Đơn hàng đã được tự động xác nhận",
+                                TinNhan = $"Đơn hàng #{donHang.MaDonHang} đã được hệ thống tự động xác nhận nhận hàng sau thời gian chờ.",
+                                MucDoQuanTrong = 1, // Thông báo thông thường
+                                DuongDanChiTiet = "/DonHang/ChiTiet/" + donHang.MaDonHang,
+                                NgayTao = DateTime.Now
+                            };
+                            db.ThongBaos.Add(thongBaoNguoiMua);
+
+                            var nguoiban = db.NguoiBans.Find(donHang.MaNguoiBan);
+                            if(nguoiban != null)
+                            {
+                                // Thêm thông báo cho người bán
+                                var thongBaoNguoiBan = new ThongBao
+                                {
+                                    MaNguoiDung = nguoiban.MaNguoiDung,
+                                    LoaiThongBao = "DonHang",
+                                    TieuDe = "Đơn hàng đã được tự động xác nhận",
+                                    TinNhan = $"Đơn hàng #{donHang.MaDonHang} đã được hệ thống tự động xác nhận nhận hàng. Thanh toán đã được chuyển vào tài khoản của bạn.",
+                                    MucDoQuanTrong = 2, // Thông báo quan trọng
+                                    DuongDanChiTiet = "/DonHang/ChiTietDonHangNguoiMua/" + donHang.MaDonHang,
+                                    NgayTao = DateTime.Now
+                                };
+                                db.ThongBaos.Add(thongBaoNguoiBan);
+                            }
+
+
+                            // Thêm thông báo đặc biệt cho đơn hàng COD
+                            if (donHang.PhuongThucThanhToan == "COD")
+                            {
+                                // Thông báo cho người mua về giao dịch COD
+                                var thongBaoCODNguoiMua = new ThongBao
+                                {
+                                    MaNguoiDung = donHang.MaNguoiDung,
+                                    LoaiThongBao = "ThanhToan",
+                                    TieuDe = "Giao dịch COD đã hoàn thành tự động",
+                                    TinNhan = $"Giao dịch thanh toán khi nhận hàng (COD) cho đơn hàng #{donHang.MaDonHang} đã được tự động hoàn thành sau thời gian chờ xác nhận.",
+                                    MucDoQuanTrong = 1,
+                                    DuongDanChiTiet = "/DonHang/ChiTiet/" + donHang.MaDonHang,
+                                    NgayTao = DateTime.Now
+                                };
+                                db.ThongBaos.Add(thongBaoCODNguoiMua);
+
+                                // Thông báo cho người bán về giao dịch COD
+                                var thongBaoCODNguoiBan = new ThongBao
+                                {
+                                    MaNguoiDung = nguoiban.MaNguoiDung,
+                                    LoaiThongBao = "ThanhToan",
+                                    TieuDe = "Giao dịch COD đã hoàn thành tự động",
+                                    TinNhan = $"Giao dịch thanh toán khi nhận hàng (COD) cho đơn hàng #{donHang.MaDonHang} đã được tự động hoàn thành. Số tiền sẽ được giải ngân vào ví của bạn sau khi trừ phí dịch vụ.",
+                                    MucDoQuanTrong = 2,
+                                    DuongDanChiTiet = "/DonHang/ChiTietDonHangNguoiMua/" + donHang.MaDonHang,
+                                    NgayTao = DateTime.Now
+                                };
+                                db.ThongBaos.Add(thongBaoCODNguoiBan);
+                            }
+
                             System.Diagnostics.Debug.WriteLine($"Đã tự động xác nhận đơn hàng #{donHang.MaDonHang}");
                         }
                         catch (Exception ex)

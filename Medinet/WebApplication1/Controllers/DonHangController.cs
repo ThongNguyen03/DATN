@@ -205,6 +205,58 @@ namespace WebApplication1.Controllers
 
                 if (result)
                 {
+                    // Thông báo cho người mua khi xác nhận nhận hàng thành công
+                    var thongBaoNguoiMua = new ThongBao
+                    {
+                        MaNguoiDung = donHang.MaNguoiDung,
+                        LoaiThongBao = "DonHang",
+                        TieuDe = "Xác nhận nhận hàng thành công",
+                        TinNhan = $"Đơn hàng #{donHang.MaDonHang} đã được xác nhận nhận hàng thành công.",
+                        MucDoQuanTrong = 1, // Thông báo thông thường
+                        DuongDanChiTiet = "/DonHang/ChiTiet/" + donHang.MaDonHang,
+                        NgayTao = DateTime.Now
+                    };
+                    db.ThongBaos.Add(thongBaoNguoiMua);
+
+                    // Thông báo cho người bán khi người mua xác nhận nhận hàng
+                    var nguoiBan = db.NguoiBans.Find(donHang.MaNguoiBan);
+                    if (nguoiBan != null)
+                    {
+                        var thongBaoNguoiBan = new ThongBao
+                        {
+                            MaNguoiDung = nguoiBan.MaNguoiDung,
+                            LoaiThongBao = "DonHang",
+                            TieuDe = "Đơn hàng đã được xác nhận nhận hàng",
+                            TinNhan = $"Người mua đã xác nhận nhận hàng cho đơn hàng #{donHang.MaDonHang}. Thanh toán sẽ được chuyển vào tài khoản của bạn.",
+                            MucDoQuanTrong = 2, // Quan trọng cao vì liên quan đến thanh toán
+                            DuongDanChiTiet = "/DonHang/ChiTietDonHangNguoiMua/" + donHang.MaDonHang,
+                            NgayTao = DateTime.Now
+                        };
+                        db.ThongBaos.Add(thongBaoNguoiBan);
+                    }
+
+                    // Thêm thông báo đặc biệt cho đơn hàng COD
+                    if (donHang.PhuongThucThanhToan == "COD")
+                    {
+
+                        // Thông báo cho người bán về việc hoàn thành giao dịch COD
+                        if (nguoiBan != null)
+                        {
+                            var thongBaoCODNguoiBan = new ThongBao
+                            {
+                                MaNguoiDung = nguoiBan.MaNguoiDung,
+                                LoaiThongBao = "ThanhToan",
+                                TieuDe = "Giao dịch COD đã hoàn thành",
+                                TinNhan = $"Giao dịch thanh toán khi nhận hàng (COD) cho đơn hàng #{donHang.MaDonHang} đã được hoàn thành. Số tiền sẽ được giải ngân vào ví của bạn sau khi trừ phí dịch vụ.",
+                                MucDoQuanTrong = 2, // Quan trọng cao vì liên quan đến thanh toán
+                                DuongDanChiTiet = "/DonHang/ChiTietDonHangNguoiMua/" + donHang.MaDonHang,
+                                NgayTao = DateTime.Now
+                            };
+                            db.ThongBaos.Add(thongBaoCODNguoiBan);
+                        }
+                    }
+                    db.SaveChanges();
+
                     TempData["Success"] = "Đã xác nhận nhận hàng thành công. Người bán sẽ nhận được thanh toán.";
                 }
                 else
@@ -288,6 +340,43 @@ namespace WebApplication1.Controllers
 
                 try
                 {
+                    // Tạo thông báo cho người mua cho từng sản phẩm đã đánh giá
+                    foreach (var chiTietDonHang in donHang.ChiTietDonHangs)
+                    {
+                        var sanPham = db.SanPhams.Find(chiTietDonHang.MaSanPham);
+                        if (sanPham != null)
+                        {
+                            var thongBaoDanhGiaThanhCong = new ThongBao
+                            {
+                                MaNguoiDung = maNguoiDung,
+                                LoaiThongBao = "DanhGia",
+                                TieuDe = "Đánh giá sản phẩm thành công",
+                                TinNhan = $"Bạn đã đánh giá sản phẩm {sanPham.TenSanPham} trong đơn hàng #{donHang.MaDonHang} thành công với {soDiem} sao.",
+                                MucDoQuanTrong = 1, // Thông báo thông thường
+                                DuongDanChiTiet = "/Home/ChiTiet/" + sanPham.MaSanPham,
+                                NgayTao = DateTime.Now
+                            };
+                            db.ThongBaos.Add(thongBaoDanhGiaThanhCong);
+                        }
+                    }
+
+                    // Thông báo cho người bán khi có đánh giá mới
+                    var nguoiBan = db.NguoiBans.Find(donHang.MaNguoiBan);
+                    if (nguoiBan != null)
+                    {
+                        var thongBaoNguoiBan = new ThongBao
+                        {
+                            MaNguoiDung = nguoiBan.MaNguoiDung,
+                            LoaiThongBao = "DanhGia",
+                            TieuDe = "Đơn hàng đã được đánh giá",
+                            TinNhan = $"Đơn hàng #{donHang.MaDonHang} đã được người mua đánh giá {soDiem} sao.",
+                            MucDoQuanTrong = 2, // Quan trọng cao vì liên quan đến đánh giá
+                            DuongDanChiTiet = "/NguoiBans/QuanLyDanhGia/" + nguoiBan.MaNguoiBan,
+                            NgayTao = DateTime.Now
+                        };
+                        db.ThongBaos.Add(thongBaoNguoiBan);
+                    }
+
                     db.SaveChanges();
                     TempData["Success"] = "Đánh giá đơn hàng thành công!";
                     return RedirectToAction("ChiTiet", new { id = id });
@@ -770,12 +859,28 @@ namespace WebApplication1.Controllers
                         TempData["Error"] = "Có lỗi xảy ra khi xử lý đặt cọc. Vui lòng thử lại sau.";
                         return RedirectToAction("ChiTietDonHangNguoiMua", new { id = id });
                     }
+                    // Thông báo đặt cọc thành công
+                    var thongBaoDatCocThanhCong = new ThongBao
+                    {
+                        MaNguoiDung = maNguoiDung,
+                        LoaiThongBao = "DonHang",
+                        TieuDe = "Đặt cọc thành công",
+                        TinNhan = $"Bạn đã đặt cọc thành công cho đơn hàng #{donHang.MaDonHang}",
+                        MucDoQuanTrong = 1, // Thông báo thông thường
+                        DuongDanChiTiet = "/GiaoDich/ViNguoiBan",
+                        NgayTao = DateTime.Now
+                    };
+                    db.ThongBaos.Add(thongBaoDatCocThanhCong);
+                    db.SaveChanges();
                 }
                 //28/03/2025
 
                 // Cập nhật trạng thái đơn hàng
                 donHang.TrangThaiDonHang = trangThai;
                 donHang.NgayCapNhat = DateTime.Now;
+
+                // Lưu trữ trạng thái cũ để thông báo
+                string trangThaiCu = donHang.TrangThaiDonHang;
 
                 // Nếu đơn hàng đã giao, cập nhật ngày giao hàng
                 if (trangThai == "Đã giao")
@@ -787,6 +892,51 @@ namespace WebApplication1.Controllers
                 }
 
                 db.Entry(donHang).State = EntityState.Modified;
+                db.SaveChanges();
+
+                // Thông báo cho người bán về việc cập nhật trạng thái đơn hàng thành công
+                var thongBaoCapNhatThanhCong = new ThongBao
+                {
+                    MaNguoiDung = maNguoiDung,
+                    LoaiThongBao = "DonHang",
+                    TieuDe = "Cập nhật trạng thái đơn hàng thành công",
+                    TinNhan = $"Bạn đã cập nhật trạng thái đơn hàng #{donHang.MaDonHang} từ '{trangThaiCu}' thành '{trangThai}'.",
+                    MucDoQuanTrong = 1, // Thông báo thông thường
+                    DuongDanChiTiet = "/DonHang/ChiTietDonHangNguoiMua/" + donHang.MaDonHang,
+                    NgayTao = DateTime.Now
+                };
+                db.ThongBaos.Add(thongBaoCapNhatThanhCong);
+                // Nếu đơn hàng chuyển sang trạng thái "Đã giao", thêm thông báo đặc biệt cho người mua
+                if (trangThai == "Đã giao")
+                {
+                    var thongBaoDaGiao = new ThongBao
+                    {
+                        MaNguoiDung = donHang.MaNguoiDung,
+                        LoaiThongBao = "DonHang",
+                        TieuDe = "Đơn hàng đã được giao",
+                        TinNhan = $"Đơn hàng #{donHang.MaDonHang} đã được giao. Vui lòng kiểm tra và xác nhận đã nhận được hàng trong vòng 3 ngày. Sau thời gian này, hệ thống sẽ tự động xác nhận.",
+                        MucDoQuanTrong = 2, // Quan trọng cao vì cần xác nhận
+                        DuongDanChiTiet = "/DonHang/ChiTiet/" + donHang.MaDonHang,
+                        NgayTao = DateTime.Now
+                    };
+                    db.ThongBaos.Add(thongBaoDaGiao);
+                }
+                else
+                {
+                    // Thông báo cho người mua về việc trạng thái đơn hàng đã thay đổi
+                    var thongBaoNguoiMua = new ThongBao
+                    {
+                        MaNguoiDung = donHang.MaNguoiDung,
+                        LoaiThongBao = "DonHang",
+                        TieuDe = "Trạng thái đơn hàng đã thay đổi",
+                        TinNhan = $"Đơn hàng #{donHang.MaDonHang} của bạn đã được cập nhật thành '{trangThai}'.",
+                        MucDoQuanTrong = 1, // Thông báo thông thường
+                        DuongDanChiTiet = "/DonHang/ChiTiet/" + donHang.MaDonHang,
+                        NgayTao = DateTime.Now
+                    };
+                    db.ThongBaos.Add(thongBaoNguoiMua);
+                }
+
                 db.SaveChanges();
 
                 TempData["Success"] = "Cập nhật trạng thái đơn hàng thành công!";
@@ -871,6 +1021,34 @@ namespace WebApplication1.Controllers
                 var escrowService = new EscrowService();
                 await escrowService.ProcessOrderCancellationAsync(id, lyDoHuy);
 
+                // Thông báo hủy đơn hàng thành công cho người bán
+                var thongBaoHuyThanhCong = new ThongBao
+                {
+                    MaNguoiDung = maNguoiDung,
+                    LoaiThongBao = "DonHang",
+                    TieuDe = "Hủy đơn hàng thành công",
+                    TinNhan = $"Bạn đã hủy đơn hàng #{donHang.MaDonHang} thành công với lý do: '{lyDoHuy}'.",
+                    MucDoQuanTrong = 1, // Thông báo thông thường
+                    DuongDanChiTiet = "/DonHang/ChiTietDonHangNguoiMua/" + donHang.MaDonHang,
+                    NgayTao = DateTime.Now
+                };
+                db.ThongBaos.Add(thongBaoHuyThanhCong);
+
+                // Thông báo cho người mua về việc đơn hàng bị hủy
+                var thongBaoNguoiMua = new ThongBao
+                {
+                    MaNguoiDung = donHang.MaNguoiDung,
+                    LoaiThongBao = "DonHang",
+                    TieuDe = "Đơn hàng đã bị hủy bởi người bán",
+                    TinNhan = $"Đơn hàng #{donHang.MaDonHang} đã bị hủy bởi người bán với lý do: '{lyDoHuy}'.",
+                    MucDoQuanTrong = 2, // Quan trọng cao vì đơn hàng bị hủy
+                    DuongDanChiTiet = "/DonHang/ChiTiet/" + donHang.MaDonHang,
+                    NgayTao = DateTime.Now
+                };
+                db.ThongBaos.Add(thongBaoNguoiMua);
+
+                await db.SaveChangesAsync();
+
                 TempData["Success"] = "Hủy đơn hàng thành công!";
                 return RedirectToAction("ChiTietDonHangNguoiMua", new { id = id });
             }
@@ -945,6 +1123,38 @@ namespace WebApplication1.Controllers
                 var escrowService = new EscrowService();
                 await escrowService.ProcessOrderCancellationAsync(id, lyDoHuy);
 
+                // Thông báo hủy đơn hàng thành công cho người mua
+                var thongBaoHuyThanhCong = new ThongBao
+                {
+                    MaNguoiDung = maNguoiDung,
+                    LoaiThongBao = "DonHang",
+                    TieuDe = "Hủy đơn hàng thành công",
+                    TinNhan = $"Bạn đã hủy đơn hàng #{donHang.MaDonHang} thành công với lý do: '{lyDoHuy}'.",
+                    MucDoQuanTrong = 1, // Thông báo thông thường
+                    DuongDanChiTiet = "/DonHang/ChiTiet/" + donHang.MaDonHang,
+                    NgayTao = DateTime.Now
+                };
+                db.ThongBaos.Add(thongBaoHuyThanhCong);
+
+                // Thông báo cho người bán về việc đơn hàng bị hủy
+                var nguoiBan = await db.NguoiBans.FindAsync(donHang.MaNguoiBan);
+                if (nguoiBan != null)
+                {
+                    var thongBaoNguoiBan = new ThongBao
+                    {
+                        MaNguoiDung = nguoiBan.MaNguoiDung,
+                        LoaiThongBao = "DonHang",
+                        TieuDe = "Đơn hàng đã bị hủy bởi người mua",
+                        TinNhan = $"Đơn hàng #{donHang.MaDonHang} đã bị hủy bởi người mua với lý do: '{lyDoHuy}'.",
+                        MucDoQuanTrong = 2, // Quan trọng cao vì đơn hàng bị hủy
+                        DuongDanChiTiet = "/DonHang/ChiTietDonHangNguoiMua/" + donHang.MaDonHang,
+                        NgayTao = DateTime.Now
+                    };
+                    db.ThongBaos.Add(thongBaoNguoiBan);
+                }
+
+                await db.SaveChangesAsync();
+
                 TempData["Success"] = "Hủy đơn hàng thành công!";
                 return RedirectToAction("ChiTiet", new { id = id });
             }
@@ -1006,6 +1216,51 @@ namespace WebApplication1.Controllers
                 // Xử lý hoàn tiền đặt cọc nếu cần
                 var escrowService = new EscrowService();
                 await escrowService.ProcessOrderCancellationAsync(id, lyDoHuy);
+
+                // Thông báo hủy đơn hàng thành công cho admin
+                var thongBaoAdminHuyThanhCong = new ThongBao
+                {
+                    MaNguoiDung = GetCurrentUserId(), // Admin hiện tại
+                    LoaiThongBao = "DonHang",
+                    TieuDe = "Hủy đơn hàng thành công",
+                    TinNhan = $"Bạn đã hủy đơn hàng #{donHang.MaDonHang} thành công với lý do: '{lyDoHuy}'.",
+                    MucDoQuanTrong = 1, // Thông báo thông thường
+                    DuongDanChiTiet = "/DonHang/ChiTietAdmin/" + donHang.MaDonHang,
+                    NgayTao = DateTime.Now
+                };
+                db.ThongBaos.Add(thongBaoAdminHuyThanhCong);
+
+                // Thông báo cho người mua về việc đơn hàng bị hủy bởi admin
+                var thongBaoNguoiMua = new ThongBao
+                {
+                    MaNguoiDung = donHang.MaNguoiDung,
+                    LoaiThongBao = "DonHang",
+                    TieuDe = "Đơn hàng đã bị hủy bởi quản trị viên",
+                    TinNhan = $"Đơn hàng #{donHang.MaDonHang} của bạn đã bị hủy bởi quản trị viên với lý do: '{lyDoHuy}'.",
+                    MucDoQuanTrong = 2, // Quan trọng cao vì đơn hàng bị hủy
+                    DuongDanChiTiet = "/DonHang/ChiTiet/" + donHang.MaDonHang,
+                    NgayTao = DateTime.Now
+                };
+                db.ThongBaos.Add(thongBaoNguoiMua);
+
+                // Thông báo cho người bán về việc đơn hàng bị hủy bởi admin
+                var nguoiBan = await db.NguoiBans.FindAsync(donHang.MaNguoiBan);
+                if (nguoiBan != null)
+                {
+                    var thongBaoNguoiBan = new ThongBao
+                    {
+                        MaNguoiDung = nguoiBan.MaNguoiDung,
+                        LoaiThongBao = "DonHang",
+                        TieuDe = "Đơn hàng đã bị hủy bởi quản trị viên",
+                        TinNhan = $"Đơn hàng #{donHang.MaDonHang} đã bị hủy bởi quản trị viên với lý do: '{lyDoHuy}'.",
+                        MucDoQuanTrong = 2, // Quan trọng cao vì đơn hàng bị hủy
+                        DuongDanChiTiet = "/DonHang/ChiTietDonHangNguoiMua/" + donHang.MaDonHang,
+                        NgayTao = DateTime.Now
+                    };
+                    db.ThongBaos.Add(thongBaoNguoiBan);
+                }
+
+                await db.SaveChangesAsync();
 
                 TempData["Success"] = "Hủy đơn hàng thành công!";
                 return RedirectToAction("QuanLyDonHang");
@@ -1224,6 +1479,72 @@ namespace WebApplication1.Controllers
                 }
 
                 db.Entry(donHang).State = EntityState.Modified;
+                db.SaveChanges();
+
+                // Lưu trạng thái cũ để thông báo
+                string trangThaiCu = donHang.TrangThaiDonHang;
+                // Thông báo cho admin về việc cập nhật thành công
+                var thongBaoAdmin = new ThongBao
+                {
+                    MaNguoiDung = GetCurrentUserId(), // Admin hiện tại
+                    LoaiThongBao = "DonHang",
+                    TieuDe = "Cập nhật trạng thái đơn hàng thành công",
+                    TinNhan = $"Bạn đã cập nhật trạng thái đơn hàng #{donHang.MaDonHang} từ '{trangThaiCu}' thành '{trangThai}'.",
+                    MucDoQuanTrong = 1, // Thông báo thông thường
+                    DuongDanChiTiet = "/DonHang/ChiTietAdmin/" + donHang.MaDonHang,
+                    NgayTao = DateTime.Now
+                };
+                db.ThongBaos.Add(thongBaoAdmin);
+
+
+                // Thông báo cho người bán về việc trạng thái đơn hàng đã thay đổi
+                var nguoiBan = db.NguoiBans.Find(donHang.MaNguoiBan);
+                if (nguoiBan != null)
+                {
+                    var thongBaoNguoiBan = new ThongBao
+                    {
+                        MaNguoiDung = nguoiBan.MaNguoiDung,
+                        LoaiThongBao = "DonHang",
+                        TieuDe = "Trạng thái đơn hàng đã thay đổi",
+                        TinNhan = $"Đơn hàng #{donHang.MaDonHang} đã được cập nhật thành '{trangThai}' bởi quản trị viên.",
+                        MucDoQuanTrong = 1, // Thông báo thông thường
+                        DuongDanChiTiet = "/DonHang/ChiTietDonHangNguoiMua/" + donHang.MaDonHang,
+                        NgayTao = DateTime.Now
+                    };
+                    db.ThongBaos.Add(thongBaoNguoiBan);
+                }
+
+                // Nếu đơn hàng chuyển sang trạng thái "Đã giao", thêm thông báo đặc biệt cho người mua
+                if (trangThai == "Đã giao")
+                {
+                    var thongBaoDaGiao = new ThongBao
+                    {
+                        MaNguoiDung = donHang.MaNguoiDung,
+                        LoaiThongBao = "DonHang",
+                        TieuDe = "Đơn hàng đã được giao",
+                        TinNhan = $"Đơn hàng #{donHang.MaDonHang} đã được giao. Vui lòng kiểm tra và xác nhận đã nhận được hàng trong vòng 3 ngày. Sau thời gian này, hệ thống sẽ tự động xác nhận.",
+                        MucDoQuanTrong = 2, // Quan trọng cao vì cần xác nhận
+                        DuongDanChiTiet = "/DonHang/ChiTiet/" + donHang.MaDonHang,
+                        NgayTao = DateTime.Now
+                    };
+                    db.ThongBaos.Add(thongBaoDaGiao);
+                }
+                else
+                {
+                    // Thông báo cho người mua về việc trạng thái đơn hàng đã thay đổi
+                    var thongBaoNguoiMua = new ThongBao
+                    {
+                        MaNguoiDung = donHang.MaNguoiDung,
+                        LoaiThongBao = "DonHang",
+                        TieuDe = "Trạng thái đơn hàng đã thay đổi",
+                        TinNhan = $"Đơn hàng #{donHang.MaDonHang} của bạn đã được cập nhật thành '{trangThai}' bởi quản trị viên.",
+                        MucDoQuanTrong = 1, // Thông báo thông thường
+                        DuongDanChiTiet = "/DonHang/ChiTiet/" + donHang.MaDonHang,
+                        NgayTao = DateTime.Now
+                    };
+                    db.ThongBaos.Add(thongBaoNguoiMua);
+                }
+
                 db.SaveChanges();
 
                 TempData["Success"] = "Cập nhật trạng thái đơn hàng thành công!";

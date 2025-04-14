@@ -26,6 +26,20 @@ namespace WebApplication1.Models
 
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public DateTime NgayTao { get; set; } = DateTime.Now;
+        //11/4/2025
+        [Required]
+        [StringLength(100)]
+        public string LoaiThongBao { get; set; } = "Chung";
+
+        [Required]
+        public string TieuDe { get; set; } = "Thông báo";
+
+        public string DuongDanChiTiet { get; set; }
+
+        public int MucDoQuanTrong { get; set; } = 0;
+
+        public DateTime? NgayDoc { get; set; }
+        //11/4/2025
 
         // Navigation property
         public virtual NguoiDung NguoiDung { get; set; }

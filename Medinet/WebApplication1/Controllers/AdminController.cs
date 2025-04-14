@@ -215,6 +215,22 @@ namespace WebApplication1.Controllers
                 nguoiDung.VaiTro = "Seller";
                 nguoiDung.XetDuyetThanhNguoiBan = false;
                 nguoiDung.TrangThai = "Active";
+
+                // Tạo thông báo cho người dùng khi được nâng cấp thành người bán
+                var thongBao = new ThongBao
+                {
+                    MaNguoiDung = nguoiDung.MaNguoiDung,
+                    LoaiThongBao = "TaiKhoan",
+                    TieuDe = "Nâng cấp thành người bán thành công",
+                    TinNhan = "Chúc mừng! Tài khoản của bạn đã được nâng cấp thành người bán. Bây giờ bạn có thể bắt đầu đăng bán sản phẩm trên hệ thống.",
+                    MucDoQuanTrong = 2, // Mức độ quan trọng cao
+                    DuongDanChiTiet = "/NguoiDungs/EditSellerProfile",
+                    NgayTao = DateTime.Now
+                };
+
+                // Thêm thông báo vào database
+                db.ThongBaos.Add(thongBao);
+
                 db.SaveChanges();
                 return Json(new { success = true, message = "Nâng cấp thành người bán thành công." });
                 //// Kiểm tra xem người dùng có phải là người bán hay không
@@ -365,6 +381,21 @@ namespace WebApplication1.Controllers
                 nguoiDung.BiTuChoiNangCap = true;
                 nguoiDung.NgayTuChoiNangCap = DateTime.Now;
 
+                // Tạo thông báo cho người dùng khi bị từ chối nâng cấp thành người bán
+                var thongBao = new ThongBao
+                {
+                    MaNguoiDung = nguoiDung.MaNguoiDung,
+                    LoaiThongBao = "TaiKhoan",
+                    TieuDe = "Yêu cầu nâng cấp thành người bán bị từ chối",
+                    TinNhan = "Yêu cầu trở thành người bán của bạn đã bị từ chối. Vui lòng kiểm tra lại thông tin và thử lại sau 30 ngày.",
+                    MucDoQuanTrong = 2, // Mức độ quan trọng cao
+                    DuongDanChiTiet = "/NguoiDungs/Profile",
+                    NgayTao = DateTime.Now
+                };
+
+                // Thêm thông báo vào database
+                db.ThongBaos.Add(thongBao);
+
                 db.SaveChanges();
 
                 return Json(new { success = true, message = "Đã từ chối nâng cấp và xóa dữ liệu liên quan." });
@@ -505,6 +536,28 @@ namespace WebApplication1.Controllers
                 // Duyệt sản phẩm
                 sanPham.TrangThai = "Đã phê duyệt";
                 sanPham.NgayCapNhat = DateTime.Now;
+
+                // Tìm thông tin người bán để gửi thông báo
+                var nguoiBan = db.NguoiBans.Find(sanPham.MaNguoiBan);
+                if (nguoiBan != null)
+                {
+                    // Tạo thông báo cho người bán khi sản phẩm được phê duyệt
+                    var thongBao = new ThongBao
+                    {
+                        MaNguoiDung = nguoiBan.MaNguoiDung,
+                        LoaiThongBao = "SanPham",
+                        TieuDe = "Sản phẩm đã được phê duyệt",
+                        TinNhan = "Sản phẩm \"" + sanPham.TenSanPham + "\" của bạn đã được phê duyệt và hiển thị trên hệ thống.",
+                        MucDoQuanTrong = 1,
+                        DuongDanChiTiet = "/NguoiBans/QuanLySanPham/" + nguoiBan.MaNguoiBan,
+                        NgayTao = DateTime.Now
+                    };
+
+                    // Thêm thông báo vào database
+                    db.ThongBaos.Add(thongBao);
+                }
+
+
                 db.SaveChanges();
 
                 return Json(new { success = true });
@@ -537,6 +590,28 @@ namespace WebApplication1.Controllers
                 // Từ chối sản phẩm
                 sanPham.TrangThai = "Bị từ chối";
                 sanPham.NgayCapNhat = DateTime.Now;
+
+                // Tìm thông tin người bán để gửi thông báo
+                var nguoiBan = db.NguoiBans.Find(sanPham.MaNguoiBan);
+                if (nguoiBan != null)
+                {
+                    // Tạo thông báo cho người bán khi sản phẩm bị từ chối
+                    var thongBao = new ThongBao
+                    {
+                        MaNguoiDung = nguoiBan.MaNguoiDung,
+                        LoaiThongBao = "SanPham",
+                        TieuDe = "Sản phẩm không được phê duyệt",
+                        TinNhan = "Sản phẩm \"" + sanPham.TenSanPham + "\" của bạn không được phê duyệt. Vui lòng kiểm tra lại thông tin sản phẩm và cập nhật để đăng lại.",
+                        MucDoQuanTrong = 2, // Mức độ quan trọng cao
+                        DuongDanChiTiet = "/NguoiBans/QuanLySanPham/" + nguoiBan.MaNguoiBan,
+                        NgayTao = DateTime.Now
+                    };
+
+                    // Thêm thông báo vào database
+                    db.ThongBaos.Add(thongBao);
+                }
+
+
                 db.SaveChanges();
 
                 return Json(new { success = true });
@@ -582,6 +657,28 @@ namespace WebApplication1.Controllers
 
                     // 2. Xóa sản phẩm
                     db.SanPhams.Remove(sanPham);
+
+                    // Lưu thông tin người bán và tên sản phẩm trước khi xóa để tạo thông báo sau này
+                    int maNguoiBan = sanPham.MaNguoiBan;
+                    var nguoiBan = db.NguoiBans.Find(maNguoiBan);
+                    string tenSanPham = sanPham.TenSanPham;
+                    // 3. Tạo thông báo cho người bán nếu nguoiBan không null
+                    if (nguoiBan != null)
+                    {
+                        var thongBao = new ThongBao
+                        {
+                            MaNguoiDung = nguoiBan.MaNguoiDung,
+                            LoaiThongBao = "SanPham",
+                            TieuDe = "Sản phẩm đã bị xóa",
+                            TinNhan = "Sản phẩm \"" + tenSanPham + "\" của bạn đã bị xóa khỏi hệ thống.",
+                            MucDoQuanTrong = 2, // Mức độ quan trọng cao
+                            DuongDanChiTiet = "/NguoiBans/QuanLySanPham/" + nguoiBan.MaNguoiBan,
+                            NgayTao = DateTime.Now
+                        };
+
+                        // Thêm thông báo vào database
+                        db.ThongBaos.Add(thongBao);
+                    }
 
                     // 3. Lưu thay đổi và commit transaction
                     db.SaveChanges();
@@ -963,6 +1060,24 @@ namespace WebApplication1.Controllers
                     donHang.DaGiaiNganChoSeller = true;
                     donHang.TrangThaiDonHang = "Đã hoàn thành";
                     db.Entry(donHang).State = EntityState.Modified;
+
+                    // Tạo thông báo cho người bán
+                    var nguoiBan = db.NguoiBans.Find(donHang.MaNguoiBan);
+                    if (nguoiBan != null)
+                    {
+                        var thongBaoNguoiBan = new ThongBao
+                        {
+                            MaNguoiDung = nguoiBan.MaNguoiDung,
+                            LoaiThongBao = "TaiChinh",
+                            TieuDe = "Đã nhận tiền từ đơn hàng",
+                            TinNhan = $"Tiền từ đơn hàng #{donHang.MaDonHang} đã được giải ngân vào tài khoản của bạn với số tiền {escrow.TienChuyenChoNguoiBan:N0} VNĐ.",
+                            MucDoQuanTrong = 2, // Quan trọng cao vì liên quan đến tài chính
+                            DuongDanChiTiet = "/GiaoDich/ViNguoiBan",
+                            NgayTao = DateTime.Now
+                        };
+                        db.ThongBaos.Add(thongBaoNguoiBan);
+                    }
+
                 }
 
                 db.Entry(escrow).State = EntityState.Modified;
@@ -1008,6 +1123,23 @@ namespace WebApplication1.Controllers
                 {
                     donHang.TrangThaiDonHang = "Đã hủy";
                     db.Entry(donHang).State = EntityState.Modified;
+
+                    // Tạo thông báo cho người bán
+                    var nguoiBan = db.NguoiBans.Find(donHang.MaNguoiBan);
+                    if (nguoiBan != null)
+                    {
+                        var thongBaoNguoiBan = new ThongBao
+                        {
+                            MaNguoiDung = nguoiBan.MaNguoiDung,
+                            LoaiThongBao = "DonHang",
+                            TieuDe = "Đơn hàng đã bị hủy",
+                            TinNhan = $"Đơn hàng #{donHang.MaDonHang} đã bị hủy và tiền đã được hoàn trả cho tài khoản của bạn.",
+                            MucDoQuanTrong = 2, // Quan trọng cao vì đơn hàng bị hủy
+                            DuongDanChiTiet = "//GiaoDich/ViNguoiBan",
+                            NgayTao = DateTime.Now
+                        };
+                        db.ThongBaos.Add(thongBaoNguoiBan);
+                    }
                 }
 
                 db.Entry(escrow).State = EntityState.Modified;

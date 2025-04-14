@@ -201,7 +201,7 @@
                 <a href="@Url.Action("Profile", "NguoiDungs")" class="list-group-item list-group-item-action d-flex align-items-center @(isAccountActive ? "active-account" : "")">
                     <i class="fas fa-user me-3"></i>Tài khoản của tôi
                 </a>
-                <a href="#" class="list-group-item list-group-item-action d-flex align-items-center">
+                <a href="@Url.Action("Index", "ThongBao")" class="list-group-item list-group-item-action d-flex align-items-center">
                     <i class="fas fa-bell me-3"></i>Thông báo
                 </a>
                 <a href="@Url.Action("DonHangCuaToi", "DonHang")" class="list-group-item list-group-item-action d-flex align-items-center">
@@ -358,7 +358,7 @@
                                     <div class="form-group row">
                                         <label class="col-sm-3 col-form-label">Số điện thoại cửa hàng</label>
                                         <div class="col-sm-9">
-                                            @Html.TextBoxFor(model => model.SoDienThoaiCuaHang, new { @class = "form-control", placeholder = "Số điện thoại phải có 10 chữ số", pattern = "[0-9]{10}", title = "Số điện thoại phải có 10 chữ số" })
+                                            @Html.TextBoxFor(model => model.SoDienThoaiCuaHang, new { @class = "form-control", placeholder = "Số điện thoại phải có 10 chữ số", maxlength = "10", pattern = "[0-9]{10}", title = "Số điện thoại phải có 10 chữ số" })
                                             @Html.ValidationMessageFor(model => model.SoDienThoaiCuaHang, "", new { @class = "text-danger" })
                                         </div>
                                     </div>

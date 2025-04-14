@@ -501,6 +501,7 @@ namespace WebApplication1.Services
                         return false;
                     }
 
+                    var maghichep = 0;
                     // Cập nhật trạng thái ký quỹ
                     escrow.TrangThai = "Đã giải ngân";
                     escrow.NgayGiaiNgan = DateTime.Now;
@@ -511,7 +512,8 @@ namespace WebApplication1.Services
                     donHang.DaGiaiNganChoSeller = true;
                     donHang.TrangThaiDonHang = "Đã hoàn thành";
                     db.Entry(donHang).State = EntityState.Modified;
-
+                    // Biến để lưu thông tin ghi chép ví
+                    GhiChepVi ghichep = null;
                     // Cập nhật ví tiền của người bán
                     var nguoiBan = escrow.NguoiBan;
                     if (nguoiBan != null)
@@ -524,14 +526,14 @@ namespace WebApplication1.Services
                             depositAmount = CalculateRequiredDeposit(donHang.TongSoTien);
 
                             // Hoàn trả tiền đặt cọc + thanh toán tiền đơn hàng
-                            decimal totalPayment = depositAmount + donHang.TongSoTien;
+                            decimal totalPayment = depositAmount ;
                             nguoiBan.SoDuVi += totalPayment;
                             db.Entry(nguoiBan).State = EntityState.Modified;
 
                             System.Diagnostics.Debug.WriteLine($"COD - Hoàn trả đặt cọc: {depositAmount:N0}đ, Thanh toán đơn hàng: {donHang.TongSoTien:N0}đ");
 
                             // Tạo ghi chép hoàn trả đặt cọc
-                            var ghiChepCoc = new GhiChepVi
+                            ghichep = new GhiChepVi
                             {
                                 MaNguoiBan = nguoiBan.MaNguoiBan,
                                 MaDonHang = maDonHang,
@@ -541,20 +543,21 @@ namespace WebApplication1.Services
                                 NgayGiaoDich = DateTime.Now,
                                 TrangThai = "Thành công"
                             };
-                            db.GhiChepVis.Add(ghiChepCoc);
 
-                            // Tạo ghi chép thanh toán đơn hàng
-                            var ghiChepThanhToan = new GhiChepVi
-                            {
-                                MaNguoiBan = nguoiBan.MaNguoiBan,
-                                MaDonHang = maDonHang,
-                                SoTien = donHang.TongSoTien,
-                                LoaiGiaoDich = "Thanh toán đơn hàng",
-                                MoTa = $"Thanh toán tiền đơn hàng #{maDonHang}",
-                                NgayGiaoDich = DateTime.Now,
-                                TrangThai = "Thành công"
-                            };
-                            db.GhiChepVis.Add(ghiChepThanhToan);
+                            db.GhiChepVis.Add(ghichep);
+
+                            //// Tạo ghi chép thanh toán đơn hàng
+                            //var ghiChepThanhToan = new GhiChepVi
+                            //{
+                            //    MaNguoiBan = nguoiBan.MaNguoiBan,
+                            //    MaDonHang = maDonHang,
+                            //    SoTien = donHang.TongSoTien,
+                            //    LoaiGiaoDich = "Thanh toán đơn hàng",
+                            //    MoTa = $"Thanh toán tiền đơn hàng #{maDonHang}",
+                            //    NgayGiaoDich = DateTime.Now,
+                            //    TrangThai = "Thành công"
+                            //};
+                            //db.GhiChepVis.Add(ghiChepThanhToan);
                         }
                         else
                         {
@@ -565,7 +568,7 @@ namespace WebApplication1.Services
                             System.Diagnostics.Debug.WriteLine($"VNPAY - Thanh toán sau khi trừ phí: {escrow.TienChuyenChoNguoiBan:N0}đ");
 
                             // Tạo ghi chép thanh toán
-                            var ghiChep = new GhiChepVi
+                            ghichep = new GhiChepVi
                             {
                                 MaNguoiBan = nguoiBan.MaNguoiBan,
                                 MaDonHang = maDonHang,
@@ -575,7 +578,8 @@ namespace WebApplication1.Services
                                 NgayGiaoDich = DateTime.Now,
                                 TrangThai = "Thành công"
                             };
-                            db.GhiChepVis.Add(ghiChep);
+
+                            db.GhiChepVis.Add(ghichep);
                         }
 
                         System.Diagnostics.Debug.WriteLine($"Đã cập nhật số dư ví người bán ID {nguoiBan.MaNguoiBan}: {nguoiBan.SoDuVi:N0}đ");
@@ -584,10 +588,47 @@ namespace WebApplication1.Services
                     // Lưu tất cả thay đổi
                     await db.SaveChangesAsync();
 
+                    // Tạo thông báo cho người bán về việc giải ngân
+                    if (nguoiBan != null)
+                    {
+                        // Thông báo chung về giải ngân 
+                        string tieuDe = "Đã giải ngân đơn hàng thành công";
+                        string tinNhan;
+                        string duongDanChiTiet = $"/GiaoDich/ChiTietGhiChepViNguoiBan/{ghichep.MaGhiChep}";
+
+                        if (donHang.PhuongThucThanhToan == "COD")
+                        {
+                            // Thông báo giải ngân COD
+                            var depositAmount = CalculateRequiredDeposit(donHang.TongSoTien);
+                            decimal totalPayment = depositAmount ;
+                            tinNhan = $"Đơn hàng #{maDonHang} đã được giải ngân. Hoàn trả số tiền đặt cọc {totalPayment:N0} VNĐ đã được chuyển vào ví .";
+                        }
+                        else
+                        {
+                            // Thông báo giải ngân VNPAY
+                            tinNhan = $"Đơn hàng #{maDonHang} đã được giải ngân. Số tiền {escrow.TienChuyenChoNguoiBan:N0} VNĐ (đã trừ phí) đã được chuyển vào ví của bạn.";
+                        }
+
+                        var thongBaoNguoiBan = new ThongBao
+                        {
+                            MaNguoiDung = nguoiBan.MaNguoiDung,
+                            LoaiThongBao = "Vi",
+                            TieuDe = tieuDe,
+                            TinNhan = tinNhan,
+                            MucDoQuanTrong = 2, // Thông báo quan trọng vì liên quan đến tiền
+                            DuongDanChiTiet = duongDanChiTiet,
+                            NgayTao = DateTime.Now
+                        };
+                        db.ThongBaos.Add(thongBaoNguoiBan);
+
+                        // Lưu thông báo
+                        await db.SaveChangesAsync();
+                    }
+
                     // Commit transaction
                     dbTransaction.Commit();
 
-                    System.Diagnostics.Debug.WriteLine($"Đã giải ngân thành công cho đơn hàng {maDonHang}");
+                    System.Diagnostics.Debug.WriteLine($"Đã giải ngân thành công cho đơn hàng {maghichep}");
                     return true;
                 }
                 catch (Exception ex)
@@ -667,102 +708,6 @@ namespace WebApplication1.Services
             }
         }
 
-        /// <summary>
-        /// Hoàn tiền cho người mua nếu hủy đơn hàng và hoàn trả tiền đặt cọc cho người bán
-        /// </summary>
-        /// <param name="maDonHang">Mã đơn hàng cần hoàn tiền</param>
-        /// <param name="lyDoHuy">Lý do hủy đơn hàng</param>
-        /// <returns>Kết quả hoàn tiền (true/false)</returns>
-        //public async Task<bool> ProcessOrderCancellationAsync(int maDonHang, string lyDoHuy)
-        //{
-        //    using (var db = new MedinetDATN())
-        //    {
-        //        using (var dbTransaction = db.Database.BeginTransaction())
-        //        {
-        //            try
-        //            {
-        //                // Lấy thông tin đơn hàng
-        //                var donHang = await db.DonHangs.FindAsync(maDonHang);
-        //                if (donHang == null)
-        //                    throw new Exception($"Không tìm thấy đơn hàng với mã {maDonHang}");
-
-        //                // Lấy thông tin ký quỹ
-        //                var escrow = await db.Escrows
-        //                    .FirstOrDefaultAsync(e => e.MaDonHang == maDonHang);
-
-        //                if (escrow == null)
-        //                {
-        //                    // Nếu không có ký quỹ (có thể đơn hàng chưa được xử lý), vẫn tiếp tục xử lý hủy đơn hàng
-        //                    System.Diagnostics.Debug.WriteLine($"Không tìm thấy ký quỹ cho đơn hàng {maDonHang}, tiếp tục xử lý hủy");
-        //                }
-        //                else if (escrow.TrangThai != "Đang giữ")
-        //                {
-        //                    // Nếu ký quỹ đã được xử lý, cảnh báo nhưng vẫn tiếp tục
-        //                    System.Diagnostics.Debug.WriteLine($"Ký quỹ đã được xử lý trước đó, trạng thái hiện tại: {escrow.TrangThai}");
-        //                }
-        //                else
-        //                {
-        //                    // Cập nhật trạng thái ký quỹ
-        //                    escrow.TrangThai = "Đã hoàn tiền";
-        //                    escrow.NgayGiaiNgan = DateTime.Now;
-        //                    db.Entry(escrow).State = EntityState.Modified;
-
-        //                    // Nếu là COD, hoàn trả tiền đặt cọc cho người bán
-        //                    if (donHang.PhuongThucThanhToan == "COD")
-        //                    {
-        //                        var nguoiBan = await db.NguoiBans.FindAsync(donHang.MaNguoiBan);
-        //                        if (nguoiBan != null)
-        //                        {
-        //                            decimal depositAmount = CalculateRequiredDeposit(donHang.TongSoTien);
-
-        //                            // Hoàn trả tiền đặt cọc
-        //                            nguoiBan.SoDuVi += depositAmount;
-        //                            db.Entry(nguoiBan).State = EntityState.Modified;
-
-        //                            // Tạo ghi chép ví
-        //                            var ghiChep = new GhiChepVi
-        //                            {
-        //                                MaNguoiBan = nguoiBan.MaNguoiBan,
-        //                                MaDonHang = maDonHang,
-        //                                SoTien = depositAmount,
-        //                                LoaiGiaoDich = "Hoàn trả đặt cọc",
-        //                                MoTa = $"Hoàn trả tiền đặt cọc cho đơn hàng #{maDonHang} (đã hủy)",
-        //                                NgayGiaoDich = DateTime.Now,
-        //                                TrangThai = "Thành công"
-        //                            };
-        //                            db.GhiChepVis.Add(ghiChep);
-
-        //                            System.Diagnostics.Debug.WriteLine($"Đã hoàn trả tiền đặt cọc {depositAmount:N0}đ cho người bán ID {nguoiBan.MaNguoiBan}");
-        //                        }
-        //                    }
-        //                    // Nếu là VNPAY, thêm vào hàng đợi hoàn tiền cho người mua
-        //                    else if (donHang.PhuongThucThanhToan == "VNPAY")
-        //                    {
-        //                        await RefundEscrow(maDonHang);
-        //                    }
-        //                }
-
-        //                // Cập nhật trạng thái đơn hàng
-        //                donHang.TrangThaiDonHang = "Đã hủy";
-        //                donHang.NgayHuy = DateTime.Now;
-        //                donHang.LyDoHuy = lyDoHuy;
-        //                donHang.NgayCapNhat = DateTime.Now;
-
-        //                // Lưu thay đổi
-        //                await db.SaveChangesAsync();
-        //                dbTransaction.Commit();
-
-        //                return true;
-        //            }
-        //            catch (Exception ex)
-        //            {
-        //                dbTransaction.Rollback();
-        //                System.Diagnostics.Debug.WriteLine($"Lỗi khi xử lý hủy đơn hàng: {ex.Message}");
-        //                throw;
-        //            }
-        //        }
-        //    }
-        //}
         public async Task<bool> ProcessOrderCancellationAsync(int maDonHang, string lyDoHuy)
         {
             using (var db = new MedinetDATN())
@@ -860,6 +805,63 @@ namespace WebApplication1.Services
                             else if (donHang.PhuongThucThanhToan == "VNPAY")
                             {
                                 await RefundEscrow(maDonHang);
+                            }
+                        }
+
+                        // Thêm thông báo cho đơn hàng COD
+                        if (donHang.PhuongThucThanhToan == "COD")
+                        {
+                            // Lấy thông tin người mua và người bán
+                            var nguoiMua = await db.NguoiDungs.FindAsync(donHang.MaNguoiDung);
+                            var nguoiBan = await db.NguoiBans.FindAsync(donHang.MaNguoiBan);
+
+                            // Thông báo cho người mua về việc hủy đơn hàng
+                            if (nguoiMua != null)
+                            {
+                                var thongBaoNguoiMua = new ThongBao
+                                {
+                                    MaNguoiDung = donHang.MaNguoiDung,
+                                    LoaiThongBao = "DonHang",
+                                    TieuDe = "Đơn hàng đã bị hủy",
+                                    TinNhan = $"Đơn hàng #{maDonHang} đã bị hủy với lý do: {lyDoHuy}. Vui lòng liên hệ với người bán hoặc hỗ trợ khách hàng nếu cần hỗ trợ thêm.",
+                                    MucDoQuanTrong = 2, // Thông báo quan trọng
+                                    DuongDanChiTiet = "/DonHang/ChiTiet/" + maDonHang,
+                                    NgayTao = DateTime.Now
+                                };
+                                db.ThongBaos.Add(thongBaoNguoiMua);
+                            }
+
+                            // Thông báo cho người bán về việc hủy đơn hàng và hoàn tiền
+                            if (nguoiBan != null)
+                            {
+                                decimal depositAmount = CalculateRequiredDeposit(donHang.TongSoTien);
+                                decimal platformFee = CalculateRequiredDeposit(donHang.TongSoTien);
+                                decimal totalRefundAmount = depositAmount + platformFee;
+
+                                var thongBaoNguoiBan = new ThongBao
+                                {
+                                    MaNguoiDung = nguoiBan.MaNguoiDung,
+                                    LoaiThongBao = "DonHang",
+                                    TieuDe = "Đơn hàng đã bị hủy",
+                                    TinNhan = $"Đơn hàng #{maDonHang} đã bị hủy với lý do: {lyDoHuy}. Tiền đặt cọc và phí nền tảng (tổng cộng {totalRefundAmount:N0} VNĐ) đã được hoàn trả vào ví của bạn.",
+                                    MucDoQuanTrong = 2, // Thông báo quan trọng
+                                    DuongDanChiTiet = "/DonHang/ChiTietDonHangNguoiMua/" + maDonHang,
+                                    NgayTao = DateTime.Now
+                                };
+                                db.ThongBaos.Add(thongBaoNguoiBan);
+
+                                // Thông báo về giao dịch ví
+                                var thongBaoHoanTien = new ThongBao
+                                {
+                                    MaNguoiDung = nguoiBan.MaNguoiDung,
+                                    LoaiThongBao = "Vi",
+                                    TieuDe = "Hoàn tiền từ đơn hàng đã hủy",
+                                    TinNhan = $"Bạn đã nhận được hoàn tiền {totalRefundAmount:N0} VNĐ (bao gồm {depositAmount:N0} VNĐ tiền đặt cọc và {platformFee:N0} VNĐ phí nền tảng) từ đơn hàng #{maDonHang} đã bị hủy.",
+                                    MucDoQuanTrong = 2, // Thông báo quan trọng vì liên quan đến tiền
+                                    DuongDanChiTiet = "/GiaoDich/ViNguoiBan",
+                                    NgayTao = DateTime.Now
+                                };
+                                db.ThongBaos.Add(thongBaoHoanTien);
                             }
                         }
 

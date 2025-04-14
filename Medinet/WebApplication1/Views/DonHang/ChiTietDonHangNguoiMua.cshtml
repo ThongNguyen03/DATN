@@ -484,7 +484,7 @@
 
                         @*30/3/2025*@
                         @if (Model.TrangThaiDonHang == "Đã giao" || Model.TrangThaiDonHang == "Đã xác nhận nhận hàng" ||
-                            Model.TrangThaiDonHang == "Đã hoàn thành" || Model.TrangThaiDonHang == "Đã thanh toán")
+                            Model.TrangThaiDonHang == "Đã hoàn thành" )
                         {
                             <div class="card mt-4">
                                 <div class="card-header">
@@ -499,7 +499,15 @@
                                             }
                                             else
                                             {
-                                                <p><strong>Ngày giao hàng:</strong> @Model.NgayCapNhat.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                                                if (Model.NgayCapNhat.HasValue)
+                                                {
+                                                    <p><strong>Ngày giao hàng:</strong> @Model.NgayCapNhat.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                                                }
+                                                else
+                                                {
+                                                    <p><strong>Ngày giao hàng:</strong> @DateTime.Now</p>
+                                                }
+
                                             }
 
                                             @if (Model.TrangThaiDonHang == "Đã giao" && Model.ThoiGianTuDongXacNhan.HasValue)
@@ -516,7 +524,15 @@
                                             {
                                                 <div class="alert alert-success">
                                                     <i class="fas fa-check-circle mr-1"></i> Người mua đã xác nhận nhận hàng vào:
-                                                    <strong>@Model.NgayCapNhat.Value.ToString("dd/MM/yyyy HH:mm")</strong>
+                                                    @if (Model.NgayCapNhat.HasValue)
+                                                    {
+                                                        <strong>@Model.NgayCapNhat.Value.ToString("dd/MM/yyyy HH:mm")</strong>
+                                                    }
+                                                    else
+                                                    {
+                                                        <strong> @DateTime.Now</strong>
+                                                    }
+
                                                 </div>
                                             }
                                         </div>

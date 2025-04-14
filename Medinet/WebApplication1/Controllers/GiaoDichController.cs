@@ -101,6 +101,31 @@ namespace WebApplication1.Controllers
             }
 
             giaoDich.TrangThaiGiaoDich = trangThai;
+
+            // Tìm đơn hàng liên quan từ mã đơn hàng trong giao dịch
+            var donHang = db.DonHangs.Find(giaoDich.MaDonHang);
+            if (donHang != null)
+            {
+                var nguoiban = db.NguoiBans.Find(donHang.MaNguoiBan);
+                if(nguoiban != null)
+                {
+                    // Tạo thông báo cho người bán
+                    var thongBaoNguoiBan = new ThongBao
+                    {
+                        MaNguoiDung = nguoiban.MaNguoiDung, 
+                        LoaiThongBao = "GiaoDich",
+                        TieuDe = "Trạng thái giao dịch đã thay đổi",
+                        TinNhan = $"Giao dịch liên quan đến đơn hàng #{donHang.MaDonHang} đã được cập nhật thành '{trangThai}'.",
+                        MucDoQuanTrong = 1, // Thông báo thông thường
+                        DuongDanChiTiet = "/GiaoDich/ChiTietGiaoDichNguoiBan/" + giaoDich.MaGiaoDich,
+                        NgayTao = DateTime.Now
+                    };
+
+                    db.ThongBaos.Add(thongBaoNguoiBan);
+                }
+
+            }
+
             db.SaveChanges();
 
             return RedirectToAction("Details", new { id = id });
@@ -377,6 +402,28 @@ namespace WebApplication1.Controllers
                 await db.SaveChangesAsync();
                 System.Diagnostics.Debug.WriteLine($"Đã cập nhật trạng thái ghi chép ví thành: {ghiChepVi.TrangThai}");
 
+                var nguoiban = db.NguoiBans.Find(ghiChepVi.MaNguoiBan);
+                if(nguoiban != null)
+                {
+                    // Tạo thông báo cho người bán về việc trạng thái ghi chép ví đã thay đổi
+                    var thongBaoNguoiBan = new ThongBao
+                    {
+                        MaNguoiDung = nguoiban.MaNguoiDung,
+                        LoaiThongBao = "Vi",
+                        TieuDe = $"Trạng thái giao dịch ví đã thay đổi",
+                        TinNhan = $"Giao dịch ví #{ghiChepVi.MaGhiChep} của bạn đã được cập nhật thành '{newStatus}'" +
+                                (!string.IsNullOrEmpty(ghiChu) ? $". Ghi chú: {ghiChu}" : "."),
+                        MucDoQuanTrong = 1, // Thông báo thông thường
+                        DuongDanChiTiet = "/GiaoDich/ChiTietGhiChepViNguoiBan/" + ghiChepVi.MaGhiChep,
+                        NgayTao = DateTime.Now
+                    };
+                    db.ThongBaos.Add(thongBaoNguoiBan);
+                    System.Diagnostics.Debug.WriteLine($"Đã tạo thông báo cho người bán ID={ghiChepVi.MaNguoiBan}");
+                }
+
+
+
+
                 // Xử lý khi giao dịch không thành công
                 if (newStatus == "Không thành công")
                 {
@@ -411,6 +458,21 @@ namespace WebApplication1.Controllers
                                 IP = Request.UserHostAddress
                             };
                             db.GhiChepVis.Add(refundRecord);
+                            // Tạo thông báo về việc hoàn tiền
+                            var thongBaoHoanTien = new ThongBao
+                            {
+                                MaNguoiDung = nguoiBan.MaNguoiBan,
+                                LoaiThongBao = "Vi",
+                                TieuDe = "Hoàn tiền từ giao dịch rút tiền",
+                                TinNhan = $"Bạn đã được hoàn {refundAmount:N0}đ từ giao dịch rút tiền #{ghiChepVi.MaGhiChep} không thành công" +
+                                        (!string.IsNullOrEmpty(ghiChu) ? $" vì: {ghiChu}" : "."),
+                                MucDoQuanTrong = 1, // Thông báo thông thường
+                                DuongDanChiTiet = "/GiaoDich/ChiTietGhiChepViNguoiBan/" + ghiChepVi.MaGhiChep,
+                                NgayTao = DateTime.Now
+                            };
+                            db.ThongBaos.Add(thongBaoHoanTien);
+                            System.Diagnostics.Debug.WriteLine("Đã tạo thông báo hoàn tiền cho người bán");
+
                             await db.SaveChangesAsync();
                             System.Diagnostics.Debug.WriteLine("Đã tạo ghi chép hoàn tiền mới");
 
@@ -424,7 +486,44 @@ namespace WebApplication1.Controllers
                     }
                     // Xử lý các loại giao dịch khác khi không thành công nếu cần...
                 }
+                else if (newStatus == "Thành công")
+                {
 
+                    // Nếu cần tạo thông báo đặc biệt cho giao dịch thành công
+                    if (ghiChepVi.LoaiGiaoDich.Contains("Nạp tiền"))
+                    {
+                        var thongBaoNapTien = new ThongBao
+                        {
+                            MaNguoiDung = nguoiban.MaNguoiDung,
+                            LoaiThongBao = "Vi",
+                            TieuDe = "Nạp tiền thành công",
+                            TinNhan = $"Giao dịch nạp tiền #{ghiChepVi.MaGhiChep} của bạn đã được xác nhận thành công với số tiền {ghiChepVi.SoTien:N0}đ.",
+                            MucDoQuanTrong = 1, // Thông báo thông thường
+                            DuongDanChiTiet = "/GiaoDich/ChiTietGhiChepViNguoiBan/" + ghiChepVi.MaGhiChep,
+                            NgayTao = DateTime.Now
+                        };
+                        db.ThongBaos.Add(thongBaoNapTien);
+                        System.Diagnostics.Debug.WriteLine("Đã tạo thông báo nạp tiền thành công cho người bán");
+                    }
+                    else if (ghiChepVi.LoaiGiaoDich.Contains("Rút tiền"))
+                    {
+                        var thongBaoRutTien = new ThongBao
+                        {
+                            MaNguoiDung = nguoiban.MaNguoiDung,
+                            LoaiThongBao = "Vi",
+                            TieuDe = "Rút tiền thành công",
+                            TinNhan = $"Giao dịch rút tiền #{ghiChepVi.MaGhiChep} của bạn đã được xác nhận thành công với số tiền {Math.Abs(ghiChepVi.SoTien):N0}đ.",
+                            MucDoQuanTrong = 1, // Thông báo thông thường
+                            DuongDanChiTiet = "/GiaoDich/ChiTietGhiChepViNguoiBan/" + ghiChepVi.MaGhiChep,
+                            NgayTao = DateTime.Now
+                        };
+                        db.ThongBaos.Add(thongBaoRutTien);
+                        System.Diagnostics.Debug.WriteLine("Đã tạo thông báo rút tiền thành công cho người bán");
+                    }
+                }
+
+                await db.SaveChangesAsync();
+                System.Diagnostics.Debug.WriteLine("Đã lưu tất cả thông báo vào cơ sở dữ liệu");
                 // Kiểm tra lại sau khi xử lý
                 var checkRecord = await db.GhiChepVis.FindAsync(id);
                 System.Diagnostics.Debug.WriteLine($"Kiểm tra sau khi xử lý: ID={id}, TrangThai={checkRecord?.TrangThai ?? "NULL"}");
@@ -650,7 +749,9 @@ namespace WebApplication1.Controllers
             {
                 return HttpNotFound();
             }
-
+            // Thêm số dư hiện tại vào ViewBag
+            var nguoiBan = db.NguoiBans.Find(maNguoiBan);
+            ViewBag.SoDuHienTai = nguoiBan != null ? nguoiBan.SoDuVi : 0;
             return View(ghiChepVi);
         }
 

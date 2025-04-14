@@ -31,6 +31,13 @@ namespace WebApplication1.Controllers
                 return Convert.ToBase64String(hash);
             }
         }
+        [HttpGet]
+        public ActionResult DangKy()
+        {
+            // Chỉ hiển thị form, không hiển thị thông báo lỗi
+            return View();
+        }
+        [HttpPost]
         //POST: Đăng kí
         public ActionResult DangKy(string HoTen, string Email, string MatKhau)
         {
@@ -111,8 +118,29 @@ namespace WebApplication1.Controllers
                         cmd.Parameters.AddWithValue("@Email", Email);
                         cmd.Parameters.AddWithValue("@Hash", hash);
                         cmd.Parameters.AddWithValue("@today", today);
-
                         cmd.ExecuteNonQuery();
+                        // Lấy ID của người dùng vừa tạo bằng một truy vấn riêng
+                        string getIdQuery = "SELECT MaNguoiDung FROM NguoiDung WHERE Email = @Email";
+                        SqlCommand getIdCmd = new SqlCommand(getIdQuery, con);
+                        getIdCmd.Parameters.AddWithValue("@Email", Email);
+                        int newUserId = (int)getIdCmd.ExecuteScalar();
+
+                        // Thêm thông báo cho người dùng mới
+                        string insertNotificationQuery = @"
+                            INSERT INTO ThongBao (MaNguoiDung, LoaiThongBao, TieuDe, TinNhan, TrangThai, NgayTao, MucDoQuanTrong, DuongDanChiTiet)
+                            VALUES (@MaNguoiDung, @LoaiThongBao, @TieuDe, @TinNhan, @TrangThai, @NgayTao, @MucDoQuanTrong, @DuongDanChiTiet)";
+
+                        SqlCommand notificationCmd = new SqlCommand(insertNotificationQuery, con);
+                        notificationCmd.Parameters.AddWithValue("@MaNguoiDung", newUserId);
+                        notificationCmd.Parameters.AddWithValue("@LoaiThongBao", "TaiKhoan");
+                        notificationCmd.Parameters.AddWithValue("@TieuDe", "Đăng ký tài khoản thành công");
+                        notificationCmd.Parameters.AddWithValue("@TinNhan", "Chào mừng bạn đến với MediNetPro! Tài khoản của bạn đã được tạo thành công.");
+                        notificationCmd.Parameters.AddWithValue("@TrangThai", "Chưa đọc");
+                        notificationCmd.Parameters.AddWithValue("@NgayTao", DateTime.Now);
+                        notificationCmd.Parameters.AddWithValue("@MucDoQuanTrong", 1);
+                        notificationCmd.Parameters.AddWithValue("@DuongDanChiTiet", "/NguoiDungs/Profile");
+
+                        notificationCmd.ExecuteNonQuery();
 
                         // Chuyển đến trang đăng nhập sau khi đăng ký thành công
                         TempData["RegistrationSuccess"] = "Đăng ký tài khoản thành công. Vui lòng đăng nhập.";

@@ -234,6 +234,26 @@ namespace WebApplication1.Controllers
 
                 if (result > 0)
                 {
+                    string getUserQuery = "SELECT MaNguoiDung FROM NguoiDung WHERE Email = @Email";
+                    SqlCommand getUserCmd = new SqlCommand(getUserQuery, con);
+                    getUserCmd.Parameters.AddWithValue("@Email", email);
+                    int userId = (int)getUserCmd.ExecuteScalar();
+                    // Thêm thông báo về việc đổi mật khẩu thành công
+                    string insertNotificationQuery = @"
+                        INSERT INTO ThongBao (MaNguoiDung, LoaiThongBao, TieuDe, TinNhan, TrangThai, NgayTao, MucDoQuanTrong, DuongDanChiTiet)
+                        VALUES (@MaNguoiDung, @LoaiThongBao, @TieuDe, @TinNhan, @TrangThai, @NgayTao, @MucDoQuanTrong, @DuongDanChiTiet)";
+
+                    SqlCommand notificationCmd = new SqlCommand(insertNotificationQuery, con);
+                    notificationCmd.Parameters.AddWithValue("@MaNguoiDung", userId);
+                    notificationCmd.Parameters.AddWithValue("@LoaiThongBao", "TaiKhoan");
+                    notificationCmd.Parameters.AddWithValue("@TieuDe", "Đổi mật khẩu thành công");
+                    notificationCmd.Parameters.AddWithValue("@TinNhan", "Mật khẩu của bạn đã được thay đổi thành công. Nếu không phải bạn thực hiện, vui lòng liên hệ với chúng tôi ngay.");
+                    notificationCmd.Parameters.AddWithValue("@TrangThai", "Chưa đọc");
+                    notificationCmd.Parameters.AddWithValue("@NgayTao", DateTime.Now);
+                    notificationCmd.Parameters.AddWithValue("@MucDoQuanTrong", 1);
+                    notificationCmd.Parameters.AddWithValue("@DuongDanChiTiet", "/NguoiDungs/Profile");
+
+                    notificationCmd.ExecuteNonQuery();
                     // Xóa session và chuyển hướng đến trang thành công
                     Session.Remove("ResetEmail");
                     return RedirectToAction("ThanhCong");

@@ -371,6 +371,47 @@ namespace WebApplication1.Controllers
                     db.SaveChanges();
                 }
 
+                var nguoiban = db.NguoiBans.Find(sanPham.MaNguoiBan);
+                if(nguoiban != null)
+                {
+                    // Tạo thông báo cho người bán về việc thêm sản phẩm thành công
+                    var thongBaoNguoiBan = new ThongBao
+                    {
+                        MaNguoiDung = nguoiban.MaNguoiDung,
+                        LoaiThongBao = "SanPham",
+                        TieuDe = "Thêm sản phẩm mới thành công",
+                        TinNhan = $"Bạn đã thêm sản phẩm '{sanPham.TenSanPham}' vào cửa hàng thành công. Sản phẩm sẽ được quản trị viên phê duyệt.",
+                        MucDoQuanTrong = 1, // Thông báo thông thường
+                        DuongDanChiTiet = "/NguoiBans/ChiTietSanPham/" + sanPham.MaSanPham,
+                        NgayTao = DateTime.Now
+                    };
+                    db.ThongBaos.Add(thongBaoNguoiBan);
+                    db.SaveChanges();
+                }
+
+
+                // Tạo thông báo cho admin về yêu cầu trở thành người bán
+                var adminList = db.NguoiDungs.Where(n => n.VaiTro == "Admin").ToList();
+                if (adminList != null && adminList.Count > 0)
+                {
+                    foreach (var admin in adminList)
+                    {
+                        var thongBaoAdmin = new ThongBao
+                        {
+                            MaNguoiDung = admin.MaNguoiDung, // Giả sử có trường MaQuanTriVien
+                            LoaiThongBao = "SanPham",
+                            TieuDe = "Có sản phẩm mới được thêm vào",
+                            TinNhan = $"Người bán ID: {sanPham.MaNguoiBan} đã thêm sản phẩm mới: '{sanPham.TenSanPham}'. Vui lòng kiểm tra .",
+                            MucDoQuanTrong = 1, // Thông báo thông thường
+                            DuongDanChiTiet = "/Admin/ProductManagement" ,
+                            NgayTao = DateTime.Now
+                        };
+                        db.ThongBaos.Add(thongBaoAdmin);
+                    }
+                    db.SaveChanges();
+                }
+                // Thêm thông báo thành công vào TempData (cho thông báo UI)
+                TempData["Success"] = $"Sản phẩm '{sanPham.TenSanPham}' đã được thêm thành công.";
                 return RedirectToAction("QuanLySanPham", new { id = sanPham.MaNguoiBan });
             }
 
@@ -624,6 +665,24 @@ namespace WebApplication1.Controllers
                         }
                     }
 
+                    var nguoiban = db.NguoiBans.Find(sanPham.MaNguoiBan);
+                    if (nguoiban != null)
+                    {
+                        // Tạo thông báo cho người bán về việc cập nhật sản phẩm thành công
+                        var thongBaoNguoiBan = new ThongBao
+                        {
+                            MaNguoiDung = nguoiban.MaNguoiDung,
+                            LoaiThongBao = "SanPham",
+                            TieuDe = "Cập nhật sản phẩm thành công",
+                            TinNhan = $"Bạn đã cập nhật thông tin sản phẩm '{sanPham.TenSanPham}' thành công",
+                            MucDoQuanTrong = 1, // Thông báo thông thường
+                            DuongDanChiTiet = "/NguoiBans/ChiTietSanPham/" + sanPham.MaSanPham,
+                            NgayTao = DateTime.Now
+                        };
+                        db.ThongBaos.Add(thongBaoNguoiBan);
+                    }
+
+
                     // Lưu các ảnh vào cơ sở dữ liệu
                     db.SaveChanges();
                 }
@@ -846,6 +905,43 @@ namespace WebApplication1.Controllers
                         foreach (var gh in gioHang)
                         {
                             db.GioHangs.Remove(gh);
+                        }
+                        var nguoiban = db.NguoiBans.Find(maNguoiBan);
+                        if(nguoiban != null)
+                        {
+                            // Tạo thông báo cho người bán về việc xóa sản phẩm
+                            var thongBaoNguoiBan = new ThongBao
+                            {
+                                MaNguoiDung = nguoiban.MaNguoiDung,
+                                LoaiThongBao = "SanPham",
+                                TieuDe = "Xóa sản phẩm thành công",
+                                TinNhan = $"Bạn đã xóa sản phẩm '{sanPham.TenSanPham}' khỏi cửa hàng của mình. Tất cả dữ liệu liên quan đến sản phẩm này đã được xóa khỏi hệ thống.",
+                                MucDoQuanTrong = 1, // Thông báo thông thường
+                                DuongDanChiTiet = "/NguoiBans/QuanLySanPham/" + maNguoiBan,
+                                NgayTao = DateTime.Now
+                            };
+                            db.ThongBaos.Add(thongBaoNguoiBan);
+                        }
+
+
+                        // Tạo thông báo cho admin về yêu cầu trở thành người bán
+                        var adminList = db.NguoiDungs.Where(n => n.VaiTro == "Admin").ToList();
+                        if (adminList != null && adminList.Count > 0)
+                        {
+                            foreach (var admin in adminList)
+                            {
+                                var thongBaoAdmin = new ThongBao
+                                {
+                                    MaNguoiDung = admin.MaNguoiDung, // Giả sử có trường MaQuanTriVien
+                                    LoaiThongBao = "SanPham",
+                                    TieuDe = "Sản phẩm đã bị xóa",
+                                    TinNhan = $"Người bán (ID: {maNguoiBan}) đã xóa sản phẩm '{sanPham.TenSanPham}' (ID: {id}) khỏi hệ thống.",
+                                    MucDoQuanTrong = 1, // Thông báo thông thường
+                                    DuongDanChiTiet = "/Admin/ProductManagement",
+                                    NgayTao = DateTime.Now
+                                };
+                                db.ThongBaos.Add(thongBaoAdmin);
+                            }
                         }
 
                         // Xóa sản phẩm
@@ -1091,6 +1187,19 @@ namespace WebApplication1.Controllers
                     TrangThai = "Chờ xác nhận"
                 };
                 db.GhiChepVis.Add(ghiChepKhac);
+
+                // Tạo thông báo cho người bán về yêu cầu nạp tiền
+                var thongBaoNguoiBan = new ThongBao
+                {
+                    MaNguoiDung = nguoiBan.MaNguoiDung,
+                    LoaiThongBao = "Vi",
+                    TieuDe = "Yêu cầu nạp tiền thành công",
+                    TinNhan = $"Yêu cầu nạp {soTien:N0} VNĐ vào ví thông qua chuyển khoản ngân hàng đã thành công",
+                    MucDoQuanTrong = 1, // Thông báo thông thường
+                    DuongDanChiTiet = "/GiaoDich/ViNguoiBan" ,
+                    NgayTao = DateTime.Now
+                };
+                db.ThongBaos.Add(thongBaoNguoiBan);
                 db.SaveChanges();
 
                 TempData["Success"] = "Yêu cầu nạp tiền đã được ghi nhận. Quản trị viên sẽ xác nhận trong thời gian sớm nhất!";
@@ -1142,6 +1251,40 @@ namespace WebApplication1.Controllers
                     TrangThai = "Đang xử lý" // Trạng thái ban đầu là đang xử lý, sau đó cần có quá trình xác nhận
                 };
                 db.GhiChepVis.Add(ghiChep);
+
+                // Tạo thông báo cho người bán về yêu cầu rút tiền
+                var thongBaoNguoiBan = new ThongBao
+                {
+                    MaNguoiDung = nguoiBan.MaNguoiDung,
+                    LoaiThongBao = "Vi",
+                    TieuDe = "Yêu cầu rút tiền đã được ghi nhận",
+                    TinNhan = $"Yêu cầu rút {soTien:N0} VNĐ từ ví về tài khoản {thongTinTaiKhoan} đã được ghi nhận. Tiền sẽ được chuyển vào tài khoản của bạn trong vòng 24h làm việc.",
+                    MucDoQuanTrong = 1, // Thông báo thông thường
+                    DuongDanChiTiet = "/GiaoDich/ViNguoiBan",
+                    NgayTao = DateTime.Now
+                };
+                db.ThongBaos.Add(thongBaoNguoiBan);
+
+                // Tạo thông báo cho admin về yêu cầu trở thành người bán
+                var adminList = db.NguoiDungs.Where(n => n.VaiTro == "Admin").ToList();
+                if (adminList != null && adminList.Count > 0)
+                {
+                    foreach (var admin in adminList)
+                    {
+                        var thongBaoAdmin = new ThongBao
+                        {
+                            MaNguoiDung = admin.MaNguoiDung, // Giả sử có trường MaQuanTriVien
+                            LoaiThongBao = "Vi",
+                            TieuDe = "Yêu cầu rút tiền mới cần xử lý",
+                            TinNhan = $"Người bán (ID: {maNguoiBan}) đã yêu cầu rút {soTien:N0} VNĐ về tài khoản {thongTinTaiKhoan}. Vui lòng kiểm tra và xử lý yêu cầu này.",
+                            MucDoQuanTrong = 2, // Thông báo quan trọng cần xử lý
+                            DuongDanChiTiet = "/GiaoDich/WalletLogs" ,
+                            NgayTao = DateTime.Now
+                        };
+                        db.ThongBaos.Add(thongBaoAdmin);
+                    }
+                }
+
 
                 // Cập nhật số dư ví
                 nguoiBan.SoDuVi -= soTien;

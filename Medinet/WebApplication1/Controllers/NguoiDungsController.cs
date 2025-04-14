@@ -83,6 +83,21 @@ namespace WebApplication1.Controllers
                     nguoiDung.AnhDaiDien = "~/Content/Images/" + fileName;
                 }
 
+                // Thêm thông báo cho người dùng
+                var thongBao = new ThongBao
+                {
+                    MaNguoiDung = nguoiDung.MaNguoiDung, // Sử dụng MaNguoiDung từ đối tượng nguoiDung
+                    LoaiThongBao = "TaiKhoan",
+                    TieuDe = "Cập nhật thông tin thành công",
+                    TinNhan = "Thông tin cá nhân của bạn đã được cập nhật thành công.",
+                    MucDoQuanTrong = 0,
+                    DuongDanChiTiet = "/NguoiDungs/Profile",
+                    NgayTao = DateTime.Now // Thêm ngày tạo nếu cần
+                };
+
+                // Thêm thông báo vào database
+                db.ThongBaos.Add(thongBao);
+
                 db.SaveChanges();
 
                 // Cập nhật Session
@@ -144,6 +159,19 @@ namespace WebApplication1.Controllers
                 // Cập nhật mật khẩu mới
                 nguoiDung.MatKhauMaHoa = MaHoaMatKhau(model.MatKhauMoi);
                 nguoiDung.NgayCapNhat = DateTime.Now;
+                // Tạo thông báo khi đổi mật khẩu thành công
+                var thongBao = new ThongBao
+                {
+                    MaNguoiDung = nguoiDung.MaNguoiDung,
+                    LoaiThongBao = "TaiKhoan",
+                    TieuDe = "Đổi mật khẩu thành công",
+                    TinNhan = "Mật khẩu của bạn đã được thay đổi thành công.",
+                    MucDoQuanTrong = 1, // Mức độ cao hơn vì liên quan đến bảo mật
+                    DuongDanChiTiet = "/NguoiDungs/Profile",
+                    NgayTao = DateTime.Now
+                };
+                // Thêm thông báo vào database
+                db.ThongBaos.Add(thongBao);
                 db.SaveChanges();
                 ViewBag.AnhDaiDien = nguoiDung.AnhDaiDien;
                 ViewBag.TenNguoiDung = nguoiDung.TenNguoiDung;
@@ -309,6 +337,39 @@ namespace WebApplication1.Controllers
                 // Cập nhật trạng thái đăng ký thành người bán
                 nguoiDung.XetDuyetThanhNguoiBan = true;
                 nguoiDung.TrangThai = "Upgrade";
+
+                // Tạo thông báo cho người dùng khi yêu cầu nâng cấp thành seller
+                var thongBao = new ThongBao
+                {
+                    MaNguoiDung = nguoiDung.MaNguoiDung,
+                    LoaiThongBao = "TaiKhoan",
+                    TieuDe = "Đã gửi yêu cầu trở thành người bán",
+                    TinNhan = "Yêu cầu trở thành người bán của bạn đã được gửi và đang chờ xét duyệt. Chúng tôi sẽ thông báo kết quả trong thời gian sớm nhất.",
+                    MucDoQuanTrong = 2, // Mức độ quan trọng cao
+                    DuongDanChiTiet = "/NguoiDungs/Profile",
+                    NgayTao = DateTime.Now
+                };
+
+                // Thêm thông báo vào database
+                db.ThongBaos.Add(thongBao);
+
+                // Tạo thông báo cho admin về yêu cầu trở thành người bán
+                var adminList = db.NguoiDungs.Where(n => n.VaiTro == "Admin").ToList();
+                foreach (var admin in adminList)
+                {
+                    var thongBaoAdmin = new ThongBao
+                    {
+                        MaNguoiDung = admin.MaNguoiDung,
+                        LoaiThongBao = "SellerRequest",
+                        TieuDe = "Yêu cầu trở thành người bán mới",
+                        TinNhan = $"Người dùng {nguoiDung.TenNguoiDung} (ID: {nguoiDung.MaNguoiDung}) đã gửi yêu cầu trở thành người bán. Vui lòng xem xét và phê duyệt.",
+                        MucDoQuanTrong = 2, // Mức độ quan trọng cao
+                        DuongDanChiTiet = "/Admin/UserManagement",
+                        NgayTao = DateTime.Now
+                    };
+                    db.ThongBaos.Add(thongBaoAdmin);
+                }
+
                 db.SaveChanges();
 
                 ViewBag.SuccessMessage = "Thông tin đã được gửi. Chúng tôi sẽ xem xét và phê duyệt trong thời gian sớm nhất.";
@@ -546,6 +607,23 @@ namespace WebApplication1.Controllers
                 nguoiBan.MoTaCuaHang = model.MoTaCuaHang;
                 nguoiBan.DiaChiCuaHang = model.DiaChiCuaHang;
                 nguoiBan.SoDienThoaiCuaHang = model.SoDienThoaiCuaHang;
+
+
+                // Tạo thông báo cho người bán khi cập nhật thông tin cửa hàng
+                var thongBao = new ThongBao
+                {
+                    MaNguoiDung = nguoiDung.MaNguoiDung,
+                    LoaiThongBao = "CuaHang",
+                    TieuDe = "Cập nhật thông tin cửa hàng",
+                    TinNhan = "Thông tin cửa hàng của bạn đã được cập nhật thành công.",
+                    MucDoQuanTrong = 1,
+                    DuongDanChiTiet = "/NguoiDungs/EditSellerProfile",
+                    NgayTao = DateTime.Now
+                };
+
+                // Thêm thông báo vào database
+                db.ThongBaos.Add(thongBao);
+
 
 
                 // Danh sách chứng chỉ mới để trả về cho AJAX
@@ -828,6 +906,23 @@ namespace WebApplication1.Controllers
                 // Cập nhật mật khẩu mới
                 nguoiDung.MatKhauMaHoa = MaHoaMatKhau(model.MatKhauMoi);
                 nguoiDung.NgayCapNhat = DateTime.Now;
+
+                // Tạo thông báo khi người bán đổi mật khẩu thành công
+                var thongBao = new ThongBao
+                {
+                    MaNguoiDung = nguoiDung.MaNguoiDung,
+                    LoaiThongBao = "TaiKhoan",
+                    TieuDe = "Đổi mật khẩu thành công",
+                    TinNhan = "Mật khẩu tài khoản người bán của bạn đã được thay đổi thành công.",
+                    MucDoQuanTrong = 1, // Mức độ cao vì liên quan đến bảo mật
+                    DuongDanChiTiet = "/NguoiDungs/EditSellerProfile",
+                    NgayTao = DateTime.Now
+                };
+
+                // Thêm thông báo vào database
+                db.ThongBaos.Add(thongBao);
+
+
                 db.SaveChanges();
 
                 ViewBag.SuccessMessage = "Đổi mật khẩu thành công!";
