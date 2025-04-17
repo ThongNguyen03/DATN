@@ -1,7 +1,7 @@
-﻿@{
+﻿@*16/4/2025*@
+@{
     ViewBag.Title = "Nhập Mã Xác Nhận";
 }
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -49,30 +49,39 @@
             text-align: center;
         }
 
-        .dev-code {
-            background-color: #f8f9fa;
-            border: 1px dashed #dee2e6;
-            border-radius: 4px;
-            padding: 10px;
+        .email-info {
+            background-color: #e9f7fe;
+            border-radius: 5px;
+            padding: 15px;
             margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+            .email-info i {
+                font-size: 24px;
+                color: #0d6efd;
+                margin-right: 15px;
+            }
+
+        .countdown-timer {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
             text-align: center;
         }
 
-            .dev-code .code {
-                font-size: 24px;
-                font-weight: bold;
-                letter-spacing: 5px;
-                color: #0d6efd;
-            }
+        .countdown-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #dc3545;
+        }
 
-        .dev-label {
-            display: inline-block;
-            background-color: #ffc107;
-            color: #212529;
-            font-size: 0.75rem;
-            padding: 3px 8px;
-            border-radius: 10px;
-            margin-bottom: 5px;
+        .countdown-expired {
+            display: none;
+            color: #dc3545;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -81,20 +90,27 @@
         <div class="text-center mb-4">
             <img src="~/Content/images/medinet-logo.png" alt="Medinet Logo" height="50" class="mb-3">
             <h2>Nhập mã xác nhận</h2>
-            <p class="text-muted">Chúng tôi đã gửi mã xác nhận đến email của bạn. Vui lòng kiểm tra hộp thư đến.</p>
         </div>
 
-        <!-- Hiển thị mã xác nhận trong chế độ phát triển -->
-        @if (TempData["DevMode"] != null && TempData["DevMode"].ToString() == "True" && TempData["ResetCode"] != null)
-        {
-            <div class="dev-code">
-                <span class="dev-label">CHẾ ĐỘ PHÁT TRIỂN</span>
-                <p class="mb-1">Mã xác nhận của bạn:</p>
-                <div class="code">@TempData["ResetCode"]</div>
-                <small class="text-muted">Trong môi trường sản phẩm, mã này sẽ được gửi qua email.</small>
+        <div class="email-info mb-4">
+            <i class="bi bi-envelope-check"></i>
+            <div>
+                <p class="mb-1">Một mã xác nhận 6 chữ số đã được gửi đến email của bạn:</p>
+                <strong>@(Session["ResetEmail"] != null ? Session["ResetEmail"].ToString() : "Email của bạn")</strong>
+                <p class="mb-0 mt-2">Vui lòng kiểm tra hộp thư đến và hộp thư rác nếu cần.</p>
             </div>
-        }
+        </div>
 
+        <!-- Đếm ngược -->
+        <div class="countdown-timer">
+            <div>Mã xác nhận hết hạn sau:</div>
+            <div class="countdown-value" id="countdown">03:00</div>
+            <div class="countdown-expired" id="expired-message" style="display: none;">
+                Mã xác nhận đã hết hạn. Vui lòng gửi lại mã mới.
+            </div>
+        </div>
+
+        <!-- Thông báo lỗi từ server nếu có -->
         @if (ViewBag.Message != null)
         {
             <div class="alert alert-danger">
@@ -102,18 +118,92 @@
             </div>
         }
 
-        <form method="post" action="@Url.Action("NhapMaXacNhan", "QuenMatKhau")">
+        <form method="post" action="@Url.Action("NhapMaXacNhan", "QuenMatKhau")" id="verification-form">
             <div class="form-group">
                 <label>Mã xác nhận</label>
-                <input type="text" name="MaXacNhan" class="form-control" placeholder="XXXXXX" maxlength="6" autocomplete="off" required />
-                <small class="text-muted">Mã xác nhận có 6 chữ số và có hiệu lực trong 1 giờ.</small>
+                <input type="text" name="MaXacNhan" class="form-control" placeholder="XXXXXX" maxlength="6" pattern="[0-9]*" inputmode="numeric" 
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"  autocomplete="off" required autofocus />
+                <small class="text-muted d-block text-center">Nhập mã xác nhận 6 chữ số</small>
             </div>
-            <button type="submit" class="btn btn-primary">Xác nhận</button>
+            <button type="submit" class="btn btn-primary" id="submit-btn">Xác nhận</button>
         </form>
 
-        <div class="links">
-            <a href="@Url.Action("Index", "QuenMatKhau")">Gửi lại mã xác nhận</a>
+        <div class="links mt-3">
+            <a href="@Url.Action("Index", "QuenMatKhau")" id="resend-link">Gửi lại mã xác nhận</a>
+            <span class="mx-2">|</span>
+            <a href="@Url.Action("DangNhap", "DangNhap")">Quay lại đăng nhập</a>
         </div>
     </div>
+
+    <!-- Thêm Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
+
+    <!-- Script đếm ngược -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Lấy thời điểm hết hạn từ server
+        var expiryTimeStr = '@ViewBag.ExpiryTime';
+        var countdownElement = document.getElementById('countdown');
+        var expiredMessage = document.getElementById('expired-message');
+        var submitButton = document.getElementById('submit-btn');
+
+        // Kiểm tra xem expiryTimeStr có hợp lệ không
+        var isValidExpiryTime = false;
+        var expiryTime;
+
+        try {
+            if (expiryTimeStr && expiryTimeStr !== '' && expiryTimeStr !== 'undefined') {
+                expiryTime = new Date(expiryTimeStr);
+                // Kiểm tra xem expiryTime có phải là ngày hợp lệ không
+                if (!isNaN(expiryTime.getTime())) {
+                    isValidExpiryTime = true;
+                }
+            }
+        } catch (error) {
+            console.log('Error parsing expiry time:', error);
+        }
+
+        function updateCountdown() {
+            try {
+                if (!isValidExpiryTime) {
+                    // Không có thời gian hợp lệ - hiển thị thông báo hết hạn
+                    countdownElement.style.display = 'none';
+                    expiredMessage.style.display = 'block';
+                    submitButton.disabled = true;
+                    return;
+                }
+
+                var now = new Date();
+                var timeLeftMs = expiryTime - now;
+                var timeLeftSec = Math.floor(timeLeftMs / 1000);
+
+                // Nếu đã hết thời gian
+                if (timeLeftSec <= 0) {
+                    clearInterval(countdownTimer);
+                    countdownElement.style.display = 'none';
+                    expiredMessage.style.display = 'block';
+                    submitButton.disabled = true;
+                    return;
+                }
+
+                // Tính phút và giây
+                var minutes = Math.floor(timeLeftSec / 60);
+                var seconds = timeLeftSec % 60;
+
+                // Hiển thị định dạng MM:SS
+                countdownElement.textContent =
+                    (minutes < 10 ? '0' + minutes : minutes) + ':' +
+                    (seconds < 10 ? '0' + seconds : seconds);
+            } catch (error) {
+                console.log('Error updating countdown:', error);
+            }
+        }
+
+        // Cập nhật đếm ngược mỗi giây
+        updateCountdown();
+        var countdownTimer = setInterval(updateCountdown, 1000);
+    });
+    </script>
 </body>
 </html>
+@*16/4/2025*@

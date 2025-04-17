@@ -6,6 +6,8 @@ using WebApplication1.Models;
 using System.Data.Entity;
 using System.Data.SqlClient;
 using System.Web.UI;
+using System.Globalization;
+using System.Text;
 
 namespace WebApplication1.Controllers
 {
@@ -35,7 +37,7 @@ namespace WebApplication1.Controllers
         private string connectionString = "Data Source=DESKTOP-C6TH3H0;Initial Catalog=MediNet;Integrated Security=True";
 
         // GET: Home/Index - Trang chủ
-        [Authorize]
+        //[Authorize]
         public ActionResult Index(int page = 1, int pageSize = 12)
         {
             // Lấy danh sách danh mục sản phẩm
@@ -327,6 +329,95 @@ namespace WebApplication1.Controllers
             return Json(new { count = count }, JsonRequestBehavior.AllowGet);
         }
 
+        public JsonResult GetSearchSuggestions(string term)
+        {
+            if (string.IsNullOrEmpty(term))
+                return Json(new List<object>(), JsonRequestBehavior.AllowGet);
+
+            // Tìm kiếm sản phẩm theo từ khóa (chỉ dùng Contains tiêu chuẩn)
+            // Sửa phần lấy đường dẫn ảnh trong GetSearchSuggestions
+            var productQuery = db.SanPhams
+                .Where(s => s.TrangThai == "Đã phê duyệt" && s.TenSanPham.Contains(term))
+                .Select(s => new {
+                    value = s.TenSanPham,
+                    id = s.MaSanPham,
+                    image = s.AnhSanPhams.Any() ?
+                        (s.AnhSanPhams.FirstOrDefault().DuongDanAnh.StartsWith("/") ?
+                            s.AnhSanPhams.FirstOrDefault().DuongDanAnh :
+                            "/" + s.AnhSanPhams.FirstOrDefault().DuongDanAnh)
+                        : null,
+                    price = s.GiaSanPham
+                })
+                .ToList();
+
+            // Chuẩn hóa từ khóa tìm kiếm cho phần lọc trong bộ nhớ
+            string normalizedTerm = RemoveDiacritics(term.ToLower());
+
+            // Lọc thêm kết quả trong bộ nhớ nếu cần 
+            var suggestions = productQuery
+                .Where(s => RemoveDiacritics(s.value.ToLower()).Contains(normalizedTerm))
+                .Take(5)
+                .ToList();
+
+            // Tìm kiếm danh mục theo từ khóa (chỉ dùng Contains tiêu chuẩn)
+            var categoryQuery = db.DanhMucSanPhams
+                .Where(c => c.TenDanhMuc.Contains(term))
+                .Select(c => new {
+                    value = "Danh mục: " + c.TenDanhMuc,
+                    id = c.MaDanhMuc,
+                    isCategory = true
+                })
+                .ToList();
+
+            // Lọc thêm kết quả danh mục trong bộ nhớ
+            var categoryTerms = categoryQuery
+                .Where(c => RemoveDiacritics(c.value.ToLower()).Contains(normalizedTerm))
+                .Take(3)
+                .ToList();
+
+            // Kết hợp kết quả
+            var productResults = suggestions.Select(s => new {
+                label = s.value,
+                value = s.value,
+                id = s.id,
+                image = s.image,
+                price = (decimal?)s.price,
+                isCategory = false
+            });
+
+            var categoryResults = categoryTerms.Select(c => new {
+                label = c.value,
+                value = c.value,
+                id = c.id,
+                image = (string)null,
+                price = (decimal?)null,
+                isCategory = c.isCategory
+            });
+
+            var results = productResults.Concat(categoryResults).ToList();
+            return Json(results, JsonRequestBehavior.AllowGet);
+        }
+
+        // Hàm loại bỏ dấu tiếng Việt để tìm kiếm tốt hơn
+        private string RemoveDiacritics(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+
+            string normalized = text.Normalize(NormalizationForm.FormD);
+            var sb = new StringBuilder();
+
+            foreach (char c in normalized)
+            {
+                if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                    sb.Append(c);
+            }
+
+            // Thay thế đ/Đ
+            return sb.ToString()
+                .Normalize(NormalizationForm.FormC)
+                .Replace('đ', 'd').Replace('Đ', 'D');
+        }
         protected override void Dispose(bool disposing)
         {
             if (disposing)

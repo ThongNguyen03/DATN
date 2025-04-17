@@ -8,10 +8,12 @@ using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Security;
 using WebApplication1.Models;
+using WebApplication1.Services;
 using CompareAttribute = System.ComponentModel.DataAnnotations.CompareAttribute;
 
 namespace WebApplication1.Controllers
@@ -429,7 +431,7 @@ namespace WebApplication1.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public ActionResult DeleteAccount(DeleteAccountViewModel model)
+        public async Task<ActionResult> DeleteAccount(DeleteAccountViewModel model)
         {
             string email = User.Identity.Name;
             var nguoiDung = db.NguoiDungs.FirstOrDefault(u => u.Email == email);
@@ -445,12 +447,35 @@ namespace WebApplication1.Controllers
                 nguoiDung.TrangThai = "Inactive";
                 db.SaveChanges();
 
-                // Đăng xuất người dùng
-                FormsAuthentication.SignOut();
-                Session.Clear();
-                Session.Abandon();
+                //// Đăng xuất người dùng
+                //FormsAuthentication.SignOut();
+                //Session.Clear();
+                //Session.Abandon();
 
-                return RedirectToAction("DangNhap","DangNhap", new { message = "Tài khoản của bạn đã được yêu cầu xóa." });
+                //return RedirectToAction("DangNhap","DangNhap", new { message = "Tài khoản của bạn đã được yêu cầu xóa." });
+                // Gửi email thông báo
+                try
+                {
+                    var emailService = new EmailService();
+                    await emailService.SendAccountDeletionEmailAsync(nguoiDung.Email, nguoiDung.TenNguoiDung);
+
+                    // Đăng xuất người dùng
+                    FormsAuthentication.SignOut();
+                    Session.Clear();
+                    Session.Abandon();
+
+                    return RedirectToAction("DangNhap", "DangNhap", new { message = "Tài khoản của bạn đã được yêu cầu xóa. Một email xác nhận đã được gửi đến địa chỉ email của bạn." });
+                }
+                catch (Exception ex)
+                {
+                    // Log lỗi nếu cần
+                    // Vẫn đăng xuất người dùng kể cả khi gửi email thất bại
+                    FormsAuthentication.SignOut();
+                    Session.Clear();
+                    Session.Abandon();
+
+                    return RedirectToAction("DangNhap", "DangNhap", new { message = "Tài khoản của bạn đã được yêu cầu xóa." });
+                }
             }
 
             ViewBag.AnhDaiDien = nguoiDung.AnhDaiDien;

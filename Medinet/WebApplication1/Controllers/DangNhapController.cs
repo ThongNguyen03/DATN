@@ -160,7 +160,7 @@ namespace WebApplication1.Controllers
 
             System.Web.Security.FormsAuthentication.SignOut();
             Session.Clear();
-            return RedirectToAction("DangNhap", "DangNhap");
+            return RedirectToAction("Index", "Home");
         }
 
         public NguoiDung GetUserById(int MaNguoiDung)

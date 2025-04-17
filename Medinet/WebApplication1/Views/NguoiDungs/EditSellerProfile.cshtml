@@ -207,7 +207,11 @@
                                 <div class="form-group row mb-4">
                                     <label class="col-sm-3 col-form-label">Số điện thoại</label>
                                     <div class="col-sm-9">
-                                        @Html.TextBoxFor(model => model.SoDienThoai, new { @class = "form-control", maxlength = "10" })
+                                        @Html.TextBoxFor(model => model.SoDienThoai, new { @class = "form-control", maxlength = "10",
+                                       type = "tel",
+                                       pattern = "[0-9]*",
+                                       onkeypress = "return event.charCode >= 48 && event.charCode <= 57"
+                                   })
                                         @Html.ValidationMessageFor(model => model.SoDienThoai, "", new { @class = "text-danger" })
                                     </div>
                                 </div>
@@ -225,7 +229,7 @@
                                 <div class="form-group row mb-4">
                                     <label class="col-sm-3 col-form-label">Ngày sinh</label>
                                     <div class="col-sm-9">
-                                        @Html.TextBoxFor(model => model.NgaySinh, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+                                        @Html.TextBoxFor(model => model.NgaySinh, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date", max = DateTime.Now.ToString("yyyy-MM-dd") })
                                     </div>
                                 </div>
 
@@ -259,7 +263,12 @@
                                 <div class="form-group row mb-4">
                                     <label class="col-sm-3 col-form-label">Số điện thoại cửa hàng</label>
                                     <div class="col-sm-9">
-                                        @Html.TextBoxFor(model => model.SoDienThoaiCuaHang, new { @class = "form-control" })
+                                        @Html.TextBoxFor(model => model.SoDienThoaiCuaHang, new { @class = "form-control",
+                                       maxlength = "10",
+                                       type = "tel",
+                                       pattern = "[0-9]*",
+                                       onkeypress = "return event.charCode >= 48 && event.charCode <= 57"
+                                   })
                                         @Html.ValidationMessageFor(model => model.SoDienThoaiCuaHang, "", new { @class = "text-danger" })
                                     </div>
                                 </div>

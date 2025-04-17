@@ -179,6 +179,7 @@
     <Compile Include="Models\VnPayLibrary.cs" />
     <Compile Include="obj\Debug\.NETFramework,Version=v4.7.2.AssemblyAttributes.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\EmailService.cs" />
     <Compile Include="Services\EscrowService.cs" />
     <Compile Include="Services\OrderAutoConfirmationService .cs" />
   </ItemGroup>
@@ -271,6 +272,7 @@
     <Content Include="Content\images\edit-icon.png" />
     <Content Include="Content\images\eye-closed.jpeg" />
     <Content Include="Content\images\eye-open.png" />
+    <Content Include="Content\images\favicon.ico" />
     <Content Include="Content\images\medinet-logo.png" />
     <Content Include="Content\images\no-image.jpeg" />
     <Content Include="Content\images\notification.png" />
@@ -405,6 +407,7 @@
     <Content Include="Views\GiaoDich\ChiTietGhiChepViNguoiBan.cshtml" />
     <Content Include="Views\GiaoDich\ChiTietGiaoDichNguoiBan.cshtml" />
     <Content Include="Views\ThongBao\Index.cshtml" />
+    <Content Include="Views\DangKy\XacNhanEmail.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

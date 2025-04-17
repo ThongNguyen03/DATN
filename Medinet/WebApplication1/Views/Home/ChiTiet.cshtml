@@ -295,6 +295,7 @@
                 @if (Model.SoLuongTonKho > 0)
                 {
                     <span class="in-stock"><i class="fas fa-check-circle"></i> Còn hàng</span>
+                    <span class="stock-quantity ml-2">(@Model.SoLuongTonKho sản phẩm có sẵn)</span>
                 }
                 else
                 {
@@ -309,19 +310,34 @@
                     <button type="button" class="quantity-btn" onclick="decreaseQuantity()">-</button>
                     <input id="product-quantity" type="number" min="1" max="@Model.SoLuongTonKho" value="1" class="quantity-input" oninput="validateQuantity(@Model.SoLuongTonKho)">
                     <button type="button" class="quantity-btn" onclick="increaseQuantity(@Model.SoLuongTonKho)">+</button>
-                    @*<span class="ml-2">@Model.SoLuongTonKho trong kho</span>*@
                 </div>
 
                 <div class="action-buttons">
-                    <button type="button" class="add-to-cart-btn" onclick="addToCart(@Model.MaSanPham)">
-                        <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
-                    </button>
-                    <button type="button" class="buy-now-btn" onclick="buyNow(@Model.MaSanPham)">
-                        <i class="fas fa-bolt"></i> Mua ngay
-                    </button>
+                    @if (Request.IsAuthenticated)
+                    {
+                        <!-- Người dùng đã đăng nhập, hiển thị nút bình thường -->
+                        <button type="button" class="add-to-cart-btn" onclick="addToCart(@Model.MaSanPham)">
+                            <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
+                        </button>
+                        <button type="button" class="buy-now-btn" onclick="buyNow(@Model.MaSanPham)">
+                            <i class="fas fa-bolt"></i> Mua ngay
+                        </button>
+                    }
+                    else
+                    {
+                        <!-- Người dùng chưa đăng nhập, hiển thị nút vô hiệu hóa và thêm thông báo -->
+                        <button type="button" class="add-to-cart-btn" style="opacity: 1;" onclick="redirectToLogin()">
+                            <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
+                        </button>
+                        <button type="button" class="buy-now-btn" style="opacity: 1; " onclick="redirectToLogin()">
+                            <i class="fas fa-bolt"></i> Mua ngay
+                        </button>
+                        @*<div class="mt-2 text-danger">
+                            <small><i class="fas fa-info-circle"></i> Vui lòng <a href="@Url.Action("DangNhap", "DangNhap", new { returnUrl = Request.Url.PathAndQuery })">đăng nhập</a> để mua hàng</small>
+                        </div>*@
+                    }
                 </div>
             }
-
             <!-- Bọc toàn bộ thông tin cửa hàng trong thẻ a để tạo liên kết -->
             <a href="@Url.Action("ThongTinNguoiBan", "NguoiBans", new { id = Model.NguoiBan.MaNguoiBan })" class="text-dark text-decoration-none store-info-link">
                 <div class="seller-info">
@@ -650,6 +666,11 @@
 </div>
 
 <script>
+    // Thêm hàm này vào phần <script> ở cuối trang
+    function redirectToLogin() {
+        var returnUrl = window.location.pathname + window.location.search;
+        window.location.href = '@Url.Action("DangNhap", "DangNhap")?returnUrl=' + encodeURIComponent(returnUrl);
+    }
     // Hàm đổi ảnh chính khi nhấp vào ảnh thumbnail
     function changeMainImage(element) {
         // Cập nhật ảnh chính

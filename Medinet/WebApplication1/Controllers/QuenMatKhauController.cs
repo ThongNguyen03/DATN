@@ -23,52 +23,49 @@ namespace WebApplication1.Controllers
             return View();
         }
 
+        //16/4/2025
         // POST: QuenMatKhau
         [HttpPost]
-        public ActionResult Index(string TenNguoiDung, string Email, string SoDienThoai)
+        public ActionResult Index(string Email)
         {
             // Kiểm tra input
-            if (string.IsNullOrWhiteSpace(TenNguoiDung) || string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(SoDienThoai))
+            if (string.IsNullOrWhiteSpace(Email))
             {
-                ViewBag.Message = "Vui lòng nhập đầy đủ thông tin";
+                ViewBag.Message = "Vui lòng nhập email";
                 return View();
             }
 
-            // Kiểm tra xem thông tin có tồn tại và khớp trong hệ thống không
+            // Kiểm tra xem email có tồn tại trong hệ thống không
             using (SqlConnection con = new SqlConnection(connectionString))
             {
                 string query = @"
-                    SELECT
-                        *
-                    FROM
-                        NguoiDung
-                    WHERE
-                        TenNguoiDung = @TenNguoiDung
-                        AND Email = @Email
-                        AND SoDienThoai = @SoDienThoai
-                        AND TrangThai IN ('Active', 'Upgrade')";
+            SELECT
+                *
+            FROM
+                NguoiDung
+            WHERE
+                Email = @Email
+                AND TrangThai IN ('Active', 'Upgrade')";
 
                 SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@TenNguoiDung", TenNguoiDung);
                 cmd.Parameters.AddWithValue("@Email", Email);
-                cmd.Parameters.AddWithValue("@SoDienThoai", SoDienThoai);
                 con.Open();
                 SqlDataReader reader = cmd.ExecuteReader();
 
                 if (reader.Read())
                 {
-                    // Thông tin khớp, tạo mã xác nhận và thời gian hết hạn
+                    // Email tồn tại, tạo mã xác nhận và thời gian hết hạn
                     string resetCode = GenerateResetCode();
-                    DateTime expiryTime = DateTime.Now.AddHours(1); // Mã xác nhận có hiệu lực trong 1 giờ
+                    DateTime expiryTime = DateTime.Now.AddMinutes(3); // Mã xác nhận có hiệu lực trong 3 phút
 
                     reader.Close();
 
                     // Lưu mã xác nhận vào database
                     string updateQuery = @"
-                        UPDATE NguoiDung 
-                        SET MaXacNhan = @MaXacNhan, 
-                            ThoiGianHetHan = @ThoiGianHetHan 
-                        WHERE Email = @Email";
+                UPDATE NguoiDung 
+                SET MaXacNhan = @MaXacNhan, 
+                    ThoiGianHetHan = @ThoiGianHetHan 
+                WHERE Email = @Email";
 
                     SqlCommand updateCmd = new SqlCommand(updateQuery, con);
                     updateCmd.Parameters.AddWithValue("@MaXacNhan", resetCode);
@@ -79,9 +76,10 @@ namespace WebApplication1.Controllers
                     // Gửi email
                     if (SendResetEmail(Email, resetCode))
                     {
-                        // Chuyển hướng đến trang nhập mã xác nhận
+                        // Lưu email vào session và hiển thị thông báo thành công
                         Session["ResetEmail"] = Email;
-                        return RedirectToAction("NhapMaXacNhan");
+                        ViewBag.Success = "Mã xác nhận đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư đến hoặc thư rác.";
+                        return View();
                     }
                     else
                     {
@@ -91,13 +89,12 @@ namespace WebApplication1.Controllers
                 }
                 else
                 {
-                    ViewBag.Message = "Thông tin không chính xác hoặc không tồn tại trong hệ thống";
+                    ViewBag.Message = "Email không tồn tại trong hệ thống hoặc tài khoản đã bị khóa";
                     return View();
                 }
             }
         }
 
-        // GET: QuenMatKhau/NhapMaXacNhan
         public ActionResult NhapMaXacNhan()
         {
             // Kiểm tra xem đã có email trong session chưa
@@ -106,18 +103,44 @@ namespace WebApplication1.Controllers
                 return RedirectToAction("Index");
             }
 
-            // Trong chế độ phát triển, hiển thị lại mã xác nhận
-            if (TempData["DevMode"] != null && TempData["DevMode"].ToString() == "True" && TempData["ResetCode"] != null)
+            string email = Session["ResetEmail"].ToString();
+
+            try
             {
-                // Giữ lại TempData để có thể hiển thị
-                TempData.Keep("DevMode");
-                TempData.Keep("ResetCode");
+                // Chỉ lấy thời gian hết hạn từ database, KHÔNG đặt lại
+                using (SqlConnection con = new SqlConnection(connectionString))
+                {
+                    string query = @"
+                SELECT
+                    ThoiGianHetHan
+                FROM
+                    NguoiDung
+                WHERE
+                    Email = @Email";
+
+                    SqlCommand cmd = new SqlCommand(query, con);
+                    cmd.Parameters.AddWithValue("@Email", email);
+                    con.Open();
+                    var result = cmd.ExecuteScalar();
+
+                    if (result != null && result != DBNull.Value)
+                    {
+                        DateTime expiryTime = (DateTime)result;
+                        // Chuyển đổi sang chuỗi ISO 8601 chuẩn
+                        ViewBag.ExpiryTime = expiryTime.ToString("yyyy-MM-ddTHH:mm:ss");
+                    }
+                    // Không thiết lập thời gian hết hạn mặc định - nếu không có, thì mã đã hết hạn
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log lỗi
+                System.Diagnostics.Debug.WriteLine("Error getting expiry time: " + ex.Message);
             }
 
             return View();
         }
 
-        // POST: QuenMatKhau/NhapMaXacNhan
         [HttpPost]
         public ActionResult NhapMaXacNhan(string MaXacNhan)
         {
@@ -132,21 +155,36 @@ namespace WebApplication1.Controllers
             // Kiểm tra mã xác nhận
             using (SqlConnection con = new SqlConnection(connectionString))
             {
+                // Trước tiên, lấy thời gian hết hạn hiện tại (để hiển thị đếm ngược)
+                string getExpiryQuery = "SELECT ThoiGianHetHan FROM NguoiDung WHERE Email = @Email";
+                SqlCommand getExpiryCmd = new SqlCommand(getExpiryQuery, con);
+                getExpiryCmd.Parameters.AddWithValue("@Email", email);
+                con.Open();
+
+                // Lấy thời gian hết hạn
+                var expiryTimeResult = getExpiryCmd.ExecuteScalar();
+                if (expiryTimeResult != null && expiryTimeResult != DBNull.Value)
+                {
+                    DateTime expiryTime = (DateTime)expiryTimeResult;
+                    ViewBag.ExpiryTime = expiryTime.ToString("yyyy-MM-ddTHH:mm:ss");
+                }
+
+                // Kiểm tra mã xác nhận
                 string query = @"
-                    SELECT
-                        *
-                    FROM
-                        NguoiDung
-                    WHERE
-                        Email = @Email
-                        AND MaXacNhan = @MaXacNhan
-                        AND ThoiGianHetHan > @ThoiGianHienTai";
+            SELECT
+                *
+            FROM
+                NguoiDung
+            WHERE
+                Email = @Email
+                AND MaXacNhan = @MaXacNhan
+                AND ThoiGianHetHan > @ThoiGianHienTai";
 
                 SqlCommand cmd = new SqlCommand(query, con);
                 cmd.Parameters.AddWithValue("@Email", email);
                 cmd.Parameters.AddWithValue("@MaXacNhan", MaXacNhan);
                 cmd.Parameters.AddWithValue("@ThoiGianHienTai", DateTime.Now);
-                con.Open();
+
                 SqlDataReader reader = cmd.ExecuteReader();
 
                 if (reader.Read())
@@ -159,19 +197,11 @@ namespace WebApplication1.Controllers
                 {
                     // Mã xác nhận không hợp lệ hoặc đã hết hạn
                     ViewBag.Message = "Mã xác nhận không hợp lệ hoặc đã hết hạn";
-
-                    // Trong chế độ phát triển, hiển thị lại mã xác nhận để thuận tiện cho việc test
-                    if (TempData["DevMode"] != null && TempData["DevMode"].ToString() == "True" && TempData["ResetCode"] != null)
-                    {
-                        TempData.Keep("DevMode");
-                        TempData.Keep("ResetCode");
-                    }
-
                     return View();
                 }
             }
         }
-
+        //16/4/2025
         // GET: QuenMatKhau/DatLaiMatKhau
         public ActionResult DatLaiMatKhau()
         {
@@ -291,19 +321,70 @@ namespace WebApplication1.Controllers
             return random.Next(100000, 999999).ToString();
         }
 
-        // Hàm gửi email đặt lại mật khẩu (phiên bản phát triển - không gửi email thật)
+        //16/4/2025
         private bool SendResetEmail(string email, string resetCode)
         {
             try
             {
-                // Log mã xác nhận để dễ kiểm tra trong quá trình phát triển
-                System.Diagnostics.Debug.WriteLine($"[DEV MODE] Reset code for {email}: {resetCode}");
+                // Lấy thông tin cấu hình SMTP từ Web.config
+                string smtpHost = System.Configuration.ConfigurationManager.AppSettings["SmtpHost"];
+                int smtpPort = int.Parse(System.Configuration.ConfigurationManager.AppSettings["SmtpPort"]);
+                string smtpEmail = System.Configuration.ConfigurationManager.AppSettings["SmtpEmail"];
+                string smtpPassword = System.Configuration.ConfigurationManager.AppSettings["SmtpPassword"];
+                bool enableSSL = bool.Parse(System.Configuration.ConfigurationManager.AppSettings["SmtpEnableSSL"]);
+                string emailFromName = System.Configuration.ConfigurationManager.AppSettings["EmailFromName"];
 
-                // Lưu mã xác nhận vào TempData để hiển thị trên giao diện
-                TempData["ResetCode"] = resetCode;
-                TempData["DevMode"] = true;
+                // Tạo đối tượng SmtpClient
+                SmtpClient smtpClient = new SmtpClient(smtpHost, smtpPort);
+                smtpClient.EnableSsl = enableSSL;
+                smtpClient.DeliveryMethod = SmtpDeliveryMethod.Network;
+                smtpClient.UseDefaultCredentials = false;
+                smtpClient.Credentials = new NetworkCredential(smtpEmail, smtpPassword);
 
-                // Luôn trả về true - giả lập gửi email thành công
+                // Tạo email
+                MailMessage mailMessage = new MailMessage();
+                mailMessage.From = new MailAddress(smtpEmail, emailFromName);
+                mailMessage.To.Add(email);
+                mailMessage.Subject = "Mã xác nhận đặt lại mật khẩu MediNet";
+
+                // Tạo nội dung email sử dụng HTML
+                string emailBody = $@"
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }}
+                .header {{ background-color: #0066cc; color: white; padding: 10px; text-align: center; border-radius: 5px 5px 0 0; }}
+                .content {{ padding: 20px; }}
+                .code {{ font-size: 24px; font-weight: bold; text-align: center; padding: 15px; margin: 20px 0; background-color: #f5f5f5; border-radius: 5px; letter-spacing: 5px; }}
+                .footer {{ text-align: center; padding-top: 20px; font-size: 12px; color: #777; }}
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h2>MediNet - Đặt lại mật khẩu</h2>
+                </div>
+                <div class='content'>
+                    <p>Kính gửi Quý khách,</p>
+                    <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu tài khoản MediNet của bạn. Vui lòng sử dụng mã xác nhận dưới đây để hoàn tất quá trình:</p>
+                    <div class='code'>{resetCode}</div>
+                    <p>Mã xác nhận có hiệu lực trong vòng 60 phút. Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này.</p>
+                    <p>Trân trọng,<br/>Đội ngũ MediNet</p>
+                </div>
+                <div class='footer'>
+                    <p>Email này được gửi tự động, vui lòng không trả lời. Nếu bạn cần hỗ trợ, vui lòng liên hệ với chúng tôi qua hệ thống hỗ trợ của MediNet.</p>
+                </div>
+            </div>
+        </body>
+        </html>";
+
+                mailMessage.Body = emailBody;
+                mailMessage.IsBodyHtml = true;
+
+                // Gửi email
+                smtpClient.Send(mailMessage);
+
                 return true;
             }
             catch (Exception ex)
@@ -315,14 +396,10 @@ namespace WebApplication1.Controllers
                     System.Diagnostics.Debug.WriteLine("Inner exception: " + ex.InnerException.Message);
                 }
 
-                // Vẫn lưu mã xác nhận để có thể hiển thị
-                TempData["ResetCode"] = resetCode;
-                TempData["DevMode"] = true;
-
-                // Vẫn trả về true để tiếp tục quy trình
-                return true;
+                return false;
             }
         }
+        //16/4/2025
 
         // Hàm kiểm tra mật khẩu hợp lệ (8 ký tự, có hoa, thường và số)
         private bool IsValidPassword(string password)

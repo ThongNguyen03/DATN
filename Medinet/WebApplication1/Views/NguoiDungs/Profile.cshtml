@@ -127,7 +127,10 @@
 
                                 <div class="mb-3">
                                     <label class="form-label">Số điện thoại</label>
-                                    @Html.TextBoxFor(m => m.SoDienThoai, new { @class = "form-control", maxlength = "10" })
+                                    @Html.TextBoxFor(m => m.SoDienThoai, new { @class = "form-control", maxlength = "10", type = "tel",
+                                   pattern = "[0-9]*",
+                                   onkeypress = "return event.charCode >= 48 && event.charCode <= 57"
+                               })
                                     @Html.ValidationMessageFor(m => m.SoDienThoai, "", new { @class = "text-danger" })
                                 </div>
 
@@ -153,7 +156,7 @@
 
                                 <div class="mb-3">
                                     <label class="form-label">Ngày sinh</label>
-                                    @Html.TextBoxFor(m => m.NgaySinh, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+                                    @Html.TextBoxFor(m => m.NgaySinh, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date", max = DateTime.Now.ToString("yyyy-MM-dd") })
                                     @Html.ValidationMessageFor(m => m.NgaySinh, "", new { @class = "text-danger" })
                                 </div>
 

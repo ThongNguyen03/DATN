@@ -1,15 +1,41 @@
-﻿<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+﻿<!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">-->
 <!-- Bootstrap CSS -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
+<!--<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">-->
 <!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+<!--<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>-->
+<!-- Thêm vào phần head của file _Layout.cshtml -->
+<!--<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>-->
+<script>
+    console.log("jQuery version:", $.fn.jquery);
+    console.log("jQuery UI version:", $.ui ? $.ui.version : "không tìm thấy");
+</script>
 <!-- Bootstrap JS Bundle with Popper -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>-->
+<!-- Các thư viện CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+
+<!-- jQuery Core (luôn đặt trước các thư viện phụ thuộc) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- jQuery UI (phụ thuộc vào jQuery Core) -->
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+<!-- Popper.js (cần cho Bootstrap) -->
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS (phụ thuộc vào jQuery và Popper) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Các thư viện bổ sung -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <!DOCTYPE html>
 <html>
@@ -17,6 +43,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewBag.Title - Medinet</title>
+    <link rel="icon" href="~/Content/images/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="~/Content/images/favicon.ico" type="image/x-icon">
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
     <style>
@@ -134,6 +162,7 @@
             justify-content: center;
             padding: 2px;
         }
+
         .notification-content {
             max-height: 400px;
             overflow-y: auto;
@@ -296,9 +325,188 @@
         .notification-item.important {
             border-left: none; /* Loại bỏ viền bên trái */
         }
+
         .centered-text {
             text-align: center;
         }
+
+
+        /*16/4/2025*/
+        /* CSS cho nút đăng nhập và đăng ký trên cùng dòng */
+        .auth-buttons {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-login, .btn-register {
+            padding: 8px 16px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            white-space: nowrap; /* Ngăn chặn xuống dòng */
+        }
+
+        .btn-login {
+            background-color: white;
+            color: #0d6efd;
+            border: 1px solid #0d6efd;
+        }
+
+            .btn-login:hover {
+                background-color: #f0f9ff;
+            }
+
+        .btn-register {
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+        }
+
+            .btn-register:hover {
+                background-color: #0b5ed7;
+            }
+
+        /* Cập nhật CSS cho phần gợi ý tìm kiếm */
+        /* Cập nhật CSS cho phần gợi ý tìm kiếm */
+        .ui-autocomplete {
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 10px 0;
+            border-radius: 0 0 10px 10px;
+            border: 1px solid #ddd;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+            z-index: 1050 !important;
+            background-color: white;
+        }
+
+        .search-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s;
+        }
+
+            .search-item:hover {
+                background-color: #f8f9fa; /* Màu nền nhẹ khi hover, không thay đổi màu chữ */
+            }
+
+        .search-item-image {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-right: 15px;
+            border: 1px solid #eee;
+        }
+
+        .search-item-content {
+            flex: 1;
+        }
+
+        .search-item-title {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        /* Giữ nguyên màu tiêu đề khi hover */
+        .search-item:hover .search-item-title {
+            color: #333; /* Giữ nguyên màu tiêu đề khi hover */
+        }
+
+        .search-item-price {
+            color: #4a9bff; /* Màu giá nhạt hơn */
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        /* Giữ nguyên màu giá khi hover */
+        .search-item:hover .search-item-price {
+            color: #4a9bff; /* Giữ nguyên màu giá khi hover */
+        }
+
+        .search-item-category {
+            background-color: #f0f4f9; /* Nền nhạt hơn */
+            color: #333; /* Màu chữ đen cho danh mục */
+            padding: 10px 15px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+            .search-item-category:hover {
+                background-color: #f0f4f9; /* Giữ nguyên màu nền khi hover */
+                color: #333; /* Giữ nguyên màu chữ khi hover */
+            }
+
+        .no-results {
+            padding: 15px;
+            color: #666;
+            font-style: italic;
+            text-align: center;
+        }
+
+        .ui-menu-item {
+            margin: 0;
+            padding: 0;
+        }
+
+        .ui-menu-item-wrapper {
+            padding: 0 !important;
+        }
+
+        /* Cập nhật phần highlight cho từ khóa tìm kiếm */
+        .highlight {
+            background-color: rgba(255, 243, 205, 0.7); /* Màu vàng kem nhạt */
+            color: #333; /* Màu chữ tối */
+            font-weight: bold;
+            padding: 1px 3px;
+            border-radius: 3px;
+        }
+
+        /* Đảm bảo màu chữ không thay đổi khi hover */
+        .search-item:hover .highlight,
+        .search-item-category:hover .highlight {
+            color: #333; /* Giữ nguyên màu chữ đã highlight khi hover */
+            background-color: rgba(255, 243, 205, 0.7); /* Giữ nguyên màu nền highlight */
+        }
+
+        /* Vô hiệu hóa màu xanh khi hover của jQuery UI */
+        .ui-state-focus,
+        .ui-state-active,
+        .ui-state-hover,
+        .ui-menu-item-wrapper.ui-state-focus,
+        .ui-menu-item-wrapper.ui-state-active,
+        .ui-menu-item-wrapper.ui-state-hover,
+        .ui-menu-item:hover,
+        .ui-menu-item:focus,
+        .ui-menu-item.ui-state-focus,
+        .ui-menu-item.ui-state-active {
+            background: #f8f9fa !important;
+            border: none !important;
+            color: #333 !important;
+            margin: 0 !important;
+        }
+
+            /* Đảm bảo các phần tử con cũng không đổi màu */
+            .ui-state-focus *,
+            .ui-state-active *,
+            .ui-state-hover * {
+                color: inherit !important;
+            }
+
+            /* Override cho mục danh mục */
+            .ui-menu-item-wrapper.ui-state-active .search-item-category,
+            .ui-menu-item-wrapper.ui-state-focus .search-item-category,
+            .ui-menu-item-wrapper.ui-state-hover .search-item-category {
+                background-color: #f0f4f9 !important;
+                color: #333 !important;
+            }
     </style>
 </head>
 <body>
@@ -315,8 +523,18 @@
                                 <img src="~/Content/images/medinet-logo.png" alt="Logo" />
                             </a>
                             break;
-                        default:
+                        case "Seller":
                             <a href="#" class="logo">
+                                <img src="~/Content/images/medinet-logo.png" alt="Logo" />
+                            </a>
+                            break;
+                        case "Admin":
+                            <a href="#" class="logo">
+                                <img src="~/Content/images/medinet-logo.png" alt="Logo" />
+                            </a>
+                            break;
+                        default:
+                            <a href="@Url.Action("Index", "Home")" class="logo">
                                 <img src="~/Content/images/medinet-logo.png" alt="Logo" />
                             </a>
                             break;
@@ -327,125 +545,136 @@
             <!-- Thay thế phần form tìm kiếm trong _Layout.cshtml -->
             @{
                 var vaitrotimkiem = Session["VaiTro"];
-                if (vaitrotimkiem != null && vaitrotimkiem.ToString() == "Buyer")
+                if (vaitrotimkiem == null || vaitrotimkiem.ToString() == "Buyer")
                 {
                     <div class="search-container">
                         <form action="@Url.Action("SanPham", "Home")" method="get" class="search-form">
                             <input type="text"
                                    name="timKiem"
                                    placeholder="Hôm nay bạn đang tìm gì?"
-                                   class="search-input" />
+                                   class="search-input" autocomplete="off" />
                             <button type="submit" class="search-button">
                                 <i class="fa fa-search"></i>
                             </button>
                         </form>
                     </div>
                 }
+
+
             }
 
-        <div class="header-icons">
-            <!-- Thay thế phần thông báo hiện tại -->
-            <div class="notification-container">
-                @{
-                    var userRoleForNotif = Session["VaiTro"] as string;
-                    if (userRoleForNotif == "Buyer")
-                    {
-                        <!-- Người mua: chuyển hướng đến trang thông báo -->
-                        <a href="@Url.Action("Index", "ThongBao")" class="icon-button">
-                            <img src="~/Content/images/notification.png" alt="Thông báo" />
-                        </a>
-                    }
-                    else
-                    {
-                        <!-- Người bán và Admin: hiển thị popup -->
-                        <a href="javascript:void(0);" class="icon-button" id="notification-icon">
-                            <img src="~/Content/images/notification.png" alt="Thông báo" />
-                        </a>
+            <div class="header-icons">
+                <!-- Thay thế phần thông báo hiện tại -->
+                <div class="notification-container">
+                    @{
+                        if (User.Identity.IsAuthenticated)
+                        {
+                            var userRoleForNotif = Session["VaiTro"] as string;
+                            if (userRoleForNotif == "Buyer")
+                            {
+                                <!-- Người mua: chuyển hướng đến trang thông báo -->
+                                <a href="@Url.Action("Index", "ThongBao")" class="icon-button">
+                                    <img src="~/Content/images/notification.png" alt="Thông báo" />
+                                </a>
+                            }
+                            else
+                            {
+                                <!-- Người bán và Admin: hiển thị popup -->
+                                <a href="javascript:void(0);" class="icon-button" id="notification-icon">
+                                    <img src="~/Content/images/notification.png" alt="Thông báo" />
+                                </a>
 
 
+                            }
+                        }
+
                     }
-                }
-                <!-- Badge hiển thị số lượng thông báo chưa đọc -->
-                <span id="notification-badge" class="notifi-badge" style="display: none;">0</span>
-                <div class="notification-popup" id="notification-popup">
-                    <div class="notification-header">
-                        <h5>Thông báo của bạn</h5>
-                        <div class="d-flex align-items-center">
-                            <a href="javascript:void(0);" id="mark-all-read" class="me-2" title="Đánh dấu tất cả đã đọc">
-                                <i class="fas fa-check-double"></i>
-                            </a>
-                            <a href="javascript:void(0);" id="close-notification">
-                                <i class="fas fa-times"></i>
-                            </a>
+                    <!-- Badge hiển thị số lượng thông báo chưa đọc -->
+                    <span id="notification-badge" class="notifi-badge" style="display: none;">0</span>
+                    <div class="notification-popup" id="notification-popup">
+                        <div class="notification-header">
+                            <h5>Thông báo của bạn</h5>
+                            <div class="d-flex align-items-center">
+                                <a href="javascript:void(0);" id="mark-all-read" class="me-2" title="Đánh dấu tất cả đã đọc">
+                                    <i class="fas fa-check-double"></i>
+                                </a>
+                                <a href="javascript:void(0);" id="close-notification">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </div>
                         </div>
-                    </div>
-                    <div class="notification-content" id="notification-list">
-                        <!-- Loading spinner -->
-                        <div class="text-center p-3">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Đang tải...</span>
+                        <div class="notification-content" id="notification-list">
+                            <!-- Loading spinner -->
+                            <div class="text-center p-3">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Đang tải...</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Phần còn lại của header-icons giữ nguyên -->
+                <!-- Phần còn lại của header-icons giữ nguyên -->
 
-            @{
-                var vaitrobuyer = Session["VaiTro"];
-                if (vaitrobuyer != null && vaitrobuyer.ToString() == "Buyer")
+                @{
+                    var vaitrobuyer = Session["VaiTro"];
+                    if (vaitrobuyer != null && vaitrobuyer.ToString() == "Buyer")
+                    {
+                        <div class="cart-container">
+                            <a href="@Url.Action("Index", "GioHangs")" class="icon-button">
+                                <img src="~/Content/images/cart.png" alt="Giỏ hàng" />
+                            </a>
+                            @if (Session["SoLuongGioHang"] != null && Convert.ToInt32(Session["SoLuongGioHang"]) > 0)
+                            {
+                                <span class="cart-badge">@Session["SoLuongGioHang"]</span>
+                            }
+                        </div>
+                    }
+                }
+
+                @if (User.Identity.IsAuthenticated)
                 {
-                    <div class="cart-container">
-                        <a href="@Url.Action("Index", "GioHangs")" class="icon-button">
-                            <img src="~/Content/images/cart.png" alt="Giỏ hàng" />
-                        </a>
-                        @if (Session["SoLuongGioHang"] != null && Convert.ToInt32(Session["SoLuongGioHang"]) > 0)
+                    var avatarPath = Session["AnhDaiDien"] as string;
+                    var userRole = Session["VaiTro"] as string;
+                    string profileUrl = "";
+
+                    // Sử dụng switch-case để xử lý các trường hợp vai trò khác nhau
+                    switch (userRole)
+                    {
+                        case "Seller":
+                            profileUrl = Url.Action("EditSellerProfile", "NguoiDungs");
+                            break;
+                        case "Buyer":
+                            profileUrl = Url.Action("Profile", "NguoiDungs");
+                            break;
+                        default:
+                            profileUrl = Url.Action("DangNhap", "DangNhap");
+                            break;
+                    }
+                    <a href="@profileUrl" class="icon-button">
+                        @if (!string.IsNullOrEmpty(avatarPath))
                         {
-                            <span class="cart-badge">@Session["SoLuongGioHang"]</span>
+                            <img src="@Url.Content(avatarPath.ToString())" alt="Avatar của @User.Identity.Name" class="user-avatar-image" />
                         }
+                        else
+                        {
+                            <img src="~/Content/Images/default-avatar.png" alt="Avatar của @User.Identity.Name" class="user-avatar-image" />
+                        }
+                    </a>
+                }
+                else
+                {
+                    @*// Người dùng chưa đăng nhập
+                        <a href="@Url.Action("DangNhap", "DangNhap")" class="icon-button">
+                            <img src="~/Content/Images/default-avatar.png" alt="Đăng nhập" class="user-avatar-image" />
+                        </a>*@
+                    <!-- Thay thế phần người dùng chưa đăng nhập với các nút đăng nhập/đăng ký -->
+                    <div class="auth-buttons">
+                        <a href="@Url.Action("DangNhap", "DangNhap")" class="btn-login">Đăng nhập</a>
+                        <a href="@Url.Action("DangKy", "DangKy")" class="btn-register">Đăng ký</a>
                     </div>
                 }
-            }
-
-            @if (User.Identity.IsAuthenticated)
-            {
-                var avatarPath = Session["AnhDaiDien"] as string;
-                var userRole = Session["VaiTro"] as string;
-                string profileUrl = "";
-
-                // Sử dụng switch-case để xử lý các trường hợp vai trò khác nhau
-                switch (userRole)
-                {
-                    case "Seller":
-                        profileUrl = Url.Action("EditSellerProfile", "NguoiDungs");
-                        break;
-                    case "Buyer":
-                        profileUrl = Url.Action("Profile", "NguoiDungs");
-                        break;
-                    default:
-                        profileUrl = Url.Action("DangNhap", "DangNhap");
-                        break;
-                }
-                <a href="@profileUrl" class="icon-button">
-                    @if (!string.IsNullOrEmpty(avatarPath))
-                    {
-                        <img src="@Url.Content(avatarPath.ToString())" alt="Avatar của @User.Identity.Name" class="user-avatar-image" />
-                    }
-                    else
-                    {
-                        <img src="~/Content/Images/default-avatar.png" alt="Avatar của @User.Identity.Name" class="user-avatar-image" />
-                    }
-                </a>
-            }
-            else
-            {
-                // Người dùng chưa đăng nhập
-                <a href="@Url.Action("DangNhap", "DangNhap")" class="icon-button">
-                    <img src="~/Content/Images/default-avatar.png" alt="Đăng nhập" class="user-avatar-image" />
-                </a>
-            }
-        </div>
+            </div>
         </div>
     </header>
     <div class="container body-content">
@@ -489,180 +718,180 @@
         });
     }
 
-        // Hàm tải danh sách thông báo cho popup
-        function loadNotifications() {
-            $.ajax({
-                url: '@Url.Action("GetAllNotifications", "ThongBao")',
-                type: 'GET',
-                dataType: 'json',
-                success: function (data) {
-                    var notificationList = $('#notification-list');
-                    notificationList.empty();
+    // Hàm tải danh sách thông báo cho popup
+    function loadNotifications() {
+        $.ajax({
+            url: '@Url.Action("GetAllNotifications", "ThongBao")',
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                var notificationList = $('#notification-list');
+                notificationList.empty();
 
-                    if (data.length === 0) {
-                        notificationList.html('<div class="no-notifications"><i class="far fa-bell-slash"></i><p>Bạn chưa có thông báo nào</p></div>');
-                        return;
+                if (data.length === 0) {
+                    notificationList.html('<div class="no-notifications"><i class="far fa-bell-slash"></i><p>Bạn chưa có thông báo nào</p></div>');
+                    return;
+                }
+
+                // Hiển thị tất cả thông báo
+                $.each(data, function(index, notification) {
+                    var unreadClass = notification.TrangThai === 'Chưa đọc' ? 'unread' : '';
+                    var importantClass = notification.MucDoQuanTrong === 2 ? 'important' : '';
+
+                    var badgeHtml = '';
+                    switch(notification.LoaiThongBao) {
+                        case 'DonHang':
+                            badgeHtml = '<span class="notification-badge centered-text" style="background-color: #0d6efd;">Đơn hàng</span>';
+                            break;
+                        case 'Vi':
+                            badgeHtml = '<span class="notification-badge centered-text" style="background-color: #198754;">Ví</span>';
+                            break;
+                        case 'ThanhToan':
+                            badgeHtml = '<span class="notification-badge centered-text" style="background-color: #0dcaf0;">Thanh toán</span>';
+                            break;
+                        case 'KhuyenMai':
+                            badgeHtml = '<span class="notification-badge centered-text" style="background-color: #fd7e14;">Khuyến mãi</span>';
+                            break;
+                        default:
+                            badgeHtml = '<span class="notification-badge centered-text" style="background-color: #6c757d;">Thông báo</span>';
+                            break;
                     }
 
-                    // Hiển thị tất cả thông báo
-                    $.each(data, function(index, notification) {
-                        var unreadClass = notification.TrangThai === 'Chưa đọc' ? 'unread' : '';
-                        var importantClass = notification.MucDoQuanTrong === 2 ? 'important' : '';
+                    // Xử lý thời gian
+                    var timeAgo = notification.NgayTao ? getTimeAgo(notification.NgayTao) : "Không xác định";
 
-                        var badgeHtml = '';
-                        switch(notification.LoaiThongBao) {
-                            case 'DonHang':
-                                badgeHtml = '<span class="notification-badge centered-text" style="background-color: #0d6efd;">Đơn hàng</span>';
-                                break;
-                            case 'Vi':
-                                badgeHtml = '<span class="notification-badge centered-text" style="background-color: #198754;">Ví</span>';
-                                break;
-                            case 'ThanhToan':
-                                badgeHtml = '<span class="notification-badge centered-text" style="background-color: #0dcaf0;">Thanh toán</span>';
-                                break;
-                            case 'KhuyenMai':
-                                badgeHtml = '<span class="notification-badge centered-text" style="background-color: #fd7e14;">Khuyến mãi</span>';
-                                break;
-                            default:
-                                badgeHtml = '<span class="notification-badge centered-text" style="background-color: #6c757d;">Thông báo</span>';
-                                break;
-                        }
+                    // Lưu cả DuongDanChiTiet vào data attribute để sử dụng khi click
+                    var html = '<div class="notification-item ' + unreadClass + ' ' + importantClass + '" data-id="' + notification.MaThongBao + '" data-url="' + (notification.DuongDanChiTiet || '') + '">' +
+                        '<div class="notification-title">' + notification.TieuDe + ' ' + badgeHtml + '</div>' +
+                        '<div class="notification-message">' + notification.TinNhan + '</div>' +
+                        '<div class="notification-time">' + timeAgo + '</div>' +
+                        '</div>';
 
-                        // Xử lý thời gian
-                        var timeAgo = notification.NgayTao ? getTimeAgo(notification.NgayTao) : "Không xác định";
+                    notificationList.append(html);
+                });
 
-                        // Lưu cả DuongDanChiTiet vào data attribute để sử dụng khi click
-                        var html = '<div class="notification-item ' + unreadClass + ' ' + importantClass + '" data-id="' + notification.MaThongBao + '" data-url="' + (notification.DuongDanChiTiet || '') + '">' +
-                            '<div class="notification-title">' + notification.TieuDe + ' ' + badgeHtml + '</div>' +
-                            '<div class="notification-message">' + notification.TinNhan + '</div>' +
-                            '<div class="notification-time">' + timeAgo + '</div>' +
-                            '</div>';
+                // Thêm sự kiện click cho mỗi thông báo
+                $('.notification-item').click(function() {
+                    var notificationId = $(this).data('id');
+                    var directUrl = $(this).data('url');
 
-                        notificationList.append(html);
-                    });
-
-                    // Thêm sự kiện click cho mỗi thông báo
-                    $('.notification-item').click(function() {
-                        var notificationId = $(this).data('id');
-                        var directUrl = $(this).data('url');
-
-                        // Đánh dấu thông báo là đã đọc
-                        $.ajax({
-                            url: '@Url.Action("MarkAsRead", "ThongBao")/' + notificationId,
-                            type: 'POST',
-                            success: function() {
-                                // Nếu có đường dẫn chi tiết, chuyển hướng đến đó
-                                if (directUrl && directUrl !== '') {
-                                    window.location.href = directUrl;
-                                } else {
-                                    // Nếu không, chuyển đến trang chi tiết thông báo
-                                    window.location.href = '@Url.Action("ChiTiet", "ThongBao")/' + notificationId;
-                                }
-                            },
-                            error: function() {
-                                // Vẫn chuyển hướng ngay cả khi có lỗi
-                                if (directUrl && directUrl !== '') {
-                                    window.location.href = directUrl;
-                                } else {
-                                    window.location.href = '@Url.Action("ChiTiet", "ThongBao")/' + notificationId;
-                                }
+                    // Đánh dấu thông báo là đã đọc
+                    $.ajax({
+                        url: '@Url.Action("MarkAsRead", "ThongBao")/' + notificationId,
+                        type: 'POST',
+                        success: function() {
+                            // Nếu có đường dẫn chi tiết, chuyển hướng đến đó
+                            if (directUrl && directUrl !== '') {
+                                window.location.href = directUrl;
+                            } else {
+                                // Nếu không, chuyển đến trang chi tiết thông báo
+                                window.location.href = '@Url.Action("ChiTiet", "ThongBao")/' + notificationId;
                             }
-                        });
+                        },
+                        error: function() {
+                            // Vẫn chuyển hướng ngay cả khi có lỗi
+                            if (directUrl && directUrl !== '') {
+                                window.location.href = directUrl;
+                            } else {
+                                window.location.href = '@Url.Action("ChiTiet", "ThongBao")/' + notificationId;
+                            }
+                        }
                     });
-                },
-                error: function (error) {
-                    console.log('Lỗi khi tải thông báo:', error);
-                    $('#notification-list').html('<div class="text-center p-3">Đã xảy ra lỗi khi tải thông báo</div>');
-                }
-            });
-        }
+                });
+            },
+            error: function (error) {
+                console.log('Lỗi khi tải thông báo:', error);
+                $('#notification-list').html('<div class="text-center p-3">Đã xảy ra lỗi khi tải thông báo</div>');
+            }
+        });
+    }
 
-        // Thêm hàm này vào phần script của bạn
-        function setupNotificationPopup() {
-            // Toggle notification popup
-            $('#notification-icon').click(function (e) {
-                e.stopPropagation();
-                const popup = $('#notification-popup');
+    // Thêm hàm này vào phần script của bạn
+    function setupNotificationPopup() {
+        // Toggle notification popup
+        $('#notification-icon').click(function (e) {
+            e.stopPropagation();
+            const popup = $('#notification-popup');
 
-                if (popup.hasClass('show')) {
-                    popup.removeClass('show');
-                } else {
-                    popup.addClass('show');
-                    // Load notifications when opened
-                    loadNotifications();
-                }
-            });
+            if (popup.hasClass('show')) {
+                popup.removeClass('show');
+            } else {
+                popup.addClass('show');
+                // Load notifications when opened
+                loadNotifications();
+            }
+        });
 
-            // Close notification popup
-            $('#close-notification').click(function () {
+        // Close notification popup
+        $('#close-notification').click(function () {
+            $('#notification-popup').removeClass('show');
+        });
+
+        // Close when clicking outside
+        $(document).click(function (e) {
+            if (!$(e.target).closest('.notification-container').length) {
                 $('#notification-popup').removeClass('show');
-            });
-
-            // Close when clicking outside
-            $(document).click(function (e) {
-                if (!$(e.target).closest('.notification-container').length) {
-                    $('#notification-popup').removeClass('show');
-                }
-            });
-        }
-        // Helper function: format thời gian
-        function getTimeAgo(dateStr) {
-            try {
-                // Kiểm tra xem dateStr có phải là chuỗi không
-                if (typeof dateStr !== 'string') {
-                    console.log("Kiểu dữ liệu ngày không phải chuỗi:", typeof dateStr, dateStr);
-                    return "Không xác định";
-                }
-
-                // Kiểm tra nếu chuỗi có dạng "/Date(1234567890000)/"
-                if (dateStr.includes("/Date(")) {
-                    // Trích xuất timestamp từ chuỗi JSON .NET
-                    var timestamp = parseInt(dateStr.replace(/\/Date\((\d+)(?:[-+]\d+)?\)\//g, "$1"));
-                    var date = new Date(timestamp);
-                    if (isNaN(date.getTime())) {
-                        console.log("Không thể chuyển đổi timestamp:", timestamp);
-                        return "Không xác định";
-                    }
-                } else {
-                    // Thử chuyển đổi trực tiếp
-                    var date = new Date(dateStr);
-                    if (isNaN(date.getTime())) {
-                        console.log("Không thể chuyển đổi chuỗi ngày:", dateStr);
-                        return "Không xác định";
-                    }
-                }
-
-                const now = new Date();
-                const seconds = Math.floor((now - date) / 1000);
-
-                // Hiển thị thời gian chính xác
-                if (seconds < 60) {
-                    return seconds + " giây trước";
-                }
-
-                let interval = Math.floor(seconds / 60);
-                if (interval < 60) {
-                    return interval + " phút trước";
-                }
-
-                interval = Math.floor(seconds / 3600);
-                if (interval < 24) {
-                    return interval + " giờ trước";
-                }
-
-                // Nếu quá 24 giờ, hiển thị ngày giờ cụ thể
-                const day = date.getDate().toString().padStart(2, '0');
-                const month = (date.getMonth() + 1).toString().padStart(2, '0');
-                const year = date.getFullYear();
-                const hours = date.getHours().toString().padStart(2, '0');
-                const minutes = date.getMinutes().toString().padStart(2, '0');
-
-                return `${day}/${month}/${year} ${hours}:${minutes}`;
-            } catch (e) {
-                console.error("Lỗi xử lý thời gian:", e);
+            }
+        });
+    }
+    // Helper function: format thời gian
+    function getTimeAgo(dateStr) {
+        try {
+            // Kiểm tra xem dateStr có phải là chuỗi không
+            if (typeof dateStr !== 'string') {
+                console.log("Kiểu dữ liệu ngày không phải chuỗi:", typeof dateStr, dateStr);
                 return "Không xác định";
             }
+
+            // Kiểm tra nếu chuỗi có dạng "/Date(1234567890000)/"
+            if (dateStr.includes("/Date(")) {
+                // Trích xuất timestamp từ chuỗi JSON .NET
+                var timestamp = parseInt(dateStr.replace(/\/Date\((\d+)(?:[-+]\d+)?\)\//g, "$1"));
+                var date = new Date(timestamp);
+                if (isNaN(date.getTime())) {
+                    console.log("Không thể chuyển đổi timestamp:", timestamp);
+                    return "Không xác định";
+                }
+            } else {
+                // Thử chuyển đổi trực tiếp
+                var date = new Date(dateStr);
+                if (isNaN(date.getTime())) {
+                    console.log("Không thể chuyển đổi chuỗi ngày:", dateStr);
+                    return "Không xác định";
+                }
+            }
+
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+
+            // Hiển thị thời gian chính xác
+            if (seconds < 60) {
+                return seconds + " giây trước";
+            }
+
+            let interval = Math.floor(seconds / 60);
+            if (interval < 60) {
+                return interval + " phút trước";
+            }
+
+            interval = Math.floor(seconds / 3600);
+            if (interval < 24) {
+                return interval + " giờ trước";
+            }
+
+            // Nếu quá 24 giờ, hiển thị ngày giờ cụ thể
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear();
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+
+            return `${day}/${month}/${year} ${hours}:${minutes}`;
+        } catch (e) {
+            console.error("Lỗi xử lý thời gian:", e);
+            return "Không xác định";
         }
+    }
     // Kiểm tra ngay khi trang tải xong
     $(document).ready(function () {
         if (@User.Identity.IsAuthenticated.ToString().ToLower()) {
@@ -670,7 +899,7 @@
             checkNewNotifications();
 
             // Kiểm tra mỗi 30 giây
-            setInterval(checkNewNotifications, 30000);
+            setInterval(checkNewNotifications, 1000);
 
             // Thiết lập sự kiện cho popup
             setupNotificationPopup();
@@ -680,90 +909,291 @@
 
 
     // Thêm hàm xử lý đánh dấu tất cả thông báo đã đọc
-function markAllAsRead() {
-    $.ajax({
-        url: '@Url.Action("MarkAllAsRead", "ThongBao")',
-        type: 'POST',
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                // Cập nhật giao diện: loại bỏ lớp unread từ tất cả thông báo
-                $('.notification-item').removeClass('unread');
+    function markAllAsRead() {
+        $.ajax({
+            url: '@Url.Action("MarkAllAsRead", "ThongBao")',
+            type: 'POST',
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    // Cập nhật giao diện: loại bỏ lớp unread từ tất cả thông báo
+                    $('.notification-item').removeClass('unread');
 
-                // Ẩn badge thông báo
-                $('#notification-badge').hide();
+                    // Ẩn badge thông báo
+                    $('#notification-badge').hide();
 
-                // Đặt lại số lượng thông báo chưa đọc
-                lastNotificationCount = 0;
+                    // Đặt lại số lượng thông báo chưa đọc
+                    lastNotificationCount = 0;
 
-                // Hiển thị thông báo thành công (tùy chọn)
-                // Ví dụ: hiển thị một thông báo nhỏ
-                showToast('Đã đánh dấu tất cả thông báo là đã đọc');
-            } else {
-                console.error('Lỗi khi đánh dấu tất cả thông báo đã đọc:', response.message);
+                    // Hiển thị thông báo thành công (tùy chọn)
+                    // Ví dụ: hiển thị một thông báo nhỏ
+                    showToast('Đã đánh dấu tất cả thông báo là đã đọc');
+                } else {
+                    console.error('Lỗi khi đánh dấu tất cả thông báo đã đọc:', response.message);
+                }
+            },
+            error: function(error) {
+                console.error('Lỗi khi đánh dấu tất cả thông báo đã đọc:', error);
             }
-        },
-        error: function(error) {
-            console.error('Lỗi khi đánh dấu tất cả thông báo đã đọc:', error);
-        }
-    });
-}
-
-// Hàm hiển thị thông báo toast nhỏ (tùy chọn)
-function showToast(message) {
-    // Kiểm tra nếu đã có toast, xóa đi
-    $('.toast-notification').remove();
-
-    // Tạo toast mới
-    var toast = $('<div class="toast-notification" style="position: fixed; bottom: 20px; right: 20px; background-color: #198754; color: white; padding: 10px 15px; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 9999;">' + message + '</div>');
-
-    // Thêm vào body
-    $('body').append(toast);
-
-    // Tự động ẩn sau 3 giây
-    setTimeout(function() {
-        toast.fadeOut(300, function() {
-            $(this).remove();
         });
-    }, 3000);
-}
+    }
 
-// Thêm vào phần setupNotificationPopup
-function setupNotificationPopup() {
-    // Toggle notification popup
-    $('#notification-icon').click(function (e) {
-        e.stopPropagation();
-        const popup = $('#notification-popup');
+    // Hàm hiển thị thông báo toast nhỏ (tùy chọn)
+    function showToast(message) {
+        // Kiểm tra nếu đã có toast, xóa đi
+        $('.toast-notification').remove();
 
-        if (popup.hasClass('show')) {
-            popup.removeClass('show');
-        } else {
-            popup.addClass('show');
-            // Load notifications when opened
-            loadNotifications();
-        }
-    });
+        // Tạo toast mới
+        var toast = $('<div class="toast-notification" style="position: fixed; bottom: 20px; right: 20px; background-color: #198754; color: white; padding: 10px 15px; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 9999;">' + message + '</div>');
 
-    // Close notification popup
-    $('#close-notification').click(function () {
-        $('#notification-popup').removeClass('show');
-    });
+        // Thêm vào body
+        $('body').append(toast);
 
-    // Thêm xử lý sự kiện cho nút đánh dấu tất cả đã đọc
-    $('#mark-all-read').click(function(e) {
-        e.stopPropagation();
-        markAllAsRead();
-    });
+        // Tự động ẩn sau 3 giây
+        setTimeout(function() {
+            toast.fadeOut(300, function() {
+                $(this).remove();
+            });
+        }, 3000);
+    }
 
-    // Close when clicking outside
-    $(document).click(function (e) {
-        if (!$(e.target).closest('.notification-container').length) {
+    // Thêm vào phần setupNotificationPopup
+    function setupNotificationPopup() {
+        // Toggle notification popup
+        $('#notification-icon').click(function (e) {
+            e.stopPropagation();
+            const popup = $('#notification-popup');
+
+            if (popup.hasClass('show')) {
+                popup.removeClass('show');
+            } else {
+                popup.addClass('show');
+                // Load notifications when opened
+                loadNotifications();
+            }
+        });
+
+        // Close notification popup
+        $('#close-notification').click(function () {
             $('#notification-popup').removeClass('show');
+        });
+
+        // Thêm xử lý sự kiện cho nút đánh dấu tất cả đã đọc
+        $('#mark-all-read').click(function(e) {
+            e.stopPropagation();
+            markAllAsRead();
+        });
+
+        // Close when clicking outside
+        $(document).click(function (e) {
+            if (!$(e.target).closest('.notification-container').length) {
+                $('#notification-popup').removeClass('show');
+            }
+        });
         }
+
+
+
+
+    // Thêm vào phần script của _Layout.cshtml
+    $(document).ready(function() {
+        // Thêm CSS cho loading indicator
+        $("<style>")
+            .prop("type", "text/css")
+            .html(`
+                .search-loading {
+                    position: absolute;
+                    right: 40px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    display: none;
+                }
+                .search-loading-spinner {
+                    width: 16px;
+                    height: 16px;
+                    border: 2px solid rgba(0,0,0,0.1);
+                    border-radius: 50%;
+                    border-top-color: #0d6efd;
+                    animation: spin 0.8s linear infinite;
+                }
+                keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            `)
+            .appendTo("head");
+
+        // Thêm loading indicator vào form tìm kiếm
+        $(".search-form").append('<div class="search-loading"><div class="search-loading-spinner"></div></div>');
+
+        // Hiển thị loading khi đang tìm kiếm
+        $(".search-input").on("autocompleteopen", function() {
+            $(".search-loading").show();
+        }).on("autocompleteclose", function() {
+            $(".search-loading").hide();
+        });
+
+        // Xử lý autocomplete cho ô tìm kiếm
+        $(".search-input").autocomplete({
+            source: function (request, response) {
+                console.log("Đang tìm kiếm:", request.term);  // Debug
+                $(".search-loading").show(); // Hiện loading khi bắt đầu tìm kiếm
+                $.ajax({
+                    url: '@Url.Action("GetSearchSuggestions", "Home")',
+                    data: { term: request.term },
+                    dataType: "json",
+                    success: function (data) {
+                        console.log("Kết quả:", data);  // Debug
+                        $(".search-loading").hide(); // Ẩn loading khi đã nhận kết quả
+                        if (data.length === 0) {
+                            var noResult = [{
+                                label: "Không tìm thấy kết quả",
+                                value: request.term,
+                                noResults: true
+                            }];
+                            response(noResult);
+                        } else {
+                            response(data);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Lỗi AJAX:", status, error);  // Debug
+                        $(".search-loading").hide(); // Ẩn loading khi có lỗi
+                    }
+                });
+            },
+            minLength: 2, // Bắt đầu tìm kiếm sau 2 ký tự
+            select: function(event, ui) {
+                if (ui.item.noResults) {
+                    return false;
+                }
+
+                if (ui.item.isCategory) {
+                    // Chuyển đến trang danh mục
+                    window.location.href = '@Url.Action("SanPham", "Home")?maDanhMuc=' + ui.item.id;
+                } else {
+                    // Chuyển đến trang chi tiết sản phẩm
+                    window.location.href = '@Url.Action("ChiTiet", "Home")/' + ui.item.id;
+                }
+                return false;
+            }
+        // Thay đổi phần _renderItem trong autocomplete
+        }).autocomplete("instance")._renderItem = function(ul, item) {
+            if (item.noResults) {
+                return $("<li>")
+                    .append("<div class='no-results'><i class='fas fa-search' style='margin-right: 8px; opacity: 0.5;'></i>Không tìm thấy kết quả</div>")
+                    .appendTo(ul);
+            }
+
+            if (item.isCategory) {
+                return $("<li>")
+                    .append("<div class='search-item-category'><i class='fas fa-folder' style='margin-right: 10px; color: #4a9bff;'></i>" + item.label + "</div>")
+                    .appendTo(ul);
+            }
+
+            var formattedPrice;
+            if (item.price) {
+                formattedPrice = new Intl.NumberFormat('vi-VN', {
+                    style: 'currency',
+                    currency: 'VND'
+                }).format(item.price);
+            } else {
+                formattedPrice = "Không có giá";
+            }
+
+            var html = "<div class='search-item'>";
+
+            // Thay thế phần xử lý ảnh trong _renderItem
+            if (item.image) {
+                // Đảm bảo đường dẫn hình ảnh được xử lý đúng
+                var imagePath = item.image;
+                if (imagePath && !imagePath.startsWith('/')) {
+                    imagePath = '/' + imagePath;
+                }
+                html += "<img src='" + imagePath + "' class='search-item-image' onerror=\"this.src='@Url.Content("~/Content/Images/default-product.png")'\">";
+            } else {
+                html += "<img src='@Url.Content("~/Content/Images/default-product.png")' class='search-item-image'>";
+            }
+
+            // Sử dụng highlight cho tiêu đề sản phẩm
+            var highlightedLabel = highlightText(item.label, $(".search-input").val());
+
+            html += "<div class='search-item-content'>" +
+                "<div class='search-item-title'>" + highlightedLabel + "</div>" +
+                "<div class='search-item-price'>" + formattedPrice + "</div>" +
+                "</div></div>";
+
+            return $("<li>")
+                .append(html)
+                .appendTo(ul);
+        };
+
+        // Xử lý khi nhấn Enter trong ô tìm kiếm
+        $(".search-input").keypress(function(e) {
+            if (e.which == 13) {
+                // Nếu đang hiển thị gợi ý, không submit form
+                if ($(".ui-autocomplete").is(":visible")) {
+                    e.preventDefault();
+                    return false;
+                }
+                // Nếu không, submit form bình thường
+                $(this).closest("form").submit();
+            }
+        });
+
+        // Thêm cải tiến: Xóa nội dung tìm kiếm
+        $(".search-container").append('<button type="button" class="search-clear" style="display:none;"><i class="fas fa-times"></i></button>');
+
+        $(".search-input").on("input", function() {
+            var $clearBtn = $(".search-clear");
+            if ($(this).val()) {
+                $clearBtn.show();
+            } else {
+                $clearBtn.hide();
+            }
+        });
+
+        $(".search-clear").click(function() {
+            $(".search-input").val("").focus();
+            $(this).hide();
+        });
+
+        // Debug - kiểm tra xem jQuery UI autocomplete có được khởi tạo không
+        console.log("jQuery UI version:", $.ui.version);
+        console.log("Có autocomplete không:", typeof $(".search-input").autocomplete === "function");
     });
-}
+
+    // Thêm vào phần _renderItem để highlight từ khóa
+    function highlightText(text, term) {
+        if (!term || term.length === 0) return text;
+
+        // Loại bỏ dấu trong term để so sánh
+        var termNoAccent = removeAccents(term.toLowerCase());
+        var textNoAccent = removeAccents(text.toLowerCase());
+
+        var index = textNoAccent.indexOf(termNoAccent);
+        if (index >= 0) {
+            return text.substring(0, index) +
+                "<span class='highlight' style='background-color: #ffeb3b; font-weight: bold;'>" +
+                text.substring(index, index + term.length) +
+                "</span>" +
+                text.substring(index + term.length);
+        }
+        return text;
+    }
+
+    // Hàm loại bỏ dấu tiếng Việt để so sánh dễ dàng hơn
+    function removeAccents(str) {
+        return str.normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/đ/g, 'd').replace(/Đ/g, 'D');
+    }
+
+    // Sử dụng hàm highlight trong phần render item
+    var highlightedLabel = highlightText(item.label, request.term);
+    html += "<div class='search-item-title'>" + highlightedLabel + "</div>";
     </script>
-    @Scripts.Render("~/bundles/jquery")
+    @*@Scripts.Render("~/bundles/jquery")*@
     @Scripts.Render("~/bundles/bootstrap")
     @RenderSection("scripts", required: false)
 </body>
