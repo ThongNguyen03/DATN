@@ -273,6 +273,7 @@
     <Content Include="Content\images\eye-closed.jpeg" />
     <Content Include="Content\images\eye-open.png" />
     <Content Include="Content\images\favicon.ico" />
+    <Content Include="Content\images\medicine.png" />
     <Content Include="Content\images\medinet-logo.png" />
     <Content Include="Content\images\no-image.jpeg" />
     <Content Include="Content\images\notification.png" />
