@@ -47,7 +47,7 @@
     <link rel="shortcut icon" href="~/Content/images/medicine.png" type="image/x-icon">
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
-    <style>
+<style>
         .header {
             background-color: #ffffff;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -507,7 +507,7 @@
                 background-color: #f0f4f9 !important;
                 color: #333 !important;
             }
-    </style>
+</style>
 </head>
 <body>
     <!--</nav>-->
@@ -1069,11 +1069,11 @@
                 }
 
                 if (ui.item.isCategory) {
-                    // Chuyển đến trang danh mục
-                    window.location.href = '@Url.Action("SanPham", "Home")?maDanhMuc=' + ui.item.id;
+                    // Chuyển đến trang danh mục với đường dẫn tuyệt đối
+                    window.location.href = '@Url.RouteUrl("Default", new { controller = "Home", action = "SanPham" })?maDanhMuc=' + ui.item.id;
                 } else {
-                    // Chuyển đến trang chi tiết sản phẩm
-                    window.location.href = '@Url.Action("ChiTiet", "Home")/' + ui.item.id;
+                    // Chuyển đến trang chi tiết sản phẩm với đường dẫn tuyệt đối
+                    window.location.href = '@Url.Content("~/")Home/ChiTiet/' + ui.item.id;
                 }
                 return false;
             }
@@ -1191,8 +1191,93 @@
 
     // Sử dụng hàm highlight trong phần render item
     var highlightedLabel = highlightText(item.label, request.term);
-    html += "<div class='search-item-title'>" + highlightedLabel + "</div>";
+        html += "<div class='search-item-title'>" + highlightedLabel + "</div>";
+
+
+        //21/4/2025
+// Biến để lưu ID của timer
+var stockCheckIntervalId = null;
+
+// Hàm kiểm tra sản phẩm hết hàng
+function checkOutOfStock() {
+    console.log("Đang kiểm tra hàng tồn kho...");
+    $.ajax({
+        url: '/NguoiBans/KiemTraSanPhamHetHang',
+        type: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                console.log("Kiểm tra hàng tồn kho thành công - Hết hàng: " +
+                    response.hetHang + ", Gần hết: " + response.ganHet);
+
+                // Nếu có thông báo mới, làm mới số lượng thông báo
+                if (response.hetHang > 0 || response.ganHet > 0) {
+                    checkNewNotifications();
+                }
+
+                // Lưu thời gian kiểm tra vào localStorage
+                localStorage.setItem('lastStockCheckTime', new Date().getTime());
+            }
+        },
+        error: function(error) {
+            console.error("Lỗi khi kiểm tra hàng tồn kho:", error);
+        }
+    });
+}
+
+// Hàm bắt đầu quét định kỳ
+function startStockChecking() {
+    // Xóa timer cũ nếu có
+    if (stockCheckIntervalId !== null) {
+        clearInterval(stockCheckIntervalId);
+    }
+
+    // Thực hiện kiểm tra ngay lập tức
+    checkOutOfStock();
+
+    // Thiết lập kiểm tra mỗi 5 phút
+    stockCheckIntervalId = setInterval(checkOutOfStock, 5 * 60 * 1000);
+    console.log("Đã bắt đầu quét hàng tồn kho, ID timer:", stockCheckIntervalId);
+}
+
+// Hàm dừng quét
+function stopStockChecking() {
+    if (stockCheckIntervalId !== null) {
+        clearInterval(stockCheckIntervalId);
+        stockCheckIntervalId = null;
+        console.log("Đã dừng quét hàng tồn kho");
+    }
+}
+
+// Khi trang được tải
+$(document).ready(function() {
+    // Chỉ khởi động nếu người dùng là người bán
+    if ('@Session["VaiTro"]' === 'Seller') {
+        console.log("Người dùng là người bán, khởi động quét hàng tồn kho");
+
+        // Kiểm tra xem đã có quét gần đây chưa
+        var lastCheckTime = localStorage.getItem('lastStockCheckTime');
+        var currentTime = new Date().getTime();
+        var checkInterval = 5 * 60 * 1000; // 5 phút
+
+        if (!lastCheckTime || (currentTime - parseInt(lastCheckTime)) > checkInterval) {
+            console.log("Chưa có quét gần đây, bắt đầu quét mới");
+            startStockChecking();
+        } else {
+            // Tính thời gian còn lại để quét tiếp theo
+            var remainingTime = checkInterval - (currentTime - parseInt(lastCheckTime));
+            console.log("Đã có quét gần đây, sẽ quét lại sau", Math.round(remainingTime/1000), "giây");
+
+            // Thực hiện quét sau thời gian còn lại
+            setTimeout(function() {
+                startStockChecking();
+            }, remainingTime);
+        }
+    }
+});
+        //21/4/2025
     </script>
+
     @*@Scripts.Render("~/bundles/jquery")*@
     @Scripts.Render("~/bundles/bootstrap")
     @RenderSection("scripts", required: false)

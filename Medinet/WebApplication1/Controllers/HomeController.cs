@@ -162,8 +162,6 @@ namespace WebApplication1.Controllers
             return View(viewModel);
         }
 
-        // GET: Home/ChiTiet - Trang chi tiết sản phẩm
-        // Cập nhật phương thức ChiTiet trong HomeController
         public ActionResult ChiTiet(int id, int? page)
         {
             var sanPham = db.SanPhams
@@ -181,17 +179,24 @@ namespace WebApplication1.Controllers
             // và sắp xếp theo số lượt mua giảm dần
             var sanPhamLienQuan = db.SanPhams
                 .Where(s => s.MaDanhMuc == sanPham.MaDanhMuc &&
-                       s.MaSanPham != sanPham.MaSanPham &&
-                       s.TrangThai == "Đã phê duyệt")
+                        s.MaSanPham != sanPham.MaSanPham &&
+                        s.TrangThai == "Đã phê duyệt")
                 .OrderByDescending(s => s.SoLuotMua)
                 .ToList();
-            //1/4/2025 thêm int? page
+
             // Lấy danh sách đánh giá cho sản phẩm
             var danhGias = db.DanhGiaSanPhams
                 .Where(dg => dg.MaSanPham == id)
                 .OrderByDescending(dg => dg.NgayTao)
                 .Include(dg => dg.NguoiDung)
                 .Include(dg => dg.DonHang)
+                .ToList();
+
+            // Lấy danh sách các phản hồi của người bán cho các đánh giá
+            var danhGiaIds = danhGias.Select(dg => dg.MaDanhGiaSanPham).ToList();
+            var phanHoiList = db.PhanHoiDanhGias
+                .Where(ph => danhGiaIds.Contains(ph.MaDanhGiaSanPham))
+                .Include(ph => ph.NguoiBan) // Thêm Include để lấy thông tin NguoiBan
                 .ToList();
 
             // Tính điểm trung bình
@@ -202,15 +207,15 @@ namespace WebApplication1.Controllers
             // Tổng số đánh giá
             ViewBag.TongDanhGia = danhGias.Count;
 
-            // Thống kê đánh giá theo sao - an toàn hơn
+            // Thống kê đánh giá theo sao
             ViewBag.ThongKeDanhGia = new Dictionary<int, int>
-            {
-                { 1, danhGias.Count(dg => dg.DanhGia == 1) },
-                { 2, danhGias.Count(dg => dg.DanhGia == 2) },
-                { 3, danhGias.Count(dg => dg.DanhGia == 3) },
-                { 4, danhGias.Count(dg => dg.DanhGia == 4) },
-                { 5, danhGias.Count(dg => dg.DanhGia == 5) }
-            };
+                {
+                    { 1, danhGias.Count(dg => dg.DanhGia == 1) },
+                    { 2, danhGias.Count(dg => dg.DanhGia == 2) },
+                    { 3, danhGias.Count(dg => dg.DanhGia == 3) },
+                    { 4, danhGias.Count(dg => dg.DanhGia == 4) },
+                    { 5, danhGias.Count(dg => dg.DanhGia == 5) }
+                };
 
             // Phân trang
             int pageSize = 5;
@@ -218,19 +223,22 @@ namespace WebApplication1.Controllers
             ViewBag.CurrentPage = pageNumber;
             ViewBag.TotalPages = (int)Math.Ceiling((double)danhGias.Count / pageSize);
 
-            ViewBag.DanhSachDanhGia = danhGias
+            // Lấy danh sách đánh giá theo trang
+            var danhGiaTrang = danhGias
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToList();
-            //1/4/2025
-            ViewBag.SanPhamLienQuan = sanPhamLienQuan;
 
+            // Truyền cả danh sách đánh giá và phản hồi vào ViewBag
+            ViewBag.DanhSachDanhGia = danhGiaTrang;
+            ViewBag.PhanHoiList = phanHoiList;
+
+            ViewBag.SanPhamLienQuan = sanPhamLienQuan;
             return View(sanPham);
         }
-
+        //21/4/2025
         // POST: Home/ThemVaoGio - Thêm sản phẩm vào giỏ hàng
         [HttpPost]
-        [Authorize]
         public ActionResult ThemVaoGio(int maSanPham, int soLuong)
         {
             // Kiểm tra sản phẩm tồn tại

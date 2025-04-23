@@ -1,17 +1,16 @@
 ﻿@model WebApplication1.Models.DonHang
 
 <div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Sản phẩm đã đặt</h5>
-        <span class="badge bg-primary">@Model.ChiTietDonHangs.Count sản phẩm</span>
+    <div class="card-header">
+        <h5 class="mb-0">Danh sách sản phẩm</h5>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
+            <table class="table table-striped table-hover mb-0">
+                <thead>
                     <tr>
                         <th>Sản phẩm</th>
-                        <th class="text-end">Đơn giá</th>
+                        <th class="text-center">Giá</th>
                         <th class="text-center">Số lượng</th>
                         <th class="text-end">Thành tiền</th>
                     </tr>
@@ -22,42 +21,43 @@
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <img src="@(item.SanPham.AnhSanPhams.FirstOrDefault()?.DuongDanAnh ?? "/Content/images/no-image.png")"
-                                         alt="@item.SanPham.TenSanPham" class="img-thumbnail me-3" style="width: 60px; height: 60px; object-fit: cover;" />
+                                    @{
+                                        var anhSanPham = item.SanPham.AnhSanPhams.FirstOrDefault();
+                                        var urlAnh = anhSanPham != null ? anhSanPham.DuongDanAnh : "/Content/images/no-image.png";
+                                    }
+                                    <img src="@urlAnh" alt="@item.SanPham.TenSanPham" class="img-thumbnail me-3" style="width: 60px; height: 60px; object-fit: cover;">
                                     <div>
-                                        <a href="@Url.Action("ChiTiet", "SanPham", new { id = item.MaSanPham })" class="text-decoration-none text-dark">
-                                            <h6 class="mb-1">@item.SanPham.TenSanPham</h6>
-                                        </a>
-                                        @*@if (!string.IsNullOrEmpty(item.GhiChu))
+                                        <div>
+                                            <a href="@Url.Action("ChiTiet", "Home", new { id = item.MaSanPham })">
+                                                @(item.SanPham?.TenSanPham ?? "Không có tên")
+                                            </a>
+                                        </div>
+                                        @if (Model.DaDanhGia)
                                         {
-                                            <small class="text-muted">Ghi chú: @item.GhiChu</small>
-                                        }*@
+                                            var danhGia = ViewBag.DanhGiaSanPhams != null ?
+                                                ((List<WebApplication1.Models.DanhGiaSanPham>)ViewBag.DanhGiaSanPhams)
+                                                .FirstOrDefault(d => d.MaSanPham == item.MaSanPham) : null;
+
+                                            if (danhGia != null)
+                                            {
+                                                <div class="rating-display mt-1">
+                                                    @for (int i = 1; i <= 5; i++)
+                                                    {
+                                                        <i class="bi @(i <= danhGia.DanhGia ? "bi-star-fill text-warning" : "bi-star text-muted")"></i>
+                                                    }
+                                                    <small class="text-muted ms-2">@danhGia.BinhLuan</small>
+                                                </div>
+                                            }
+                                        }
                                     </div>
                                 </div>
                             </td>
-                            <td class="text-end">@String.Format("{0:N0} VNĐ", item.Gia)</td>
+                            <td class="text-center">@String.Format("{0:N0} VNĐ", item.Gia)</td>
                             <td class="text-center">@item.SoLuong</td>
-                            <td class="text-end">@String.Format("{0:N0} VNĐ", item.Gia * item.SoLuong)</td>
+                            <td class="text-end">@String.Format("{0:N0} VNĐ", item.SoLuong * item.Gia)</td>
                         </tr>
                     }
                 </tbody>
-                <tfoot class="table-light">
-                    <tr>
-                        <td colspan="3" class="text-end fw-bold">Tổng tiền hàng:</td>
-                        <td class="text-end fw-bold">@String.Format("{0:N0} VNĐ", Model.TongSoTien)</td>
-                    </tr>
-                    @*@if (Model.PhiVanChuyen > 0)
-                    {
-                        <tr>
-                            <td colspan="3" class="text-end">Phí vận chuyển:</td>
-                            <td class="text-end">@String.Format("{0:N0} VNĐ", Model.PhiVanChuyen)</td>
-                        </tr>
-                        <tr>
-                            <td colspan="3" class="text-end fw-bold">Tổng thanh toán:</td>
-                            <td class="text-end fw-bold text-primary">@String.Format("{0:N0} VNĐ", Model.TongTien + Model.PhiVanChuyen)</td>
-                        </tr>
-                    }*@
-                </tfoot>
             </table>
         </div>
     </div>

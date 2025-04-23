@@ -300,6 +300,14 @@
         #productTable tbody tr:hover {
             background-color: rgba(0,123,255,0.05);
         }
+
+    .out-of-stock {
+        background-color: rgba(220, 53, 69, 0.1) !important; /* đỏ nhạt */
+    }
+
+    .low-stock {
+        background-color: rgba(255, 193, 7, 0.1) !important; /* vàng nhạt */
+    }
 </style>
 
 <div class="container mt-4">
@@ -379,6 +387,7 @@
                         </div>
                         <div class="col-md-3">
                             <select id="sortOrder" class="form-control">
+                                <option value="stockLow" @(ViewBag.SortOrder == "stockLow" ? "selected" : "")>Ưu tiên hàng sắp hết</option>
                                 <option value="newest" @(ViewBag.SortOrder == "newest" ? "selected" : "")>Mới nhất</option>
                                 <option value="oldest" @(ViewBag.SortOrder == "oldest" ? "selected" : "")>Cũ nhất</option>
                                 <option value="nameAsc" @(ViewBag.SortOrder == "nameAsc" ? "selected" : "")>Tên A-Z</option>
@@ -411,7 +420,16 @@
                                     int stt = (currentPage - 1) * pageSize + 1;
                                     foreach (var item in Model)
                                     {
-                                        <tr data-name="@item.TenSanPham.ToLower()" data-status="@item.TrangThai" data-price="@item.GiaSanPham">
+                                        string rowClass = "";
+                                        if (item.SoLuongTonKho == 0)
+                                        {
+                                            rowClass = "out-of-stock";
+                                        }
+                                        else if (item.SoLuongTonKho <= 5)
+                                        {
+                                            rowClass = "low-stock";
+                                        }
+                                        <tr data-name="@item.TenSanPham.ToLower()" data-status="@item.TrangThai" data-price="@item.GiaSanPham" class="@rowClass">
                                             <td>@stt</td>
                                             <td>
                                                 @{
@@ -428,7 +446,20 @@
                                             <td>@item.TenSanPham</td>
                                             <td>@(item.DanhMucSanPham != null ? item.DanhMucSanPham.TenDanhMuc : "")</td>
                                             <td>@String.Format("{0:N0}", item.GiaSanPham)</td>
-                                            <td>@item.SoLuongTonKho</td>
+                                            <td>
+                                                @if (item.SoLuongTonKho == 0)
+                                                {
+                                                    <span class="text-danger font-weight-bold">@item.SoLuongTonKho <i class="fas fa-exclamation-circle" title="Hết hàng"></i></span>
+                                                }
+                                                else if (item.SoLuongTonKho <= 5)
+                                                {
+                                                    <span class="text-warning font-weight-bold">@item.SoLuongTonKho <i class="fas fa-exclamation-triangle" title="Sắp hết hàng"></i></span>
+                                                }
+                                                else
+                                                {
+                                                    @item.SoLuongTonKho
+                                                }
+                                            </td>
                                             <td>
                                                 @if (item.TrangThai == "Đã phê duyệt")
                                                 {
@@ -586,6 +617,12 @@
             // Lọc theo trạng thái
             $("#statusFilter").change(function () {
                 filterProducts();
+            });
+
+            $("#sortOrder").change(function () {
+                var value = $(this).val();
+                $("#hiddenSortOrder").val(value);
+                $("#searchForm").submit();
             });
 
             // Sắp xếp sản phẩm

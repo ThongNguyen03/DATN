@@ -138,19 +138,6 @@
                                     <input type="checkbox" class="form-check-input select-shop" data-shop="@shopGroup.TenCuaHang">
                                     <label class="form-check-label fw-bold">@shopGroup.TenCuaHang</label>
                                 </div>
-                                <div class="voucher-section">
-                                    <span class="text-danger voucher-toggle" data-bs-toggle="collapse" data-bs-target="#voucher-@shopGroup.TenCuaHang.Replace(" ", "")" aria-expanded="false">
-                                        <i class="fa fa-tag"></i> voucher
-                                    </span>
-                                    <div class="collapse" id="voucher-@shopGroup.TenCuaHang.Replace(" ", "")">
-                                        <div class="mt-2">
-                                            <div class="input-group">
-                                                <input type="text" class="form-control voucher-input" placeholder="Mã giảm giá">
-                                                <button class="btn btn-outline-primary apply-voucher" data-shop="@shopGroup.TenCuaHang">Áp dụng</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
 
                             @foreach (var item in shopGroup.Items)

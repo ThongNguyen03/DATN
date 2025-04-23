@@ -48,6 +48,7 @@ namespace WebApplication1.Controllers
         // POST: NguoiBans/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to, for 
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Create([Bind(Include = "MaNguoiBan,MaNguoiDung,TenCuaHang,MoTaCuaHang,DiaChiCuaHang,SoDienThoaiCuaHang,NgayTao")] NguoiBan nguoiBan)
@@ -64,6 +65,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: NguoiBans/Edit/5
+        [Authorize]
         public ActionResult Edit(int? id)
         {
             if (id == null)
@@ -81,6 +83,7 @@ namespace WebApplication1.Controllers
 
         // POST: NguoiBans/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to, for 
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Edit([Bind(Include = "MaNguoiBan,MaNguoiDung,TenCuaHang,MoTaCuaHang,DiaChiCuaHang,SoDienThoaiCuaHang,NgayTao")] NguoiBan nguoiBan)
@@ -96,6 +99,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: NguoiBans/Delete/5
+        [Authorize]
         public ActionResult Delete(int? id)
         {
             if (id == null)
@@ -111,6 +115,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: NguoiBans/Delete/5
+        [Authorize]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
@@ -122,6 +127,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: NguoiBans/ThongTinNguoiBan/5
+        [Authorize]
         public ActionResult ThongTinNguoiBan(int? id, int? page = 1, string sort = "newest", int pageSize = 9)
         {
             if (id == null)
@@ -191,6 +197,7 @@ namespace WebApplication1.Controllers
 
         // GET: NguoiBans/QuanLySanPham/5
         // Thêm vào đầu phương thức QuanLySanPham trong NguoiBansController
+        [Authorize]
         public ActionResult QuanLySanPham(int? id, int? page, string searchTerm = "", string statusFilter = "", string sortOrder = "newest")
         {
             if (id == null)
@@ -245,6 +252,11 @@ namespace WebApplication1.Controllers
                 case "priceDesc":
                     sanPhams = sanPhams.OrderByDescending(s => s.GiaSanPham);
                     break;
+                case "stockLow": // Thêm tùy chọn mới này
+                    sanPhams = sanPhams.OrderBy(s => s.SoLuongTonKho == 0 ? 0 :
+                                                 s.SoLuongTonKho <= 5 ? 1 : 2)
+                                      .ThenByDescending(s => s.NgayTao);
+                    break;
                 default: // newest
                     sanPhams = sanPhams.OrderByDescending(s => s.NgayTao);
                     break;
@@ -296,6 +308,7 @@ namespace WebApplication1.Controllers
 
         // GET: NguoiBans/ThemSanPham/5
         // Update this part in the ThemSanPham action
+        [Authorize]
         public ActionResult ThemSanPham(int? id)
         {
             if (id == null)
@@ -327,6 +340,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: NguoiBans/ThemSanPham
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult ThemSanPham([Bind(Include = "MaSanPham,MaNguoiBan,MaDanhMuc,TenSanPham,MoTaSanPham,GiaSanPham,SoLuongTonKho,TrangThai,ThongTin,SoLuotMua,ThuongHieu,SoLuongMoiHop,ThanhPhan,DoiTuongSuDung,HuongDanSuDung,KhoiLuong,BaoQuan")] SanPham sanPham, HttpPostedFileBase[] anhSanPham)
@@ -425,6 +439,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: NguoiBans/ChiTietSanPham/5
+        [Authorize]
         public ActionResult ChiTietSanPham(int? id, int? trangDanhGia = 1)
         {
             if (id == null)
@@ -516,6 +531,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: NguoiBans/SuaSanPham/5
+        [Authorize]
         public ActionResult SuaSanPham(int? id)
         {
             if (id == null)
@@ -558,6 +574,7 @@ namespace WebApplication1.Controllers
             return View(viewModel);
         }
 
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult SuaSanPham(SanPhamViewModel viewModel, HttpPostedFileBase[] anhSanPham)
@@ -721,6 +738,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: NguoiBans/XoaSanPham/5
+        [Authorize]
         public ActionResult XoaSanPham(int? id)
         {
             if (id == null)
@@ -822,6 +840,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: NguoiBans/XoaSanPham/5
+        [Authorize]
         [HttpPost, ActionName("XoaSanPham")]
         [ValidateAntiForgeryToken]
         public ActionResult XoaSanPhamConfirmed(int id)
@@ -972,6 +991,7 @@ namespace WebApplication1.Controllers
 
         //27/03/2025
         // Thêm phương thức quản lý tài khoản vào NguoiBansController.cs
+        [Authorize]
         public ActionResult QuanLyTaiKhoan(int? id)
         {
             if (id == null)
@@ -1104,6 +1124,7 @@ namespace WebApplication1.Controllers
 
 
         // GET: NguoiBans/NapTien
+        [Authorize]
         public ActionResult NapTien()
         {
             int maNguoiDung = GetCurrentUserId();
@@ -1126,6 +1147,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: NguoiBans/NapTienVi
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult NapTienVi(decimal soTien, string phuongThucThanhToan)
@@ -1212,6 +1234,7 @@ namespace WebApplication1.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult RutTienVi(int maNguoiBan, decimal soTien, string thongTinTaiKhoan)
@@ -1326,10 +1349,118 @@ namespace WebApplication1.Controllers
             return 0; // Trả về 0 để biểu thị không tìm thấy người dùng
         }
 
-        //2/4/2025
-        // Add this method to your NguoiBansController class
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult TraLoiDanhGia(int maDanhGia, string noiDungTraLoi)
+        {
+            try
+            {
+                // Lấy thông tin người dùng hiện tại
+                int maNguoiDung = GetCurrentUserId();
+                if (maNguoiDung <= 0)
+                {
+                    return RedirectToAction("DangNhap", "DangNhap");
+                }
+
+                // Lấy thông tin người bán
+                var nguoiBan = db.NguoiBans.FirstOrDefault(n => n.MaNguoiDung == maNguoiDung);
+                if (nguoiBan == null)
+                {
+                    TempData["Error"] = "Bạn không có quyền thực hiện chức năng này!";
+                    return RedirectToAction("Index", "Home");
+                }
+
+                // Kiểm tra đánh giá tồn tại
+                var danhGia = db.DanhGiaSanPhams.Find(maDanhGia);
+                if (danhGia == null)
+                {
+                    TempData["Error"] = "Không tìm thấy đánh giá!";
+                    return RedirectToAction("QuanLyDanhGia", new { id = nguoiBan.MaNguoiBan });
+                }
+
+                // Kiểm tra xem đánh giá có thuộc sản phẩm của người bán này không
+                var sanPham = db.SanPhams.Find(danhGia.MaSanPham);
+                if (sanPham == null || sanPham.MaNguoiBan != nguoiBan.MaNguoiBan)
+                {
+                    TempData["Error"] = "Bạn không có quyền trả lời đánh giá này!";
+                    return RedirectToAction("QuanLyDanhGia", new { id = nguoiBan.MaNguoiBan });
+                }
+
+                // Kiểm tra nội dung trả lời
+                if (string.IsNullOrWhiteSpace(noiDungTraLoi))
+                {
+                    TempData["Error"] = "Nội dung trả lời không được để trống!";
+                    return RedirectToAction("QuanLyDanhGia", new { id = nguoiBan.MaNguoiBan });
+                }
+
+                // Kiểm tra xem đã có phản hồi chưa, nếu có thì cập nhật
+                var phanHoi = db.PhanHoiDanhGias.FirstOrDefault(p => p.MaDanhGiaSanPham == maDanhGia);
+                if (phanHoi != null)
+                {
+                    // Cập nhật phản hồi hiện có
+                    phanHoi.NoiDungPhanHoi = noiDungTraLoi;
+                    phanHoi.NgayTao = DateTime.Now;
+                    db.Entry(phanHoi).State = EntityState.Modified;
+                }
+                else
+                {
+                    // Tạo mới phản hồi
+                    phanHoi = new PhanHoiDanhGia
+                    {
+                        MaDanhGiaSanPham = maDanhGia,
+                        MaNguoiBan = nguoiBan.MaNguoiBan,
+                        NoiDungPhanHoi = noiDungTraLoi,
+                        NgayTao = DateTime.Now
+                    };
+                    db.PhanHoiDanhGias.Add(phanHoi);
+                }
+
+                // Lưu thay đổi
+                db.SaveChanges();
+
+                // Tạo thông báo cho người bán
+                var thongBaoNguoiBan = new ThongBao
+                {
+                    MaNguoiDung = maNguoiDung,
+                    LoaiThongBao = "DanhGia",
+                    TieuDe = "Đã trả lời đánh giá thành công",
+                    TinNhan = $"Bạn đã trả lời đánh giá cho sản phẩm {sanPham.TenSanPham} thành công.",
+                    MucDoQuanTrong = 1, // Thông báo thông thường
+                    DuongDanChiTiet = "/NguoiBans/QuanLyDanhGia/" + nguoiBan.MaNguoiBan,
+                    NgayTao = DateTime.Now
+                };
+                db.ThongBaos.Add(thongBaoNguoiBan);
+
+                // Tạo thông báo cho người mua về việc đánh giá đã được trả lời
+                var thongBaoNguoiMua = new ThongBao
+                {
+                    MaNguoiDung = danhGia.MaNguoiDung,
+                    LoaiThongBao = "DanhGia",
+                    TieuDe = "Đánh giá của bạn đã được trả lời",
+                    TinNhan = $"Người bán đã trả lời đánh giá của bạn về sản phẩm {sanPham.TenSanPham}.",
+                    MucDoQuanTrong = 2, // Thông báo quan trọng
+                    DuongDanChiTiet = "/Home/ChiTiet/" + danhGia.MaSanPham,
+                    NgayTao = DateTime.Now
+                };
+                db.ThongBaos.Add(thongBaoNguoiMua);
+
+                db.SaveChanges();
+
+                TempData["Success"] = "Đã trả lời đánh giá thành công!";
+                return RedirectToAction("QuanLyDanhGia", new { id = nguoiBan.MaNguoiBan });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Lỗi trả lời đánh giá: " + ex.Message);
+                TempData["Error"] = "Đã xảy ra lỗi khi trả lời đánh giá. Vui lòng thử lại sau!";
+                return RedirectToAction("QuanLyDanhGia", new { id = db.NguoiBans.FirstOrDefault(n => n.MaNguoiDung == GetCurrentUserId())?.MaNguoiBan });
+            }
+        }
+
+        [Authorize]
         public ActionResult QuanLyDanhGia(int? id, int? page, string searchTerm = "",
-            string statusFilter = "", string sortOrder = "newest", DateTime? startDate = null, DateTime? endDate = null)
+    string statusFilter = "", string sortOrder = "newest", DateTime? startDate = null, DateTime? endDate = null)
         {
             if (id == null)
             {
@@ -1371,10 +1502,23 @@ namespace WebApplication1.Controllers
             // Áp dụng bộ lọc số sao nếu có
             if (!string.IsNullOrEmpty(statusFilter))
             {
-                int soSao;
-                if (int.TryParse(statusFilter, out soSao))
+                if (statusFilter == "replied")
                 {
-                    danhGiaQuery = danhGiaQuery.Where(d => d.DanhGia == soSao);
+                    var danhGiaDaTraLoiIds = db.PhanHoiDanhGias.Select(p => p.MaDanhGiaSanPham).ToList();
+                    danhGiaQuery = danhGiaQuery.Where(d => danhGiaDaTraLoiIds.Contains(d.MaDanhGiaSanPham));
+                }
+                else if (statusFilter == "waiting")
+                {
+                    var danhGiaDaTraLoiIds = db.PhanHoiDanhGias.Select(p => p.MaDanhGiaSanPham).ToList();
+                    danhGiaQuery = danhGiaQuery.Where(d => !danhGiaDaTraLoiIds.Contains(d.MaDanhGiaSanPham));
+                }
+                else
+                {
+                    int soSao;
+                    if (int.TryParse(statusFilter, out soSao))
+                    {
+                        danhGiaQuery = danhGiaQuery.Where(d => d.DanhGia == soSao);
+                    }
                 }
             }
 
@@ -1441,6 +1585,14 @@ namespace WebApplication1.Controllers
                 .Take(pageSize)
                 .ToList();
 
+            // Lấy danh sách ID đánh giá
+            var danhGiaIds = danhGiaTrang.Select(d => d.MaDanhGiaSanPham).ToList();
+
+            // Lấy thông tin phản hồi từ người bán
+            var phanHoiList = db.PhanHoiDanhGias
+                .Where(p => danhGiaIds.Contains(p.MaDanhGiaSanPham))
+                .ToList();
+
             // Tính điểm đánh giá trung bình
             double? trungBinhDanhGia = null;
             if (totalItems > 0)
@@ -1472,12 +1624,118 @@ namespace WebApplication1.Controllers
             ViewBag.EndDate = endDate;
             ViewBag.TrungBinhDanhGia = trungBinhDanhGia;
             ViewBag.ThongKeDanhGia = thongKeDanhGia;
+            ViewBag.PhanHoiList = phanHoiList;
 
             return View(danhGiaTrang);
         }
-        //2/4/2025
+        //21/4/2025
+        public ActionResult KiemTraSanPhamHetHang()
+        {
+            try
+            {
+                // Chỉ thực hiện nếu người dùng đã đăng nhập và là người bán
+                if (!User.Identity.IsAuthenticated || Session["VaiTro"] as string != "Seller")
+                {
+                    return Json(new { success = false, message = "Không có quyền truy cập" }, JsonRequestBehavior.AllowGet);
+                }
 
-        //27/03/2025
+                // Lấy thông tin người bán
+                int maNguoiDung = GetCurrentUserId();
+                var nguoiBan = db.NguoiBans.FirstOrDefault(n => n.MaNguoiDung == maNguoiDung);
+                if (nguoiBan == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy thông tin người bán" }, JsonRequestBehavior.AllowGet);
+                }
+
+                // Lấy danh sách sản phẩm đã hết hàng
+                var sanPhamHetHang = db.SanPhams
+                    .Where(s => s.MaNguoiBan == nguoiBan.MaNguoiBan && s.SoLuongTonKho == 0 && s.TrangThai == "Đã phê duyệt")
+                    .ToList();
+
+                // Lấy danh sách sản phẩm sắp hết hàng
+                var sanPhamGanHet = db.SanPhams
+                    .Where(s => s.MaNguoiBan == nguoiBan.MaNguoiBan && s.SoLuongTonKho > 0 && s.SoLuongTonKho <= 5 && s.TrangThai == "Đã phê duyệt")
+                    .ToList();
+
+                // Tạo thông báo cho sản phẩm hết hàng
+                foreach (var sanPham in sanPhamHetHang)
+                {
+                    // Kiểm tra xem đã gửi thông báo cho sản phẩm này trong 24h qua chưa
+                    // Tính toán thời gian trước khi sử dụng trong truy vấn
+                    DateTime ngayHomQua = DateTime.Now.AddHours(-24);
+
+                    // Sử dụng biến trong truy vấn
+                    var daGuiThongBao = db.ThongBaos
+                        .Any(tb => tb.MaNguoiDung == maNguoiDung
+                                && tb.LoaiThongBao == "SanPham"
+                                && tb.TieuDe.Contains("hết hàng")
+                                && tb.TinNhan.Contains(sanPham.MaSanPham.ToString())
+                                && tb.NgayTao >= ngayHomQua);
+                    if (!daGuiThongBao)
+                    {
+                        var thongBao = new ThongBao
+                        {
+                            MaNguoiDung = maNguoiDung,
+                            LoaiThongBao = "SanPham",
+                            TieuDe = "Sản phẩm hết hàng",
+                            TinNhan = $"Sản phẩm {sanPham.TenSanPham} (Mã: {sanPham.MaSanPham}) đã hết hàng. Vui lòng cập nhật số lượng để tiếp tục bán hàng.",
+                            MucDoQuanTrong = 2, // Quan trọng
+                            DuongDanChiTiet = $"/NguoiBans/QuanLySanPham/{nguoiBan.MaNguoiBan}",
+                            NgayTao = DateTime.Now,
+                            TrangThai = "Chưa đọc"
+                        };
+
+                        db.ThongBaos.Add(thongBao);
+                    }
+                }
+
+                // Tạo thông báo cho sản phẩm sắp hết hàng
+                foreach (var sanPham in sanPhamGanHet)
+                {
+                    // Kiểm tra xem đã gửi thông báo cho sản phẩm này trong 24h qua chưa
+                    // Tính toán thời gian trước khi sử dụng trong truy vấn
+                    DateTime ngayHomQua = DateTime.Now.AddHours(-24);
+
+                    // Sử dụng biến trong truy vấn
+                    var daGuiThongBao = db.ThongBaos
+                        .Any(tb => tb.MaNguoiDung == maNguoiDung
+                                && tb.LoaiThongBao == "SanPham"
+                                && tb.TieuDe.Contains("hết hàng")
+                                && tb.TinNhan.Contains(sanPham.MaSanPham.ToString())
+                                && tb.NgayTao >= ngayHomQua);
+                    if (!daGuiThongBao)
+                    {
+                        var thongBao = new ThongBao
+                        {
+                            MaNguoiDung = maNguoiDung,
+                            LoaiThongBao = "SanPham",
+                            TieuDe = "Sản phẩm sắp hết hàng",
+                            TinNhan = $"Sản phẩm {sanPham.TenSanPham} (Mã: {sanPham.MaSanPham}) chỉ còn {sanPham.SoLuongTonKho} sản phẩm. Vui lòng cập nhật số lượng kịp thời.",
+                            MucDoQuanTrong = 1, // Thông thường
+                            DuongDanChiTiet = $"/NguoiBans/QuanLySanPham/{nguoiBan.MaNguoiBan}",
+                            NgayTao = DateTime.Now,
+                            TrangThai = "Chưa đọc"
+                        };
+
+                        db.ThongBaos.Add(thongBao);
+                    }
+                }
+
+                db.SaveChanges();
+
+                return Json(new
+                {
+                    success = true,
+                    hetHang = sanPhamHetHang.Count,
+                    ganHet = sanPhamGanHet.Count
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+        //21/4/2025
         protected override void Dispose(bool disposing)
                 {
                     if (disposing)

@@ -272,7 +272,6 @@ namespace WebApplication1.Models
 
 
 
-
             // Cấu hình precision và scale cho các trường decimal
             // NguoiBan
             modelBuilder.Entity<NguoiBan>()

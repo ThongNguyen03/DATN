@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Web;
 using System.Web.Mvc;
+using System.Web.Security;
 using WebApplication1.Models;
 
 namespace WebApplication1.Controllers
@@ -103,6 +104,16 @@ namespace WebApplication1.Controllers
                         // Thiết lập cookie xác thực để Forms Authentication hoạt động
                         System.Web.Security.FormsAuthentication.SetAuthCookie(Email, false);
 
+                        //21/4/2025
+                        // Thiết lập session để check stock nếu người dùng là người bán
+                        if (vaiTro == "Seller")
+                        {
+                            Session["CheckStock"] = true;
+
+                            // Kiểm tra sản phẩm hết hàng ngay khi đăng nhập
+                            KiemTraSanPhamHetHang(maNguoiDung);
+                        }
+                        //21/4/2025
                         // Xử lý chuyển hướng sau đăng nhập
                         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                         {
@@ -140,6 +151,104 @@ namespace WebApplication1.Controllers
             }
         }
 
+        //21/4/2025
+        // Hàm kiểm tra sản phẩm hết hàng
+        private void KiemTraSanPhamHetHang(int maNguoiDung)
+        {
+            try
+            {
+                // Lấy thông tin người bán
+                var nguoiBan = db.NguoiBans.FirstOrDefault(n => n.MaNguoiDung == maNguoiDung);
+                if (nguoiBan == null)
+                {
+                    return;
+                }
+
+                // Lấy danh sách sản phẩm đã hết hàng
+                var sanPhamHetHang = db.SanPhams
+                    .Where(s => s.MaNguoiBan == nguoiBan.MaNguoiBan && s.SoLuongTonKho == 0 && s.TrangThai == "Đã phê duyệt")
+                    .ToList();
+
+                // Lấy danh sách sản phẩm sắp hết hàng
+                var sanPhamGanHet = db.SanPhams
+                    .Where(s => s.MaNguoiBan == nguoiBan.MaNguoiBan && s.SoLuongTonKho > 0 && s.SoLuongTonKho <= 5 && s.TrangThai == "Đã phê duyệt")
+                    .ToList();
+
+                // Tạo thông báo cho sản phẩm hết hàng
+                foreach (var sanPham in sanPhamHetHang)
+                {
+                    // Kiểm tra xem đã gửi thông báo cho sản phẩm này trong 24h qua chưa
+                    // Tính toán thời gian trước khi sử dụng trong truy vấn
+                    DateTime ngayHomQua = DateTime.Now.AddHours(-24);
+
+                    // Sử dụng biến trong truy vấn
+                    var daGuiThongBao = db.ThongBaos
+                        .Any(tb => tb.MaNguoiDung == maNguoiDung
+                                && tb.LoaiThongBao == "SanPham"
+                                && tb.TieuDe.Contains("hết hàng")
+                                && tb.TinNhan.Contains(sanPham.MaSanPham.ToString())
+                                && tb.NgayTao >= ngayHomQua);
+
+                    if (!daGuiThongBao)
+                    {
+                        var thongBao = new ThongBao
+                        {
+                            MaNguoiDung = maNguoiDung,
+                            LoaiThongBao = "SanPham",
+                            TieuDe = "Sản phẩm hết hàng",
+                            TinNhan = $"Sản phẩm {sanPham.TenSanPham} (Mã: {sanPham.MaSanPham}) đã hết hàng. Vui lòng cập nhật số lượng để tiếp tục bán hàng.",
+                            MucDoQuanTrong = 2, // Quan trọng
+                            DuongDanChiTiet = $"/NguoiBans/QuanLySanPham/{nguoiBan.MaNguoiBan}",
+                            NgayTao = DateTime.Now,
+                            TrangThai = "Chưa đọc"
+                        };
+
+                        db.ThongBaos.Add(thongBao);
+                    }
+                }
+
+                // Tạo thông báo cho sản phẩm sắp hết hàng
+                foreach (var sanPham in sanPhamGanHet)
+                {
+                    // Kiểm tra xem đã gửi thông báo cho sản phẩm này trong 24h qua chưa
+                    // Tính toán thời gian trước khi sử dụng trong truy vấn
+                    DateTime ngayHomQua = DateTime.Now.AddHours(-24);
+
+                    // Sử dụng biến trong truy vấn
+                    var daGuiThongBao = db.ThongBaos
+                        .Any(tb => tb.MaNguoiDung == maNguoiDung
+                                && tb.LoaiThongBao == "SanPham"
+                                && tb.TieuDe.Contains("hết hàng")
+                                && tb.TinNhan.Contains(sanPham.MaSanPham.ToString())
+                                && tb.NgayTao >= ngayHomQua);
+
+                    if (!daGuiThongBao)
+                    {
+                        var thongBao = new ThongBao
+                        {
+                            MaNguoiDung = maNguoiDung,
+                            LoaiThongBao = "SanPham",
+                            TieuDe = "Sản phẩm sắp hết hàng",
+                            TinNhan = $"Sản phẩm {sanPham.TenSanPham} (Mã: {sanPham.MaSanPham}) chỉ còn {sanPham.SoLuongTonKho} sản phẩm. Vui lòng cập nhật số lượng kịp thời.",
+                            MucDoQuanTrong = 1, // Thông thường
+                            DuongDanChiTiet = $"/NguoiBans/QuanLySanPham/{nguoiBan.MaNguoiBan}",
+                            NgayTao = DateTime.Now,
+                            TrangThai = "Chưa đọc"
+                        };
+
+                        db.ThongBaos.Add(thongBao);
+                    }
+                }
+
+                db.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                // Log lỗi
+                System.Diagnostics.Debug.WriteLine("Lỗi kiểm tra hàng tồn kho: " + ex.Message);
+            }
+        }
+        //21/4/2025
         // GET: DangXuat
         public ActionResult DangXuat()
         {
@@ -160,8 +269,39 @@ namespace WebApplication1.Controllers
 
             System.Web.Security.FormsAuthentication.SignOut();
             Session.Clear();
+            Session.Abandon();
+            // Xóa cookie xác thực
+            if (Request.Cookies[FormsAuthentication.FormsCookieName] != null)
+            {
+                HttpCookie cookie = new HttpCookie(FormsAuthentication.FormsCookieName);
+                cookie.Expires = DateTime.Now.AddDays(-1);
+                Response.Cookies.Add(cookie);
+            }
+
+            // Xóa cookie Session ID
+            if (Request.Cookies["ASP.NET_SessionId"] != null)
+            {
+                HttpCookie cookie = new HttpCookie("ASP.NET_SessionId");
+                cookie.Expires = DateTime.Now.AddDays(-1);
+                Response.Cookies.Add(cookie);
+            }
+
+            // Thiết lập cache headers để ngăn lưu trữ trang trong bộ đệm
+            Response.Cache.SetCacheability(HttpCacheability.NoCache);
+            Response.Cache.SetExpires(DateTime.UtcNow.AddHours(-1));
+            Response.Cache.SetNoStore();
             return RedirectToAction("Index", "Home");
         }
+
+
+        //21/4/2025
+        [HttpPost]
+        public ActionResult ClearCheckStockSession()
+        {
+            Session["CheckStock"] = false;
+            return Json(new { success = true });
+        }
+        //21/4/2025
 
         public NguoiDung GetUserById(int MaNguoiDung)
         {

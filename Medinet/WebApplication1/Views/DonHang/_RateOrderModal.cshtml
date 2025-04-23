@@ -1,161 +1,123 @@
 ﻿@model WebApplication1.Models.DonHang
 
-<style>
-    /* Style cho rating */
-    .rating-container {
-        margin: 10px 0;
-    }
-
-    .rating {
-        display: flex;
-        flex-direction: row-reverse;
-        justify-content: flex-start;
-    }
-
-        .rating input {
-            display: none;
-        }
-
-        .rating label {
-            cursor: pointer;
-            font-size: 30px;
-            color: #ddd;
-            margin-right: 5px;
-        }
-
-        .rating input:checked ~ label {
-            color: #ffc107;
-        }
-
-        .rating label:hover,
-        .rating label:hover ~ label {
-            color: #ffc107;
-        }
-</style>
-<!-- Modal Đánh giá đơn hàng -->
+<!-- Modal đánh giá -->
 <div class="modal fade" id="danhGiaModal" tabindex="-1" aria-labelledby="danhGiaModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <form action="@Url.Action("DanhGiaDonHang", "DonHang", new { id = Model.MaDonHang })" method="post">
-                @Html.AntiForgeryToken()
-                <div class="modal-header">
-                    <h5 class="modal-title" id="danhGiaModalLabel">Đánh giá đơn hàng #@Model.MaDonHang</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
+            <div class="modal-header">
+                <h5 class="modal-title" id="danhGiaModalLabel">Đánh giá sản phẩm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @using (Html.BeginForm("DanhGiaDonHang", "DonHang", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.Hidden("id", Model.MaDonHang)
+
                     <div class="mb-4">
-                        <label class="form-label d-block">Đánh giá của bạn <span class="text-danger">*</span></label>
-                        <div class="rating-container">
-                            <div class="rating">
-                                <input type="radio" id="star5" name="soDiem" value="5" required />
-                                <label for="star5" title="Xuất sắc"><i class="bi bi-star-fill"></i></label>
-
-                                <input type="radio" id="star4" name="soDiem" value="4" />
-                                <label for="star4" title="Tốt"><i class="bi bi-star-fill"></i></label>
-
-                                <input type="radio" id="star3" name="soDiem" value="3" />
-                                <label for="star3" title="Bình thường"><i class="bi bi-star-fill"></i></label>
-
-                                <input type="radio" id="star2" name="soDiem" value="2" />
-                                <label for="star2" title="Không tốt"><i class="bi bi-star-fill"></i></label>
-
-                                <input type="radio" id="star1" name="soDiem" value="1" />
-                                <label for="star1" title="Rất tệ"><i class="bi bi-star-fill"></i></label>
-                            </div>
-                            <div class="rating-text small text-muted mt-2">Chọn số sao để đánh giá</div>
-                        </div>
+                        <p class="text-muted">Vui lòng đánh giá từng sản phẩm trong đơn hàng của bạn</p>
                     </div>
 
-                    <!-- Hiển thị sản phẩm đã mua -->
-                    <div class="mb-4">
-                        <h6>Sản phẩm đã mua:</h6>
-                        <div class="order-products">
-                            @foreach (var item in Model.ChiTietDonHangs)
-                            {
-                                <div class="product-item d-flex align-items-center p-2 border-bottom">
-                                    <img src="@(item.SanPham.AnhSanPhams.FirstOrDefault()?.DuongDanAnh ?? "/Content/images/no-image.png")"
-                                         alt="@item.SanPham.TenSanPham" class="img-thumbnail me-3"
-                                         style="width: 40px; height: 40px; object-fit: cover;" />
+                    int productIndex = 0;
+                    foreach (var chiTiet in Model.ChiTietDonHangs)
+                    {
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    @{
+                                        var anhSanPham = chiTiet.SanPham.AnhSanPhams.FirstOrDefault();
+                                        var urlAnh = anhSanPham != null ? anhSanPham.DuongDanAnh : "/Content/images/no-image.png";
+                                    }
+                                    <img src="@urlAnh" alt="@chiTiet.SanPham.TenSanPham" class="img-thumbnail me-3" style="width: 80px; height: 80px; object-fit: cover;">
                                     <div>
-                                        <p class="mb-0 small">@item.SanPham.TenSanPham</p>
-                                        <p class="mb-0 text-muted small">SL: @item.SoLuong</p>
+                                        <h6 class="mb-1">@chiTiet.SanPham.TenSanPham</h6>
+                                        <div class="text-muted small">
+                                            Số lượng: @chiTiet.SoLuong | Giá: @String.Format("{0:N0} VNĐ", chiTiet.Gia)
+                                        </div>
                                     </div>
                                 </div>
-                            }
-                        </div>
-                    </div>
 
-                    <div class="mb-3">
-                        <label for="noiDungDanhGia" class="form-label">Nội dung đánh giá <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="noiDungDanhGia" name="noiDungDanhGia" rows="4"
-                                  placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm và dịch vụ..." required></textarea>
+                                <input type="hidden" name="maSanPham[@productIndex]" value="@chiTiet.MaSanPham" />
+
+                                <div class="mb-3">
+                                    <label class="form-label">Đánh giá sao:</label>
+                                    <div class="rating-stars">
+                                        <div class="star-rating" data-product-id="@chiTiet.MaSanPham">
+                                            @for (int i = 5; i >= 1; i--)
+                                            {
+                                                <input type="radio" id="star@(i)_@chiTiet.MaSanPham" name="soDiem[@productIndex]" value="@i" required />
+                                                <label for="star@(i)_@chiTiet.MaSanPham" title="@i sao">★</label>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="noiDungDanhGia_@chiTiet.MaSanPham" class="form-label">Nhận xét:</label>
+                                    <textarea class="form-control" id="noiDungDanhGia_@chiTiet.MaSanPham" name="noiDungDanhGia[@productIndex]" rows="3"
+                                              placeholder="Hãy chia sẻ trải nghiệm của bạn về sản phẩm này..."></textarea>
+                                </div>
+
+                                <hr />
+                            </div>
+                        </div>
+
+                        productIndex++;
+                    }
+
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
-                </div>
-            </form>
+                }
+            </div>
         </div>
     </div>
 </div>
 
 <style>
-    .rating-container {
-        margin: 10px 0;
+    /* Style cho rating stars */
+    .rating-stars {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
     }
 
-    .rating {
+    .star-rating {
         display: flex;
         flex-direction: row-reverse;
-        justify-content: flex-start;
+        font-size: 2em;
+        justify-content: flex-end;
+        padding: 0 .2em;
+        text-align: center;
     }
 
-        .rating input {
+        .star-rating input {
             display: none;
         }
 
-        .rating label {
+        .star-rating label {
+            color: #ccc;
             cursor: pointer;
-            font-size: 30px;
-            color: #ddd;
-            margin-right: 5px;
+            padding: 0 .2em;
         }
 
-        .rating input:checked ~ label {
-            color: #ffc107;
+        .star-rating :checked ~ label {
+            color: #ffc700;
         }
 
-        .rating label:hover,
-        .rating label:hover ~ label {
-            color: #ffc107;
+        .star-rating label:hover,
+        .star-rating label:hover ~ label {
+            color: #ffcc00;
         }
-
-    .order-products {
-        max-height: 150px;
-        overflow-y: auto;
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-    }
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Hiển thị text tương ứng với số sao
-        const ratingInputs = document.querySelectorAll('.rating input');
-        const ratingText = document.querySelector('.rating-text');
-        const ratingLabels = {
-            1: 'Rất tệ',
-            2: 'Không tốt',
-            3: 'Bình thường',
-            4: 'Tốt',
-            5: 'Xuất sắc'
-        };
-
-        ratingInputs.forEach(input => {
-            input.addEventListener('change', function() {
-                ratingText.textContent = ratingLabels[this.value];
-            });
+    document.addEventListener('DOMContentLoaded', function () {
+        // Mặc định chọn 5 sao cho tất cả sản phẩm
+        const defaultRatings = document.querySelectorAll('.star-rating input[value="5"]');
+        defaultRatings.forEach(radio => {
+            radio.checked = true;
         });
     });
 </script>

@@ -31,6 +31,7 @@ namespace WebApplication1.Controllers
 
         #region Người Mua
         // GET: DonHang/DonHangCuaToi - Cho người mua
+        [Authorize]
         public ActionResult DonHangCuaToi(string trangThai, string ngayDat, string sapXep)
         {
             try
@@ -115,6 +116,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: DonHang/ChiTiet/5 - Cho người mua
+        [Authorize]
         public ActionResult ChiTiet(int id)
         {
             try
@@ -142,6 +144,15 @@ namespace WebApplication1.Controllers
                 var escrow = db.Escrows.FirstOrDefault(e => e.MaDonHang == id);
                 ViewBag.Escrow = escrow;
 
+
+                // Nếu đơn hàng đã được đánh giá, lấy thông tin đánh giá cho từng sản phẩm
+                if (donHang.DaDanhGia)
+                {
+                    var danhGiaSanPhams = db.DanhGiaSanPhams
+                        .Where(d => d.MaDonHang == id)
+                        .ToList();
+                    ViewBag.DanhGiaSanPhams = danhGiaSanPhams;
+                }
                 return View(donHang);
             }
             catch (Exception ex)
@@ -153,6 +164,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: DonHang/XacNhanNhanHang/5 - Cho người mua
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> XacNhanNhanHang(int id)
@@ -274,11 +286,10 @@ namespace WebApplication1.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-
-        //1/4/2025
-        public ActionResult DanhGiaDonHang(int id, int soDiem, string noiDungDanhGia)
+        public ActionResult DanhGiaDonHang(int id, int[] maSanPham, int[] soDiem, string[] noiDungDanhGia)
         {
             try
             {
@@ -312,23 +323,59 @@ namespace WebApplication1.Controllers
                     return RedirectToAction("ChiTiet", new { id = id });
                 }
 
+                // Kiểm tra mảng dữ liệu đầu vào
+                if (maSanPham == null || soDiem == null || noiDungDanhGia == null ||
+                    maSanPham.Length == 0 || maSanPham.Length != soDiem.Length || maSanPham.Length != noiDungDanhGia.Length)
+                {
+                    TempData["Error"] = "Dữ liệu đánh giá không hợp lệ. Vui lòng thử lại!";
+                    return RedirectToAction("ChiTiet", new { id = id });
+                }
+
                 // Danh sách các đánh giá sẽ được tạo
                 var danhGias = new List<DanhGiaSanPham>();
 
-                // Tạo đánh giá cho từng sản phẩm trong đơn hàng
-                foreach (var chiTietDonHang in donHang.ChiTietDonHangs)
+                // Lấy danh sách chi tiết đơn hàng để kiểm tra tính hợp lệ của sản phẩm
+                var chiTietDonHangs = db.ChiTietDonHangs.Where(ct => ct.MaDonHang == id).ToList();
+                var sanPhamTrongDonHang = chiTietDonHangs.Select(ct => ct.MaSanPham).ToList();
+
+                // Tạo đánh giá cho từng sản phẩm trong đơn hàng với đánh giá riêng biệt
+                for (int i = 0; i < maSanPham.Length; i++)
                 {
+                    // Kiểm tra xem sản phẩm có thuộc đơn hàng không
+                    if (!sanPhamTrongDonHang.Contains(maSanPham[i]))
+                    {
+                        continue; // Bỏ qua nếu sản phẩm không thuộc đơn hàng
+                    }
+
+                    // Kiểm tra giá trị đánh giá
+                    int diemDanhGia = soDiem[i];
+                    if (diemDanhGia < 1 || diemDanhGia > 5)
+                    {
+                        diemDanhGia = 5; // Đặt giá trị mặc định nếu không hợp lệ
+                    }
+
+                    // Đảm bảo nội dung đánh giá không null
+                    string noiDung = noiDungDanhGia[i] ?? "";
+
                     var danhGia = new DanhGiaSanPham
                     {
                         MaNguoiDung = maNguoiDung,
-                        MaSanPham = chiTietDonHang.MaSanPham,
+                        MaSanPham = maSanPham[i],
                         MaDonHang = id,
                         MaNguoiBan = donHang.MaNguoiBan,
-                        DanhGia = soDiem,
-                        BinhLuan = noiDungDanhGia,
-                        DaDanhGia = true
+                        DanhGia = diemDanhGia,
+                        BinhLuan = noiDung,
+                        DaDanhGia = true,
+                        NgayTao = DateTime.Now
                     };
                     danhGias.Add(danhGia);
+                }
+
+                // Kiểm tra nếu không có đánh giá nào được tạo
+                if (danhGias.Count == 0)
+                {
+                    TempData["Error"] = "Không có sản phẩm nào được đánh giá. Vui lòng thử lại!";
+                    return RedirectToAction("ChiTiet", new { id = id });
                 }
 
                 // Thêm tất cả các đánh giá
@@ -341,9 +388,9 @@ namespace WebApplication1.Controllers
                 try
                 {
                     // Tạo thông báo cho người mua cho từng sản phẩm đã đánh giá
-                    foreach (var chiTietDonHang in donHang.ChiTietDonHangs)
+                    foreach (var danhGia in danhGias)
                     {
-                        var sanPham = db.SanPhams.Find(chiTietDonHang.MaSanPham);
+                        var sanPham = db.SanPhams.Find(danhGia.MaSanPham);
                         if (sanPham != null)
                         {
                             var thongBaoDanhGiaThanhCong = new ThongBao
@@ -351,7 +398,7 @@ namespace WebApplication1.Controllers
                                 MaNguoiDung = maNguoiDung,
                                 LoaiThongBao = "DanhGia",
                                 TieuDe = "Đánh giá sản phẩm thành công",
-                                TinNhan = $"Bạn đã đánh giá sản phẩm {sanPham.TenSanPham} trong đơn hàng #{donHang.MaDonHang} thành công với {soDiem} sao.",
+                                TinNhan = $"Bạn đã đánh giá sản phẩm {sanPham.TenSanPham} trong đơn hàng #{donHang.MaDonHang} thành công với {danhGia.DanhGia} sao.",
                                 MucDoQuanTrong = 1, // Thông báo thông thường
                                 DuongDanChiTiet = "/Home/ChiTiet/" + sanPham.MaSanPham,
                                 NgayTao = DateTime.Now
@@ -369,7 +416,7 @@ namespace WebApplication1.Controllers
                             MaNguoiDung = nguoiBan.MaNguoiDung,
                             LoaiThongBao = "DanhGia",
                             TieuDe = "Đơn hàng đã được đánh giá",
-                            TinNhan = $"Đơn hàng #{donHang.MaDonHang} đã được người mua đánh giá {soDiem} sao.",
+                            TinNhan = $"Đơn hàng #{donHang.MaDonHang} đã được người mua đánh giá cho {danhGias.Count} sản phẩm.",
                             MucDoQuanTrong = 2, // Quan trọng cao vì liên quan đến đánh giá
                             DuongDanChiTiet = "/NguoiBans/QuanLyDanhGia/" + nguoiBan.MaNguoiBan,
                             NgayTao = DateTime.Now
@@ -378,7 +425,7 @@ namespace WebApplication1.Controllers
                     }
 
                     db.SaveChanges();
-                    TempData["Success"] = "Đánh giá đơn hàng thành công!";
+                    TempData["Success"] = "Đánh giá sản phẩm thành công!";
                     return RedirectToAction("ChiTiet", new { id = id });
                 }
                 catch (DbUpdateException ex)
@@ -408,7 +455,8 @@ namespace WebApplication1.Controllers
                 return RedirectToAction("ChiTiet", new { id = id });
             }
         }
-        //1/4/2025
+
+        [Authorize]
         public FileResult XuatHoaDonPdf(int maDonHang)
         {
             try
@@ -612,6 +660,7 @@ namespace WebApplication1.Controllers
             }
         }
 
+
         // Phương thức hỗ trợ tạo cell trong PDF
         private PdfPCell CreateCell(string text, Font font, int alignment)
         {
@@ -627,6 +676,7 @@ namespace WebApplication1.Controllers
 
         #region Người Bán
         // GET: DonHang/DonHangNguoiMua - Cho người bán
+        [Authorize]
         public ActionResult DonHangNguoiMua()
         {
             try
@@ -696,6 +746,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: DonHang/ChiTietDonHangNguoiMua/5 - Cho người bán
+        [Authorize]
         public ActionResult ChiTietDonHangNguoiMua(int id)
         {
             try
@@ -772,6 +823,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: DonHang/CapNhatTrangThaiDonHang - Cho người bán
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> CapNhatTrangThaiDonHang(int id, string trangThai, HttpPostedFileBase anhXacNhan)
@@ -874,13 +926,13 @@ namespace WebApplication1.Controllers
                     db.SaveChanges();
                 }
                 //28/03/2025
-
+                // Lưu trữ trạng thái cũ để thông báo
+                string trangThaiCu = donHang.TrangThaiDonHang;
                 // Cập nhật trạng thái đơn hàng
                 donHang.TrangThaiDonHang = trangThai;
                 donHang.NgayCapNhat = DateTime.Now;
 
-                // Lưu trữ trạng thái cũ để thông báo
-                string trangThaiCu = donHang.TrangThaiDonHang;
+
 
                 // Nếu đơn hàng đã giao, cập nhật ngày giao hàng
                 if (trangThai == "Đã giao")
@@ -950,6 +1002,7 @@ namespace WebApplication1.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> HuyDonHangNguoiBan(int id, string lyDoHuy)
@@ -996,6 +1049,21 @@ namespace WebApplication1.Controllers
                 {
                     TempData["Error"] = "Không thể hủy đơn hàng ở trạng thái hiện tại!";
                     return RedirectToAction("ChiTietDonHangNguoiMua", new { id = id });
+                }
+
+                // Lấy danh sách chi tiết đơn hàng
+                var chiTietDonHangs = await db.ChiTietDonHangs.Where(ct => ct.MaDonHang == id).ToListAsync();
+
+                // Cập nhật lại số lượng tồn kho của từng sản phẩm trong đơn hàng
+                foreach (var chiTiet in chiTietDonHangs)
+                {
+                    var sanPham = await db.SanPhams.FindAsync(chiTiet.MaSanPham);
+                    if (sanPham != null)
+                    {
+                        // Cộng lại số lượng sản phẩm vào tồn kho
+                        sanPham.SoLuongTonKho += chiTiet.SoLuong;
+                        db.Entry(sanPham).State = EntityState.Modified;
+                    }
                 }
 
                 // Cập nhật trạng thái đơn hàng
@@ -1062,6 +1130,7 @@ namespace WebApplication1.Controllers
 
 
         // Cập nhật phương thức HuyDonHang để sử dụng async/await
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> HuyDonHang(int id, string lyDoHuy)
@@ -1100,6 +1169,21 @@ namespace WebApplication1.Controllers
                 {
                     TempData["Error"] = "Không thể hủy đơn hàng ở trạng thái hiện tại!";
                     return RedirectToAction("ChiTiet", new { id = id });
+                }
+
+                // Lấy danh sách chi tiết đơn hàng
+                var chiTietDonHangs = await db.ChiTietDonHangs.Where(ct => ct.MaDonHang == id).ToListAsync();
+
+                // Cập nhật lại số lượng tồn kho của từng sản phẩm trong đơn hàng
+                foreach (var chiTiet in chiTietDonHangs)
+                {
+                    var sanPham = await db.SanPhams.FindAsync(chiTiet.MaSanPham);
+                    if (sanPham != null)
+                    {
+                        // Cộng lại số lượng sản phẩm vào tồn kho
+                        sanPham.SoLuongTonKho += chiTiet.SoLuong;
+                        db.Entry(sanPham).State = EntityState.Modified;
+                    }
                 }
 
                 // Cập nhật trạng thái đơn hàng
@@ -1194,6 +1278,21 @@ namespace WebApplication1.Controllers
                 {
                     TempData["Error"] = "Không thể hủy đơn hàng ở trạng thái hiện tại!";
                     return RedirectToAction("ChiTietAdmin", new { id = id });
+                }
+
+                // Lấy danh sách chi tiết đơn hàng
+                var chiTietDonHangs = await db.ChiTietDonHangs.Where(ct => ct.MaDonHang == id).ToListAsync();
+
+                // Cập nhật lại số lượng tồn kho của từng sản phẩm trong đơn hàng
+                foreach (var chiTiet in chiTietDonHangs)
+                {
+                    var sanPham = await db.SanPhams.FindAsync(chiTiet.MaSanPham);
+                    if (sanPham != null)
+                    {
+                        // Cộng lại số lượng sản phẩm vào tồn kho
+                        sanPham.SoLuongTonKho += chiTiet.SoLuong;
+                        db.Entry(sanPham).State = EntityState.Modified;
+                    }
                 }
 
                 // Cập nhật trạng thái đơn hàng

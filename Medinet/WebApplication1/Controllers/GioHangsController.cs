@@ -17,6 +17,7 @@ namespace WebApplication1.Controllers
         private MedinetDATN db = new MedinetDATN();
 
         // GET: GioHangs - Hiển thị giỏ hàng của người dùng hiện tại
+        [Authorize]
         public ActionResult Index()
         {
             try
@@ -85,6 +86,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: GioHangs/ThemVaoGio - Thêm sản phẩm vào giỏ hàng
+        [Authorize]
         [HttpPost]
         public ActionResult ThemVaoGio(int maSanPham, int soLuong = 1)
         {
@@ -145,6 +147,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: GioHangs/CapNhatSoLuong - Cập nhật số lượng sản phẩm trong giỏ hàng
+        [Authorize]
         [HttpPost]
         public ActionResult CapNhatSoLuong(int maGioHang, int soLuong)
         {
@@ -200,6 +203,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: GioHangs/XoaSanPham - Xóa sản phẩm khỏi giỏ hàng
+        [Authorize]
         [HttpPost]
         public ActionResult XoaSanPham(int maGioHang)
         {
@@ -237,6 +241,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: GioHangs/XoaNhieu - Xóa nhiều sản phẩm cùng lúc
+        [Authorize]
         [HttpPost]
         public ActionResult XoaNhieu(int[] maGioHangs)
         {
@@ -324,6 +329,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: GioHangs/TienHanhThanhToan - Tiến hành thanh toán chỉ với các sản phẩm được chọn
+        [Authorize]
         [HttpPost]
         public ActionResult TienHanhThanhToan(string selectedItems, string paymentMethod = "COD")
         {
@@ -376,6 +382,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: GioHangs/ThanhToanTrucTiep - Thanh toán trực tiếp từ giỏ hàng
+        [Authorize]
         [HttpGet]
         public ActionResult ThanhToanTrucTiep(string paymentMethod = "COD")
         {
@@ -417,6 +424,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: GioHangs/ChuyenSangThanhToanVNPay - Chuyển đổi sang thanh toán VNPAY trực tiếp
+        [Authorize]
         [HttpGet]
         public ActionResult ChuyenSangThanhToanVNPay()
         {
@@ -466,6 +474,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: GioHangs/GetCartCount - API lấy số lượng sản phẩm trong giỏ hàng
+        [Authorize]
         [HttpGet]
         public JsonResult GetCartCount()
         {
@@ -500,6 +509,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: GioHangs/CapNhatDiaChi - Cập nhật địa chỉ người dùng
+        [Authorize]
         [HttpPost]
         public ActionResult CapNhatDiaChi(string diaChi, string soDienThoai)
         {

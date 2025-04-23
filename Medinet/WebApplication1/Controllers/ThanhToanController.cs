@@ -22,6 +22,7 @@ namespace WebApplication1.Controllers
         private EscrowService escrowService = new EscrowService();
 
         // GET: ThanhToan
+        [Authorize]
         public ActionResult Index()
         {
             try
@@ -70,6 +71,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: ThanhToan - Receives data directly from cart form
+        [Authorize]
         [HttpPost]
         public ActionResult Index(string selectedItems)
         {
@@ -141,6 +143,7 @@ namespace WebApplication1.Controllers
             }
         }
 
+        [Authorize]
         private string TaoUrlThanhToanVNPay(int maDonHang, decimal tongTien)
         {
             // Get configuration values from Web.config
@@ -178,6 +181,7 @@ namespace WebApplication1.Controllers
         }
 
         // Sửa lại phương thức để tránh khai báo trùng biến sanPhamTheoNguoiBan
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> XacNhanDatHang(ThanhToanViewModel model)
@@ -453,7 +457,7 @@ namespace WebApplication1.Controllers
 
         // Thêm phương thức nạp tiền qua VNPAY vào ThanhToanController.cs
         [HttpGet]
-
+        [Authorize]
         public ActionResult TaoThanhToanVNPayNapTien(int maNguoiBan, decimal soTien)
         {
             try
@@ -534,6 +538,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: ThanhToan/KetQuaThanhToanNapTien
+        [Authorize]
         public ActionResult KetQuaThanhToanNapTien()
         {
             try
@@ -624,6 +629,7 @@ namespace WebApplication1.Controllers
                 return View();
             }
         }
+        [Authorize]
         public ActionResult DatHangThanhCong(string maDonHang)
         {
             // If maDonHang not in parameters, try to get from Session
@@ -719,6 +725,7 @@ namespace WebApplication1.Controllers
         }
 
         // Phương thức nhận và xử lý kết quả thanh toán từ VNPay
+        [Authorize]
         public async Task<ActionResult> KetQuaThanhToan()
         {
             try

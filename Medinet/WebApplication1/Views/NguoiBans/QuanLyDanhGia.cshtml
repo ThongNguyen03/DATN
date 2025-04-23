@@ -181,9 +181,23 @@
             color: white;
         }
 
+    /* Phản hồi styling */
+    .seller-reply {
+        background-color: #f8f9fa;
+        border-left: 3px solid #28a745;
+        padding: 10px;
+        margin-top: 10px;
+        border-radius: 0 4px 4px 0;
+    }
+
+    .seller-name {
+        font-weight: 600;
+        color: #28a745;
+    }
+
     /* Thẻ trạng thái đã trả lời */
     .badge-replied {
-        background-color: #28a745;
+        background-color: #17a2b8;
         color: white;
     }
 
@@ -191,6 +205,167 @@
     .stars-container {
         white-space: nowrap;
     }
+
+    /* Thêm CSS mới vào phần <style> */
+
+    /* Styling cho phần đánh giá người dùng */
+    .review-box {
+        background-color: #ffffff;
+        border-radius: 6px;
+        padding: 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* Styling cho phần phản hồi của người bán */
+    .seller-reply-row {
+        background-color: #f5f9ff !important;
+    }
+
+    .seller-reply-container {
+        margin: 0 0 15px 20px;
+        background-color: #f8f9fa;
+        border-left: 3px solid #28a745;
+        border-radius: 0 6px 6px 0;
+        padding: 0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .seller-reply-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 15px;
+        background-color: #f0f8f3;
+        border-radius: 0 6px 0 0;
+        border-bottom: 1px solid #e0e9e5;
+    }
+
+    .seller-name {
+        font-weight: 600;
+        color: #28a745;
+    }
+
+    .seller-reply-content {
+        padding: 15px;
+    }
+
+    .reply-text {
+        margin-bottom: 8px;
+    }
+
+    .reply-date {
+        text-align: right;
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .toggle-reply {
+        padding: 0.2rem 0.5rem;
+    }
+
+        .toggle-reply:hover {
+            background-color: #e2e6ea;
+        }
+
+    /* Override table styling for reply rows */
+    #reviewTable tbody tr.seller-reply-row:hover {
+        background-color: #f5f9ff !important;
+    }
+
+    #reviewTable tbody tr.seller-reply-row td {
+        border-top: none;
+        padding-top: 0;
+    }
+
+
+    /* CSS cho các mẫu phản hồi */
+    .reply-templates {
+        margin-bottom: 15px;
+    }
+
+    .reply-category {
+        font-weight: 600;
+        color: #333;
+        padding: 8px 0;
+        margin-top: 10px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .reply-template-item {
+        padding: 10px 15px;
+        margin: 5px 0;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        background-color: #f8f9fa;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .reply-template-item:hover {
+            background-color: #e9ecef;
+            border-color: #ced4da;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+        }
+
+        .reply-template-item.selected {
+            background-color: #d4edda;
+            border-color: #28a745;
+            box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.25);
+        }
+
+        .reply-template-item::before {
+            content: "👉";
+            position: absolute;
+            left: -20px;
+            transition: all 0.2s ease;
+            opacity: 0;
+        }
+
+        .reply-template-item:hover::before {
+            left: 0;
+            opacity: 1;
+        }
+
+    /* Tùy chỉnh màu sắc theo loại đánh giá */
+    .reply-category + .reply-template-item {
+        /* Đánh giá tích cực */
+        border-left: 3px solid #28a745;
+    }
+
+        .reply-category + .reply-template-item + .reply-template-item {
+            /* Đánh giá tích cực */
+            border-left: 3px solid #28a745;
+        }
+
+            .reply-category + .reply-template-item + .reply-template-item + .reply-template-item {
+                /* Đánh giá tích cực */
+                border-left: 3px solid #28a745;
+            }
+
+    /* Đánh giá trung bình */
+    .reply-category:nth-of-type(2) + .reply-template-item {
+        border-left: 3px solid #ffc107;
+    }
+
+        .reply-category:nth-of-type(2) + .reply-template-item + .reply-template-item {
+            border-left: 3px solid #ffc107;
+        }
+
+    /* Đánh giá tiêu cực */
+    .reply-category:nth-of-type(3) + .reply-template-item {
+        border-left: 3px solid #dc3545;
+    }
+
+        .reply-category:nth-of-type(3) + .reply-template-item + .reply-template-item {
+            border-left: 3px solid #dc3545;
+        }
+
+            .reply-category:nth-of-type(3) + .reply-template-item + .reply-template-item + .reply-template-item {
+                border-left: 3px solid #dc3545;
+            }
 </style>
 
 <div class="container mt-4">
@@ -281,9 +456,9 @@
                     </div>
 
                     <!-- Phần tabs -->
-                    <!--<ul class="nav nav-tabs rating-tabs mb-3" id="ratingTabs" role="tablist">
+                    <ul class="nav nav-tabs rating-tabs mb-3" id="ratingTabs" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link @(string.IsNullOrEmpty(ViewBag.StatusFilter) ? "active" : "")" id="all-tab" href="@Url.Action("QuanLyDanhGia", "NguoiBans", new { id = ViewBag.MaNguoiBan })" role="tab">
+                            <a class="nav-link @(string.IsNullOrEmpty(ViewBag.StatusFilter) || (ViewBag.StatusFilter != "replied" && ViewBag.StatusFilter != "waiting") ? "active" : "")" id="all-tab" href="@Url.Action("QuanLyDanhGia", "NguoiBans", new { id = ViewBag.MaNguoiBan })" role="tab">
                                 Tất cả
                             </a>
                         </li>
@@ -297,8 +472,7 @@
                                 Chờ trả lời
                             </a>
                         </li>
-                    </ul>-->
-
+                    </ul>
                     <!-- Phần tìm kiếm và lọc -->
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -350,6 +524,7 @@
                                     <th>Đánh giá</th>
                                     <th>Người đánh giá</th>
                                     <th>Ngày đánh giá</th>
+                                    <th>Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -358,6 +533,10 @@
                                     int stt = (currentPage - 1) * pageSize + 1;
                                     foreach (var item in Model)
                                     {
+                                        var phanHoi = phanHoiList?.FirstOrDefault(p => p.MaDanhGiaSanPham == item.MaDanhGiaSanPham);
+                                        bool daPhanHoi = phanHoi != null;
+
+                                        @* Thay đổi cấu trúc hiển thị đánh giá và phản hồi *@
                                         <tr>
                                             <td class="text-center">@stt</td>
                                             <td>
@@ -371,14 +550,14 @@
                                                     }
                                                     <img src="@anhHienThi" alt="@item.SanPham?.TenSanPham" class="img-thumbnail mr-2" style="width: 50px; height: 50px; object-fit: cover;">
                                                     <div>
-                                                        <a href="@Url.Action("ChiTietSanPham", "NguoiBans", new { id = item.MaSanPham })">
+                                                        <a href="@Url.Action("ChiTietDonHangNguoiMua", "DonHang", new { id = item.MaDonHang })">
                                                             @(item.SanPham?.TenSanPham ?? "Không có tên")
                                                         </a>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td>
-                                                <div>
+                                                <div class="review-box">
                                                     <div class="stars-container mb-1">
                                                         @for (int i = 1; i <= 5; i++)
                                                         {
@@ -391,6 +570,10 @@
                                                                 <i class="far fa-star text-warning"></i>
                                                             }
                                                         }
+                                                        @if (daPhanHoi)
+                                                        {
+                                                            <span class="badge badge-info ml-2">Đã trả lời</span>
+                                                        }
                                                     </div>
                                                     <div class="review-content">@item.BinhLuan</div>
                                                 </div>
@@ -401,7 +584,42 @@
                                             <td>
                                                 <div class="review-date">@item.NgayTao.ToString("dd/MM/yyyy")</div>
                                             </td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm @(daPhanHoi ? "btn-warning" : "btn-info")"
+                                                        data-toggle="modal" data-target="#replyModal"
+                                                        data-review-id="@item.MaDanhGiaSanPham"
+                                                        data-rating="@item.DanhGia"
+                                                        data-product="@item.SanPham.TenSanPham"
+                                                        data-comment="@item.BinhLuan"
+                                                        data-reply="@(daPhanHoi ? phanHoi.NoiDungPhanHoi : "")">
+                                                    <i class="fas @(daPhanHoi ? "fa-edit" : "fa-reply")"></i>
+                                                    @(daPhanHoi ? "Sửa phản hồi" : "Trả lời")
+                                                </button>
+                                            </td>
                                         </tr>
+
+                                        if (daPhanHoi)
+                                        {
+                                            <tr class="seller-reply-row">
+                                                <td></td>
+                                                <td colspan="5">
+                                                    <div class="seller-reply-container">
+                                                        <div class="seller-reply-header">
+                                                            <span class="seller-name"><i class="fas fa-store mr-1"></i> Phản hồi của Shop:</span>
+                                                            <button class="btn btn-sm btn-outline-secondary toggle-reply"
+                                                                    data-toggle="collapse"
+                                                                    data-target="#sellerReply-@item.MaDanhGiaSanPham">
+                                                                <i class="fas fa-chevron-down"></i>
+                                                            </button>
+                                                        </div>
+                                                        <div id="sellerReply-@item.MaDanhGiaSanPham" class="seller-reply-content collapse show">
+                                                            <div class="reply-text">@phanHoi.NoiDungPhanHoi</div>
+                                                            <div class="reply-date text-muted small">@phanHoi.NgayTao.ToString("dd/MM/yyyy HH:mm")</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
                                         stt++;
                                     }
                                 }
@@ -512,58 +730,256 @@
     </div>
 </div>
 
+<!-- Modal để trả lời đánh giá -->
+<div class="modal fade" id="replyModal" tabindex="-1" role="dialog" aria-labelledby="replyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="replyModalLabel">Trả lời đánh giá</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            @using (Html.BeginForm("TraLoiDanhGia", "NguoiBans", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" id="maDanhGia" name="maDanhGia" value="" />
+
+                    <div class="form-group">
+                        <label>Sản phẩm:</label>
+                        <p id="productName" class="font-weight-bold"></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Đánh giá người mua:</label>
+                        <div>
+                            <div id="reviewRating" class="stars-container mb-2"></div>
+                            <p id="reviewComment" class="font-italic"></p>
+                        </div>
+                    </div>
+
+                    <!-- Mẫu phản hồi nhanh -->
+                    <div class="form-group">
+                        <label>Chọn mẫu phản hồi nhanh:</label>
+
+                        <p class="text-muted small"><i class="fas fa-info-circle"></i> Nhấp vào một mẫu bên dưới để sử dụng:</p>
+                        <div class="reply-templates">
+                            <!-- Phản hồi cho đánh giá tích cực -->
+                            <div class="reply-category">Đánh giá tích cực (4-5 sao)</div>
+                            <div class="reply-template-item" data-template="Cảm ơn quý khách đã đánh giá tích cực về sản phẩm của chúng tôi! Rất vui khi sản phẩm đã đáp ứng được mong đợi của quý khách. Hy vọng sẽ được phục vụ quý khách trong những lần mua sắm tiếp theo!">
+                                <strong>Cảm ơn chung:</strong> Lời cảm ơn cho đánh giá tích cực
+                            </div>
+                            <div class="reply-template-item" data-template="Xin chân thành cảm ơn quý khách đã dành thời gian đánh giá sản phẩm! Chúng tôi rất vui khi biết quý khách hài lòng và sẽ tiếp tục nỗ lực để mang đến những sản phẩm chất lượng nhất. Rất mong được phục vụ quý khách trong tương lai!">
+                                <strong>Cảm ơn chi tiết:</strong> Lời cảm ơn chi tiết và cam kết chất lượng
+                            </div>
+                            <div class="reply-template-item" data-template="Cảm ơn quý khách đã tin tưởng và ủng hộ shop! Nhận được phản hồi tích cực từ quý khách là niềm vui và động lực lớn với chúng tôi. Shop sẽ luôn cố gắng duy trì chất lượng sản phẩm và dịch vụ. Chúc quý khách một ngày tốt lành!">
+                                <strong>Cảm ơn đặc biệt:</strong> Lời cảm ơn nhiệt thành
+                            </div>
+
+                            <!-- Phản hồi cho đánh giá trung bình -->
+                            <div class="reply-category mt-3">Đánh giá trung bình (3 sao)</div>
+                            <div class="reply-template-item" data-template="Cảm ơn quý khách đã đánh giá sản phẩm của chúng tôi. Chúng tôi rất tiếc vì chưa thể đáp ứng hoàn toàn kỳ vọng của quý khách. Mọi ý kiến đóng góp đều rất quý báu để chúng tôi cải thiện sản phẩm và dịch vụ. Rất mong được phục vụ quý khách tốt hơn trong lần tới!">
+                                <strong>Ghi nhận ý kiến:</strong> Cảm ơn và ghi nhận phản hồi trung bình
+                            </div>
+                            <div class="reply-template-item" data-template="Xin chân thành cảm ơn phản hồi của quý khách. Chúng tôi luôn nỗ lực cải thiện chất lượng sản phẩm và dịch vụ. Quý khách có thể chia sẻ thêm điều gì chúng tôi có thể cải thiện không? Rất mong nhận được góp ý chi tiết qua tin nhắn để chúng tôi phục vụ tốt hơn.">
+                                <strong>Đề nghị góp ý:</strong> Đề nghị khách hàng cung cấp thêm góp ý
+                            </div>
+
+                            <!-- Phản hồi cho đánh giá tiêu cực -->
+                            <div class="reply-category mt-3">Đánh giá tiêu cực (1-2 sao)</div>
+                            <div class="reply-template-item" data-template="Chúng tôi thành thật xin lỗi vì trải nghiệm không tốt của quý khách. Chúng tôi rất mong nhận được thông tin chi tiết về vấn đề quý khách gặp phải để có thể hỗ trợ khắc phục. Quý khách vui lòng liên hệ với chúng tôi qua tin nhắn hoặc hotline để được hỗ trợ nhanh nhất.">
+                                <strong>Xin lỗi và đề nghị hỗ trợ:</strong> Xin lỗi và mong muốn hỗ trợ khách hàng
+                            </div>
+                            <div class="reply-template-item" data-template="Chúng tôi vô cùng tiếc nuối khi sản phẩm chưa đáp ứng được mong đợi của quý khách. Đây là điều chúng tôi không mong muốn và rất mong có cơ hội khắc phục. Quý khách vui lòng liên hệ với chúng tôi để được hỗ trợ đổi/trả hàng hoặc các giải pháp phù hợp khác.">
+                                <strong>Đề nghị đổi/trả:</strong> Đề xuất đổi/trả hàng để khắc phục vấn đề
+                            </div>
+                            <div class="reply-template-item" data-template="Xin chân thành cảm ơn quý khách đã chia sẻ trải nghiệm. Chúng tôi rất tiếc về sự không hài lòng của quý khách và sẽ nghiêm túc rút kinh nghiệm. Chúng tôi đã ghi nhận phản hồi và sẽ cải thiện sản phẩm/dịch vụ. Rất mong có cơ hội được phục vụ quý khách tốt hơn trong tương lai.">
+                                <strong>Ghi nhận và cải thiện:</strong> Ghi nhận ý kiến và cam kết cải thiện
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="noiDungTraLoi">Phản hồi của bạn:</label>
+                        <textarea id="noiDungTraLoi" name="noiDungTraLoi" class="form-control" rows="5"
+                                  placeholder="Nhập phản hồi của bạn về đánh giá này..." required></textarea>
+                        <small class="form-text text-muted">
+                            Phản hồi của bạn sẽ được hiển thị công khai. Hãy viết một phản hồi chuyên nghiệp để duy trì mối quan hệ tốt với khách hàng.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-info">Gửi phản hồi</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
 @section Scripts {
     <script>
-        // Hiển thị thông báo nếu có
-        function showAlert(message, type) {
-            var alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-            var alertHtml = '<div class="alert ' + alertClass + ' alert-dismissible fade show" role="alert">' +
-                message +
-                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-                '<span aria-hidden="true">&times;</span>' +
-                '</button>' +
-                '</div>';
+    // Hiển thị thông báo nếu có
+    function showAlert(message, type) {
+        var alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        var alertHtml = '<div class="alert ' + alertClass + ' alert-dismissible fade show" role="alert">' +
+            message +
+            '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+            '<span aria-hidden="true">&times;</span>' +
+            '</button>' +
+            '</div>';
 
-            // Thêm thông báo vào đầu card-body
-            $('.card-body:first').prepend(alertHtml);
+        // Thêm thông báo vào đầu card-body
+        $('.card-body:first').prepend(alertHtml);
 
-            // Tự động đóng thông báo sau 5 giây
-            setTimeout(function() {
-                $('.alert').alert('close');
-            }, 5000);
+        // Tự động đóng thông báo sau 5 giây
+        setTimeout(function() {
+            $('.alert').alert('close');
+        }, 5000);
+    }
+
+    $(document).ready(function() {
+        // Kiểm tra và hiển thị thông báo từ TempData
+        var successMessage = '@TempData["Success"]';
+        var errorMessage = '@TempData["Error"]';
+
+        if (successMessage && successMessage !== '' && successMessage !== '@TempData["Success"]') {
+            showAlert(successMessage, 'success');
         }
 
-        $(document).ready(function() {
-            // Kiểm tra và hiển thị thông báo từ TempData
-            var successMessage = '@TempData["Success"]';
-            var errorMessage = '@TempData["Error"]';
+        if (errorMessage && errorMessage !== '' && errorMessage !== '@TempData["Error"]') {
+            showAlert(errorMessage, 'error');
+        }
 
-            if (successMessage && successMessage !== '' && successMessage !== '@TempData["Success"]') {
-                showAlert(successMessage, 'success');
-            }
-
-            if (errorMessage && errorMessage !== '' && errorMessage !== '@TempData["Error"]') {
-                showAlert(errorMessage, 'error');
-            }
-
-            // Tab navigation
-            $('#all-tab, #replied-tab, #waiting-tab').click(function(e) {
-                e.preventDefault();
-                window.location.href = $(this).attr('href');
-            });
+        // Tab navigation
+        $('#all-tab, #replied-tab, #waiting-tab').click(function(e) {
+            e.preventDefault();
+            window.location.href = $(this).attr('href');
         });
 
-        // Xử lý khi thay đổi bộ lọc
-        function applyFilter() {
-            var ratingFilter = $('#ratingFilter').val();
-            var sortOrder = $('#sortOrder').val();
+        // Xử lý khi chọn mẫu phản hồi nhanh
+        $('.reply-template-item').click(function() {
+            // Xóa lớp selected khỏi tất cả các mẫu
+            $('.reply-template-item').removeClass('selected');
 
-            // Cập nhật giá trị hidden inputs
-            $('#hiddenStatusFilter').val(ratingFilter);
-            $('#hiddenSortOrder').val(sortOrder);
+            // Thêm lớp selected vào mẫu được chọn
+            $(this).addClass('selected');
 
-            // Submit form
-            $('#searchForm').submit();
-        }
+            // Lấy nội dung mẫu và đưa vào textarea
+            var template = $(this).data('template');
+            $('#noiDungTraLoi').val(template);
+        });
+
+        // Modal để trả lời đánh giá
+        $('#replyModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var reviewId = button.data('review-id');
+            var rating = button.data('rating');
+            var product = button.data('product');
+            var comment = button.data('comment');
+            var reply = button.data('reply');
+
+            var modal = $(this);
+            modal.find('#maDanhGia').val(reviewId);
+            modal.find('#productName').text(product);
+
+            // Hiển thị số sao
+            var ratingHtml = '';
+            for (var i = 1; i <= 5; i++) {
+                if (i <= rating) {
+                    ratingHtml += '<i class="fas fa-star text-warning"></i> ';
+                } else {
+                    ratingHtml += '<i class="far fa-star text-warning"></i> ';
+                }
+            }
+            modal.find('#reviewRating').html(ratingHtml);
+
+            // Hiển thị nội dung đánh giá
+            modal.find('#reviewComment').text(comment);
+
+            // Nếu đã có phản hồi thì điền vào
+            modal.find('#noiDungTraLoi').val(reply);
+
+            // Reset các mẫu được chọn
+            $('.reply-template-item').removeClass('selected');
+
+            // Hiển thị các mẫu phản hồi phù hợp với số sao
+            if (rating >= 4) {
+                // Hiển thị nổi bật các mẫu cho đánh giá tích cực
+                $('.reply-category').each(function() {
+                    if ($(this).text().includes('tích cực')) {
+                        $(this).closest('.reply-category').next().next().next().addClass('d-block');
+                    }
+                });
+            } else if (rating == 3) {
+                // Hiển thị nổi bật các mẫu cho đánh giá trung bình
+                $('.reply-category').each(function() {
+                    if ($(this).text().includes('trung bình')) {
+                        $(this).closest('.reply-category').next().next().addClass('d-block');
+                    }
+                });
+            } else {
+                // Hiển thị nổi bật các mẫu cho đánh giá tiêu cực
+                $('.reply-category').each(function() {
+                    if ($(this).text().includes('tiêu cực')) {
+                        $(this).closest('.reply-category').next().next().next().addClass('d-block');
+                    }
+                });
+            }
+
+            // Thay đổi tiêu đề modal nếu đã có phản hồi
+            if (reply) {
+                modal.find('#replyModalLabel').text('Chỉnh sửa phản hồi');
+                modal.find('button[type="submit"]').text('Cập nhật phản hồi');
+            } else {
+                modal.find('#replyModalLabel').text('Trả lời đánh giá');
+                modal.find('button[type="submit"]').text('Gửi phản hồi');
+            }
+        });
+
+        // Khi đóng modal, reset lại các mẫu được chọn
+        $('#replyModal').on('hidden.bs.modal', function() {
+            $('.reply-template-item').removeClass('selected');
+        });
+
+        // Thêm vào phần $(document).ready(function() {...}) 
+        // Xử lý sự kiện khi click nút ẩn/hiện phản hồi
+        $(document).on('click', '.toggle-reply', function () {
+            var button = $(this);
+            var target = $(button.data('target'));
+
+            // Kiểm tra trạng thái hiện tại
+            if (target.hasClass('show')) {
+                // Đang hiện, chuyển sang ẩn
+                button.html('<i class="fas fa-chevron-up"></i>');
+            } else {
+                // Đang ẩn, chuyển sang hiện
+                button.html('<i class="fas fa-chevron-down"></i>');
+            }
+        });
+
+        // Thêm hiệu ứng hover cho hàng đánh giá
+        $(document).on('mouseenter', 'tr:not(.seller-reply-row)', function () {
+            var reviewId = $(this).find('button[data-review-id]').data('review-id');
+            if (reviewId) {
+                $(this).next('tr.seller-reply-row').addClass('hover-highlight');
+            }
+        }).on('mouseleave', 'tr:not(.seller-reply-row)', function () {
+            $(this).next('tr.seller-reply-row').removeClass('hover-highlight');
+        });
+    });
+
+    // Xử lý khi thay đổi bộ lọc
+    function applyFilter() {
+        var ratingFilter = $('#ratingFilter').val();
+        var sortOrder = $('#sortOrder').val();
+
+        // Cập nhật giá trị hidden inputs
+        $('#hiddenStatusFilter').val(ratingFilter);
+        $('#hiddenSortOrder').val(sortOrder);
+
+        // Submit form
+        $('#searchForm').submit();
+    }
     </script>
 }

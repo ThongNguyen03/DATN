@@ -247,6 +247,77 @@
         .store-info-link:hover .seller-info {
             background-color: #f0f0f0;
         }
+
+    /* Thêm CSS này vào phần <style> trong file ChiTiet.cshtml */
+
+    /* Thiết kế cho phần phản hồi của người bán */
+    .seller-reply {
+        margin-top: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 12px;
+        border-left: 3px solid #28a745;
+        margin-left: 20px;
+    }
+
+    .seller-reply-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .seller-name {
+        font-weight: 600;
+        color: #28a745;
+        font-size: 0.95rem;
+    }
+
+    .seller-reply-content {
+        margin-top: 5px;
+    }
+
+    .reply-text {
+        color: #333;
+        font-size: 0.95rem;
+    }
+
+    .reply-date {
+        margin-top: 8px;
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    /* Cải thiện hiển thị của phần đánh giá */
+    .review-item {
+        padding: 15px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .review-header {
+        margin-bottom: 10px;
+    }
+
+    .reviewer-info {
+        font-size: 1rem;
+    }
+
+    .review-body {
+        padding: 5px 0;
+    }
+
+    .review-order-info {
+        margin-top: 5px;
+        font-style: italic;
+    }
+
+    /* Animation cho phản hồi (tùy chọn) */
+    .seller-reply {
+        transition: all 0.3s ease;
+    }
+
+        .seller-reply:hover {
+            background-color: #f0f8f3;
+        }
 </style>
 
 <div class="container product-detail-container">
@@ -495,37 +566,45 @@
         <!-- Thống kê đánh giá theo sao -->
         @if (ViewBag.ThongKeDanhGia != null)
         {
-        <div class="rating-breakdown mb-4">
-            @for (int star = 5; star >= 1; star--)
-            {
-                int count = 0;
-                ViewBag.ThongKeDanhGia.TryGetValue(star, out count);
-                double percentage = ViewBag.TongDanhGia > 0
-                    ? ((double)count / ViewBag.TongDanhGia) * 100
-                    : 0;
+            <div class="rating-breakdown mb-4">
+                @for (int star = 5; star >= 1; star--)
+                {
+                    int count = 0;
+                    ViewBag.ThongKeDanhGia.TryGetValue(star, out count);
+                    double percentage = ViewBag.TongDanhGia > 0
+                        ? ((double)count / ViewBag.TongDanhGia) * 100
+                        : 0;
 
-                <div class="rating-row d-flex align-items-center mb-2">
-                    <div class="star-label mr-2">@star sao</div>
-                    <div class="progress flex-grow-1 mr-2" style="height: 10px;">
-                        <div class="progress-bar bg-warning" role="progressbar"
-                             style="width: @(percentage)%"
-                             aria-valuenow="@percentage"
-                             aria-valuemin="0"
-                             aria-valuemax="100"></div>
+                    <div class="rating-row d-flex align-items-center mb-2">
+                        <div class="star-label mr-2">@star sao</div>
+                        <div class="progress flex-grow-1 mr-2" style="height: 10px;">
+                            <div class="progress-bar bg-warning" role="progressbar"
+                                 style="width: @(percentage)%"
+                                 aria-valuenow="@percentage"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100"></div>
+                        </div>
+                        <div class="count text-muted">@count</div>
                     </div>
-                    <div class="count text-muted">@count</div>
-                </div>
-            }
-        </div>
+                }
+            </div>
         }
 
+        @* Thay thế phần hiển thị đánh giá trong file ChiTiet.cshtml *@
         <!-- Danh sách đánh giá chi tiết -->
         <div class="reviews-list">
             @if (ViewBag.DanhSachDanhGia != null && ViewBag.DanhSachDanhGia.Count > 0)
             {
+                var phanHoiList = ViewBag.PhanHoiList as List<WebApplication1.Models.PhanHoiDanhGia>;
+
                 foreach (var danhGia in ViewBag.DanhSachDanhGia)
                 {
+                    // Tìm phản hồi của người bán cho đánh giá này (nếu có)
+                    var phanHoi = phanHoiList?.FirstOrDefault(p => p.MaDanhGiaSanPham == danhGia.MaDanhGiaSanPham);
+                    bool daPhanHoi = phanHoi != null;
+
                     <div class="review-item border-bottom pb-3 mb-3">
+                        <!-- Phần đánh giá người dùng -->
                         <div class="review-header d-flex justify-content-between">
                             <div class="reviewer-info">
                                 <strong>@danhGia.NguoiDung.TenNguoiDung</strong>
@@ -552,6 +631,22 @@
                         {
                             <div class="review-order-info text-muted small">
                                 Đánh giá cho đơn hàng #@danhGia.DonHang.MaDonHang
+                            </div>
+                        }
+
+                        <!-- Phần phản hồi của người bán (nếu có) -->
+                        @if (daPhanHoi)
+                        {
+                            <div class="seller-reply mt-3">
+                                <div class="seller-reply-header">
+                                    <div class="seller-name">
+                                        <i class="fas fa-store mr-1"></i> Phản hồi của @(phanHoi.NguoiBan?.TenCuaHang ?? "Shop"):
+                                    </div>
+                                </div>
+                                <div class="seller-reply-content">
+                                    <div class="reply-text mt-2">@phanHoi.NoiDungPhanHoi</div>
+                                    <div class="reply-date text-muted small text-right">@phanHoi.NgayTao.ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
                             </div>
                         }
                     </div>

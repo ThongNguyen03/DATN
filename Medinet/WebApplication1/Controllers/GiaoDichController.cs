@@ -15,6 +15,7 @@ namespace WebApplication1.Controllers
         private MedinetDATN db = new MedinetDATN();
 
         // GET: GiaoDich
+        [Authorize]
         public ActionResult Index(DateTime? tuNgay = null, DateTime? denNgay = null, string trangThai = null, string phuongThuc = null, int page = 1)
         {
             // Thiết lập ngày mặc định nếu không có
@@ -75,6 +76,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: GiaoDich/Details/5
+        [Authorize]
         public ActionResult Details(int? id)
         {
             if (id == null)
@@ -90,6 +92,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: GiaoDich/UpdateStatus
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult UpdateStatus(int id, string trangThai)
@@ -132,6 +135,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: GiaoDich/Escrow
+        [Authorize]
         public ActionResult Escrow(DateTime? tuNgay = null, DateTime? denNgay = null, string trangThai = null, int page = 1)
         {
             // Thiết lập ngày mặc định nếu không có
@@ -195,6 +199,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: GiaoDich/EscrowDetails/5
+        [Authorize]
         public ActionResult EscrowDetails(int? id)
         {
             if (id == null)
@@ -210,6 +215,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: GiaoDich/UpdateEscrowStatus
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult UpdateEscrowStatus(int id, string trangThai)
@@ -246,6 +252,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: GiaoDich/WalletLogs
+        [Authorize]
         public ActionResult WalletLogs(DateTime? tuNgay = null, DateTime? denNgay = null, string loaiGiaoDich = "", int page = 1)
         {
             // Thiết lập ngày mặc định nếu không có
@@ -294,6 +301,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: GiaoDich/WalletLogDetails/5
+        [Authorize]
         public ActionResult WalletLogDetails(int? id)
         {
             if (id == null)
@@ -309,6 +317,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: GiaoDich/Dashboard
+        [Authorize]
         public ActionResult Dashboard()
         {
             // Thống kê tổng quan
@@ -349,6 +358,7 @@ namespace WebApplication1.Controllers
 
 
         //7/4/2025
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> ChangeWalletLogStatus(int id, string newStatus, string ghiChu)
@@ -607,6 +617,7 @@ namespace WebApplication1.Controllers
             viewModel.TongGiaoDich = filteredData.Count();
             viewModel.GiaoDichHoanThanh = filteredData.Count(g => g.TrangThaiGiaoDich == "Đã hoàn thành");
             viewModel.GiaoDichDangXuLy = filteredData.Count(g => g.TrangThaiGiaoDich == "Đang chờ xử lý");
+            viewModel.GiaoDichKhongThanhCong = filteredData.Count(g => g.TrangThaiGiaoDich == "Không thành công");
             viewModel.TongDoanhThu = filteredData.Where(g => g.TrangThaiGiaoDich == "Đã hoàn thành").Sum(g => (decimal?)g.TongTien) ?? 0;
 
             // Phân trang
@@ -814,6 +825,7 @@ namespace WebApplication1.Controllers
         // Thống kê
         public int TongGiaoDich { get; set; }
         public int GiaoDichHoanThanh { get; set; }
+        public int GiaoDichKhongThanhCong { get; set; }
         public int GiaoDichDangXuLy { get; set; }
         public decimal TongDoanhThu { get; set; }
         public int TongKyQuy { get; set; }

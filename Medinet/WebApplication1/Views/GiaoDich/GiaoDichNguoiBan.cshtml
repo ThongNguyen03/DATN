@@ -171,6 +171,31 @@
         pointer-events: none;
         background-color: #fff;
     }
+
+    .bg-primary-light {
+        background-color: rgba(0, 123, 255, 0.1);
+        color: #007bff;
+    }
+
+    .bg-success-light {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+
+    .bg-warning-light {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+    }
+
+    .bg-info-light {
+        background-color: rgba(23, 162, 184, 0.1);
+        color: #17a2b8;
+    }
+
+    .bg-danger-light {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
 </style>
 
 <div class="container mt-4">
@@ -335,14 +360,14 @@
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card stat-card">
+                            <div class="card stat-card bg-danger-light">
                                 <div class="card-body d-flex justify-content-between">
                                     <div>
-                                        <h3 class="stat-value">@string.Format("{0:N0}", Model.TongDoanhThu)</h3>
-                                        <p class="stat-label">Tổng doanh thu</p>
+                                        <h3 class="stat-value">@Model.GiaoDichKhongThanhCong</h3>
+                                        <p class="stat-label">Không thành công</p>
                                     </div>
                                     <div class="stat-icon">
-                                        <i class="fas fa-money-bill-wave"></i>
+                                        <i class="fas fa-times-circle"></i>
                                     </div>
                                 </div>
                             </div>

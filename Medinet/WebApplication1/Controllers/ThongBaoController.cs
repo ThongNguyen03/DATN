@@ -12,6 +12,7 @@ namespace WebApplication1.Controllers
     {
         private MedinetDATN db = new MedinetDATN();
         // GET: ThongBao
+        [Authorize]
         public ActionResult Index()
         {
             int userId = GetCurrentUserId();

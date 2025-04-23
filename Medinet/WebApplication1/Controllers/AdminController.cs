@@ -17,6 +17,7 @@ namespace WebApplication1.Controllers
         private MedinetDATN db = new MedinetDATN();
 
         // GET: Admin/UserManagement
+        [Authorize]
         public ActionResult UserManagement(int page = 1, string role = "", string status = "")
         {
             int pageSize = 10; // Số người dùng hiển thị trên mỗi trang
@@ -70,6 +71,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: Admin/UserDetails/5
+        [Authorize]
         public ActionResult UserDetails(int id)
         {
             var nguoiDung = db.NguoiDungs.Find(id);
@@ -109,6 +111,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: Admin/RestoreUser/5
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult RestoreUser(int id)
@@ -140,6 +143,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: Admin/LockUser/5
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult LockUser(int id)
@@ -170,6 +174,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: Admin/UnlockUser/5
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult UnlockUser(int id)
@@ -200,6 +205,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: Admin/UpgradeToSeller/5
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult UpgradeToSeller(int id)
@@ -233,42 +239,6 @@ namespace WebApplication1.Controllers
 
                 db.SaveChanges();
                 return Json(new { success = true, message = "Nâng cấp thành người bán thành công." });
-                //// Kiểm tra xem người dùng có phải là người bán hay không
-                //var nguoiBan = db.NguoiBans.FirstOrDefault(s => s.MaNguoiDung == nguoiDung.MaNguoiDung);
-                //if (nguoiBan != null)
-                //{
-                //    // Cập nhật vai trò người dùng
-                //    nguoiDung.VaiTro = "Seller";
-                //    nguoiDung.XetDuyetThanhNguoiBan = false;
-                //    nguoiDung.TrangThai = "Active";
-                //    return Json(new { success = true, message = "Nâng cấp thành người bán thành công." });
-                //}
-                ////else
-                ////{
-                ////    // Kiểm tra xem đã có thông tin người bán chưa
-                ////    var nguoiban = db.NguoiBans.FirstOrDefault(s => s.MaNguoiDung == nguoiDung.MaNguoiDung);
-                ////    if (nguoiban == null)
-                ////    {
-                ////        // Tạo thông tin người bán mặc định
-                ////        nguoiban = new WebApplication1.Models.NguoiBan
-                ////        {
-                ////            MaNguoiDung = nguoiDung.MaNguoiDung,
-                ////            TenCuaHang = nguoiDung.TenNguoiDung + "'s Shop",
-                ////            MoTaCuaHang = "Cửa hàng mới",
-                ////            DiaChiCuaHang = "Chưa cập nhật",
-                ////            SoDienThoaiCuaHang = nguoiDung.SoDienThoai,
-                ////            NgayTao = DateTime.Now
-                ////        };
-
-                ////        db.NguoiBans.Add(nguoiban);
-                ////        return Json(new { success = true, message = "Nâng cấp thành người bán thành công." });
-
-                ////    }
-                ////}
-
-                //db.SaveChanges();
-
-                //return Json(new { success = true });
             }
             catch (Exception ex)
             {
@@ -277,6 +247,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: Admin/DeleteUser/5
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult DeleteUser(int id)
@@ -308,6 +279,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: Admin/RejectUpgradeToSeller/5
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult RejectUpgradeToSeller(int id)
@@ -407,6 +379,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: Admin/UserStatistics
+        [Authorize]
         public ActionResult UserStatistics()
         {
             ViewBag.TotalUsers = db.NguoiDungs.Count();
@@ -423,6 +396,7 @@ namespace WebApplication1.Controllers
 
 
         // GET: Admin/ProductManagement
+        [Authorize]
         public ActionResult ProductManagement(int page = 1, string category = "", string status = "")
         {
             int pageSize = 10; // Số sản phẩm hiển thị trên mỗi trang
@@ -488,6 +462,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: Admin/ProductDetails/5
+        [Authorize]
         public ActionResult ProductDetails(int id)
         {
             var sanPham = db.SanPhams.Find(id);
@@ -515,6 +490,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: Admin/ApproveProduct/5
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult ApproveProduct(int id)
@@ -569,6 +545,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: Admin/RejectProduct/5
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult RejectProduct(int id)
@@ -623,6 +600,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: Admin/DeleteProduct/5
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult DeleteProduct(int id)
@@ -697,6 +675,7 @@ namespace WebApplication1.Controllers
 
 
         // GET: Admin/CategoryManagement
+        [Authorize]
         public ActionResult CategoryManagement(int page = 1, string searchTerm = "")
         {
             int pageSize = 10; // Number of categories per page
@@ -741,6 +720,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: Admin/CategoryDetails/5
+        [Authorize]
         public ActionResult CategoryDetails(int id)
         {
             var danhMuc = db.DanhMucSanPhams.Find(id);
@@ -769,6 +749,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: Admin/CreateCategory
+        [Authorize]
         public ActionResult CreateCategory()
         {
             // Get list of categories for parent selection
@@ -778,6 +759,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: Admin/CreateCategory
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult CreateCategory([Bind(Include = "TenDanhMuc,MaDanhMucCha")] DanhMucSanPham danhMuc, HttpPostedFileBase categoryImage)
@@ -824,6 +806,8 @@ namespace WebApplication1.Controllers
         }
 
         // GET: Admin/EditCategory/5
+
+        [Authorize]
         public ActionResult EditCategory(int id)
         {
             var danhMuc = db.DanhMucSanPhams.Find(id);
@@ -841,6 +825,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: Admin/EditCategory/5
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult EditCategory([Bind(Include = "MaDanhMuc,TenDanhMuc,AnhDanhMucSanPham,MaDanhMucCha,NgayTao")] DanhMucSanPham danhMuc, HttpPostedFileBase categoryImage, bool? removeImage = false)
@@ -935,6 +920,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: Admin/DeleteCategory/5
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult DeleteCategory(int id)
@@ -972,6 +958,7 @@ namespace WebApplication1.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost]
         public ActionResult EmptyForm()
         {
@@ -982,6 +969,7 @@ namespace WebApplication1.Controllers
 
 
         // GET: Admin/QuanLyKyQuy
+        [Authorize]
         public ActionResult QuanLyKyQuy()
         {
             try
@@ -1003,6 +991,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: Admin/ChiTietKyQuy/5
+        [Authorize]
         public ActionResult ChiTietKyQuy(int id)
         {
             try
@@ -1031,6 +1020,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: Admin/GiaiNganKyQuy/5
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> GiaiNganKyQuy(int id)
@@ -1095,6 +1085,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: Admin/HoanTienKyQuy/5
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> HoanTienKyQuy(int id)
@@ -1157,6 +1148,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: Admin/ThongKeDoanhThu
+        [Authorize]
         public ActionResult ThongKeDoanhThu(DateTime? tuNgay, DateTime? denNgay)
         {
             try
@@ -1218,6 +1210,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: Admin/ThongKeNguoiBan
+        [Authorize]
         public ActionResult ThongKeNguoiBan(DateTime? tuNgay, DateTime? denNgay)
         {
             try
@@ -1272,6 +1265,7 @@ namespace WebApplication1.Controllers
 
 
         // GET: Admin/Dashboard
+        [Authorize]
         public ActionResult Dashboard()
         {
             try
@@ -1549,6 +1543,7 @@ namespace WebApplication1.Controllers
             }
         }
 
+        [Authorize]
         [HttpGet]
         public JsonResult GetDashboardData(string timeRange)
         {

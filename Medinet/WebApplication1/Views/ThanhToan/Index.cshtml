@@ -296,7 +296,10 @@
                 <form id="addressForm">
                     <div class="mb-3">
                         <label for="soDienThoai" class="form-label">Số điện thoại</label>
-                        <input type="text" class="form-control" id="soDienThoai" name="soDienThoai" value="@Model.SoDienThoai" required>
+                        <input type="text" class="form-control" id="soDienThoai" name="soDienThoai" value="@Model.SoDienThoai" maxlength="10" 
+                           pattern="[0-9]{1,10}" 
+                           title="Vui lòng chỉ nhập số, tối đa 10 chữ số" 
+                           oninput="this.value = this.value.replace(/[^0-9]/g, '');" required>
                     </div>
                     <div class="mb-3">
                         <label for="diaChi" class="form-label">Địa chỉ nhận hàng</label>
@@ -364,8 +367,9 @@
                             // Đổi text nút
                             $(".address-card .btn-outline-primary").html('<i class="fas fa-edit"></i> Sửa địa chỉ');
 
-                            // Đóng modal
-                            $("#addressModal").modal('hide');
+                            setTimeout(function () {
+                                forceCloseModal();
+                            }, 100);
                         } else {
                             alert(result.message || "Đã xảy ra lỗi khi cập nhật địa chỉ");
                         }
@@ -385,7 +389,11 @@
                 if (diaChi === "Chưa có địa chỉ" || diaChi === "") {
                     e.preventDefault();
                     alert("Vui lòng nhập địa chỉ giao hàng trước khi đặt hàng");
-                    $("#addressModal").modal('show');
+                    // Trước khi mở modal, đảm bảo rằng mọi thứ đã được dọn dẹp
+                    forceCloseModal();
+                    setTimeout(function () {
+                        $("#addressModal").modal('show');
+                    }, 100);
                     return false;
                 }
 
@@ -396,7 +404,58 @@
                 // Cho phép form submit
                 return true;
             });
+
+            // Thêm xử lý khi modal đóng để đảm bảo dọn dẹp đúng cách
+            $('#addressModal').on('hidden.bs.modal', function (e) {
+                // Đảm bảo rằng modal backdrop được xóa
+                forceCloseModal();
+            });
+
+            // Thêm một giải pháp cuối cùng - bắt sự kiện click toàn trang
+            $(document).on('click', function (e) {
+                // Kiểm tra xem có modal-backdrop nào tồn tại không
+                if ($('.modal-backdrop').length > 0 && !$('#addressModal').is(':visible')) {
+                    forceCloseModal();
+                }
+            });
         });
+        // Hàm buộc đóng modal và xóa tất cả các phần tử có thể gây cản trở
+        function forceCloseModal() {
+            // Đóng modal bằng Bootstrap API
+            try {
+                var addressModal = bootstrap.Modal.getInstance(document.getElementById('addressModal'));
+                if (addressModal) {
+                    addressModal.hide();
+                }
+            } catch (e) {
+                console.log("Error closing modal with Bootstrap API:", e);
+            }
+
+            // Đóng modal bằng jQuery
+            $("#addressModal").modal('hide');
+
+            // Xóa các lớp và phần tử liên quan
+            $('body').removeClass('modal-open');
+            $('.modal-backdrop').remove();
+
+            // Đặt lại z-index và overflow cho body
+            $('body').css({
+                'overflow': '',
+                'padding-right': ''
+            });
+
+            // Ẩn modal bằng CSS
+            $("#addressModal").css('display', 'none');
+
+            // Đặt aria-hidden
+            $("#addressModal").attr('aria-hidden', 'true');
+
+            // Thay đổi pointer-events để đảm bảo có thể tương tác
+            $('.modal').css('pointer-events', 'none');
+            setTimeout(function () {
+                $('.modal').css('pointer-events', '');
+            }, 500);
+        }
 
         // Chọn phương thức thanh toán
         function selectPaymentMethod(method) {
