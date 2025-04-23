@@ -1,4 +1,6 @@
 ﻿
+@*23/4/2025*@
+@model WebApplication1.Controllers.DangNhapController.DangNhapViewModel
 @{
     ViewBag.Title = "DangNhap";
 }
@@ -91,27 +93,56 @@
                 <p class="text-muted">Nhập thông tin đăng nhập của bạn để truy cập vào tài khoản của bạn.</p>
             </div>
 
-            <form method="post" action="@Url.Action("DangNhap", "DangNhap")">
-                @if (!string.IsNullOrEmpty(ViewBag.MessageLogin))
+            @using (Html.BeginForm("DangNhap", "DangNhap", new
+            {
+                returnUrl = ViewBag.ReturnUrl,
+                action = ViewBag.Action,
+                productId = ViewBag.ProductId,
+                quantity = ViewBag.Quantity
+            }, FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+
+                if (!string.IsNullOrEmpty(ViewBag.MessageLogin))
                 {
                     <div class="alert alert-danger mb-3">
                         @ViewBag.MessageLogin
                     </div>
                 }
+
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" name="Email" class="form-control" placeholder="Nhập email" required />
+                    @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder = "Nhập email", required = "required", type = "email" })
+                    @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
                 </div>
                 <div class="form-group">
                     <label>Mật khẩu</label>
-                    <input type="password" name="password" class="form-control" placeholder="Nhập mật khẩu" required />
+                    @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Nhập mật khẩu", required = "required" })
+                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
                 </div>
+                <div class="form-group">
+                    <div class="form-check">
+                        @Html.CheckBoxFor(m => m.RememberMe, new { @class = "form-check-input" })
+                        <label class="form-check-label">Ghi nhớ đăng nhập</label>
+                    </div>
+                </div>
+
+                <!-- Hiển thị các tham số ẩn để debug -->
+                <div class="debug-info d-none">
+                    <p>ReturnUrl: @ViewBag.ReturnUrl</p>
+                    <p>Action: @ViewBag.Action</p>
+                    <p>ProductId: @ViewBag.ProductId</p>
+                    <p>Quantity: @ViewBag.Quantity</p>
+                </div>
+
                 <button type="submit" class="btn btn-primary">Đăng nhập</button>
                 <div class="login-links">
                     <a href="~/QuenMatKhau/Index">Quên mật khẩu?</a>
                     <p>Bạn chưa có tài khoản? <a href="~/DangKy/DangKy"> Đăng ký</a></p>
                 </div>
-            </form>
+
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+            }
         </div>
 
         <div class="login-image">
@@ -119,9 +150,10 @@
         </div>
     </div>
 
-    @section Scripts {
-        <partial name="_ValidationScriptsPartial" />
-    }
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.3/dist/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@3.2.12/dist/jquery.validate.unobtrusive.min.js"></script>
 </body>
 </html>
+@*23/4/2025*@
 

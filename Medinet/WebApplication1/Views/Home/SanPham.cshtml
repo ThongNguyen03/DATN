@@ -254,7 +254,7 @@
                                 </div>
                                 </a>
                                 <div class="card-footer bg-white">
-                                    <button class="btn btn-primary w-100" onclick="addToCart(@sanPham.MaSanPham)">
+                                    <button class="btn btn-primary w-100 btn-them-vao-gio" type="button" data-id="@sanPham.MaSanPham">
                                         <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
                                     </button>
                                 </div>
@@ -351,107 +351,157 @@
 
 
 <script>
-    $(document).ready(function() {
-        // Khi chọn danh mục
-        $('.category-radio').change(function() {
-            var maDanhMuc = $(this).val();
+    //23/4/2025
+// Đảm bảo jQuery đã được tải
+if (typeof $ === 'undefined') {
+    console.error("jQuery không được tải!");
+    // Tải jQuery nếu cần
+    document.write('<script src="https://code.jquery.com/jquery-3.6.0.min.js"><\/script>');
+}
 
-            // Nếu có mã danh mục, gọi API để lấy danh sách thương hiệu
-            if (maDanhMuc) {
+// Định nghĩa hàm addToCart trong phạm vi toàn cục
+window.addToCart = function(maSanPham) {
+    console.log("Hàm addToCart được gọi với maSanPham =", maSanPham);
+
+    // Kiểm tra xem người dùng đã đăng nhập chưa
+    var isAuthenticated = @(Request.IsAuthenticated.ToString().ToLower());
+    console.log("isAuthenticated =", isAuthenticated);
+
+    if (!isAuthenticated) {
+        console.log("Người dùng chưa đăng nhập, chuyển hướng đến trang đăng nhập");
+        // Chuyển hướng đến trang đăng nhập với thông tin về việc thêm vào giỏ
+        redirectToLogin('addToCart', maSanPham, 1);
+        return;
+    }
+
+    // Nếu đã đăng nhập, tiếp tục với hành động thêm vào giỏ
+    $.ajax({
+        url: '@Url.Action("ThemVaoGio", "Home")',
+        type: 'POST',
+        data: { maSanPham: maSanPham, soLuong: 1 },
+        success: function (result) {
+            if (result.success) {
+                alert('Đã thêm sản phẩm vào giỏ hàng');
+
+                // Gọi thêm API để lấy số lượng giỏ hàng hiện tại
                 $.ajax({
-                    url: '@Url.Action("GetThuongHieuTheoDanhMuc", "Home")',
+                    url: '@Url.Action("GetCartCount", "Home")',
                     type: 'GET',
-                    data: { maDanhMuc: maDanhMuc },
-                    success: function(thuongHieus) {
-                        // Xóa tất cả thương hiệu hiện tại
-                        $('#thuongHieuContainer').empty();
+                    success: function(countData) {
+                        var cartBadge = $(".cart-badge");
 
-                        // Kiểm tra nếu có thương hiệu
-                        if (thuongHieus && thuongHieus.length > 0) {
-                            // Thêm các thương hiệu mới
-                            thuongHieus.forEach(function(thuongHieu) {
-                                var thId = 'th_' + thuongHieu.replace(/\s+/g, '_');
-                                var html = '<div class="custom-checkbox">' +
-                                    '<input type="radio" id="' + thId + '" name="thuongHieu" value="' + thuongHieu + '" class="brand-radio" />' +
-                                    '<label for="' + thId + '">' + thuongHieu + '</label>' +
-                                    '</div>';
-                                $('#thuongHieuContainer').append(html);
-                            });
-
-                            // Thêm lại sự kiện cho nút radio thương hiệu
-                            $('.brand-radio').change(function() {
-                                $('#filterForm').submit();
-                            });
+                        if (cartBadge.length > 0) {
+                            cartBadge.text(countData.count);
                         } else {
-                            // Nếu không có thương hiệu nào
-                            $('#thuongHieuContainer').html('<p class="text-muted">Không có thương hiệu nào.</p>');
+                            $(".cart-container").append('<span class="cart-badge" style="position: absolute; top: -8px; right: -8px; background-color: #dc3545; color: white; border-radius: 50%; min-width: 18px; height: 18px; font-size: 11px; font-weight: bold; display: flex; align-items: center; justify-content: center; padding: 2px;">' + countData.count + '</span>');
                         }
-                    },
-                    error: function() {
-                        console.error('Không thể lấy danh sách thương hiệu');
                     }
                 });
+            } else {
+                alert(result.message);
             }
+        },
+        error: function () {
+            alert('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
+        }
+    });
+};
 
-            // Submit form để lọc theo danh mục
-            $('#filterForm').submit();
-        });
+// Định nghĩa hàm redirectToLogin trong phạm vi toàn cục
+window.redirectToLogin = function(action, productId, quantity) {
+    var returnUrl = window.location.pathname + window.location.search;
 
-        // Khi chọn thương hiệu, tự động submit form
-        $('.brand-radio').change(function() {
-            $('#filterForm').submit();
-        });
+    // Tạo URL cho việc chuyển hướng đến trang đăng nhập với thông tin về hành động
+    var loginUrl = '@Url.Action("DangNhap", "DangNhap")' +
+                  '?returnUrl=' + encodeURIComponent(returnUrl) +
+                  '&action=' + encodeURIComponent(action) +
+                  '&productId=' + encodeURIComponent(productId);
 
-        // Hàm cập nhật badge giỏ hàng
-        function updateCartBadge(count) {
-            var cartBadge = $(".cart-badge");
+    // Thêm số lượng nếu được cung cấp
+    if (quantity) {
+        loginUrl += '&quantity=' + encodeURIComponent(quantity);
+    }
 
-            // Nếu badge chưa tồn tại và count > 0, thêm mới
-            if (cartBadge.length === 0 && count > 0) {
-                $(".cart-container").append('<span class="cart-badge">' + count + '</span>');
-            }
-            // Nếu badge đã tồn tại, cập nhật số lượng
-            else if (cartBadge.length > 0) {
-                if (count > 0) {
-                    cartBadge.text(count);
-                } else {
-                    cartBadge.remove();
+    window.location.href = loginUrl;
+};
+
+// Đặt các hàm khác và sự kiện document.ready sau khi đã tải jQuery
+$(document).ready(function() {
+    console.log("Document ready được chạy");
+
+    // Hiển thị thông báo từ TempData nếu có
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <text>
+        alert('@TempData["SuccessMessage"]');
+        </text>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <text>
+        alert('@TempData["ErrorMessage"]');
+        </text>
+    }
+
+    // Khi chọn danh mục
+    $('.category-radio').change(function() {
+        var maDanhMuc = $(this).val();
+
+        // Nếu có mã danh mục, gọi API để lấy danh sách thương hiệu
+        if (maDanhMuc) {
+            $.ajax({
+                url: '@Url.Action("GetThuongHieuTheoDanhMuc", "Home")',
+                type: 'GET',
+                data: { maDanhMuc: maDanhMuc },
+                success: function(thuongHieus) {
+                    // Xóa tất cả thương hiệu hiện tại
+                    $('#thuongHieuContainer').empty();
+
+                    // Kiểm tra nếu có thương hiệu
+                    if (thuongHieus && thuongHieus.length > 0) {
+                        // Thêm các thương hiệu mới
+                        thuongHieus.forEach(function(thuongHieu) {
+                            var thId = 'th_' + thuongHieu.replace(/\s+/g, '_');
+                            var html = '<div class="custom-checkbox">' +
+                                '<input type="radio" id="' + thId + '" name="thuongHieu" value="' + thuongHieu + '" class="brand-radio" />' +
+                                '<label for="' + thId + '">' + thuongHieu + '</label>' +
+                                '</div>';
+                            $('#thuongHieuContainer').append(html);
+                        });
+
+                        // Thêm lại sự kiện cho nút radio thương hiệu
+                        $('.brand-radio').change(function() {
+                            $('#filterForm').submit();
+                        });
+                    } else {
+                        // Nếu không có thương hiệu nào
+                        $('#thuongHieuContainer').html('<p class="text-muted">Không có thương hiệu nào.</p>');
+                    }
+                },
+                error: function() {
+                    console.error('Không thể lấy danh sách thương hiệu');
                 }
-            }
+            });
         }
 
+        // Submit form để lọc theo danh mục
+        $('#filterForm').submit();
     });
 
-    function addToCart(maSanPham) {
-        $.ajax({
-            url: '@Url.Action("ThemVaoGio", "Home")',
-            type: 'POST',
-            data: { maSanPham: maSanPham, soLuong: 1 },
-            success: function (result) {
-                if (result.success) {
-                    alert('Đã thêm sản phẩm vào giỏ hàng');
+    // Khi chọn thương hiệu, tự động submit form
+    $('.brand-radio').change(function() {
+        $('#filterForm').submit();
+    });
 
-                    // Gọi thêm API để lấy số lượng giỏ hàng hiện tại
-                    $.ajax({
-                        url: '@Url.Action("GetCartCount", "Home")',
-                        type: 'GET',
-                        success: function(countData) {
-                            var cartBadge = $(".cart-badge");
+    // Gắn sự kiện click cho các nút thêm vào giỏ
+    $('.btn-them-vao-gio').click(function() {
+        var maSanPham = $(this).data('id');
+        console.log("Nút thêm vào giỏ được click, maSanPham =", maSanPham);
+        addToCart(maSanPham);
+        return false; // Ngăn chặn sự kiện mặc định
+    });
+});
 
-                            if (cartBadge.length > 0) {
-                                cartBadge.text(countData.count);
-                            } else {
-                                $(".cart-container").append('<span class="cart-badge" style="position: absolute; top: -8px; right: -8px; background-color: #dc3545; color: white; border-radius: 50%; min-width: 18px; height: 18px; font-size: 11px; font-weight: bold; display: flex; align-items: center; justify-content: center; padding: 2px;">' + countData.count + '</span>');
-                            }
-                        }
-                    });
-                } else {
-                    alert(result.message);
-                }
-            },
-            error: function () {
-                alert('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
-            }
-        });
-    }
+    //23/4/2025
 </script>

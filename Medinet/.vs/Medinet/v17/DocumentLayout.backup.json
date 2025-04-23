@@ -3,148 +3,28 @@
   "WorkspaceRootPath": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\controllers\\thongbaocontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\controllers\\thongbaocontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\controllers\\thanhtoancontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\controllers\\thanhtoancontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\controllers\\nguoidungscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\controllers\\nguoidungscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\controllers\\nguoibanscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\controllers\\nguoibanscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\controllers\\giohangscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\controllers\\giohangscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\controllers\\giaodichcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\controllers\\giaodichcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\controllers\\donhangcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\controllers\\donhangcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\controllers\\dangkycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\controllers\\dangkycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\controllers\\dangnhapcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|D:\\IT\\DATN\\Medinet-DATN\\Medinet\\webapplication1\\controllers\\dangnhapcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\controllers\\dangnhapcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|D:\\IT\\DATN\\Medinet-DATN\\Medinet\\webapplication1\\views\\home\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\home\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\admin\\dashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\admin\\dashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|D:\\IT\\DATN\\Medinet-DATN\\Medinet\\webapplication1\\views\\home\\chitiet.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\home\\chitiet.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\giaodich\\walletlogs.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\giaodich\\walletlogs.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\dangnhap\\dangnhap.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\dangnhap\\dangnhap.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\giaodich\\walletlogdetails.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\giaodich\\walletlogdetails.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\giaodich\\vinguoiban.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\giaodich\\vinguoiban.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\giaodich\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\giaodich\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\giaodich\\giaodichnguoiban.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\giaodich\\giaodichnguoiban.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\giaodich\\escrowdetails.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\giaodich\\escrowdetails.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\giaodich\\escrow.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\giaodich\\escrow.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\giaodich\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\giaodich\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\giaodich\\dashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\giaodich\\dashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\giaodich\\chitietgiaodichnguoiban.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\giaodich\\chitietgiaodichnguoiban.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\giaodich\\chitietghichepvinguoiban.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\giaodich\\chitietghichepvinguoiban.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\donhang\\quanlydonhang.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\donhang\\quanlydonhang.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\donhang\\chitietadmin.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\donhang\\chitietadmin.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\admin\\usermanagement.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\admin\\usermanagement.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\admin\\userdetails.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\admin\\userdetails.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\admin\\thongkedoanhthu.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\admin\\thongkedoanhthu.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\admin\\productmanagement.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\admin\\productmanagement.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\admin\\productdetails.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\admin\\productdetails.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\admin\\createcategory.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\admin\\createcategory.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\admin\\editcategory.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\admin\\editcategory.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\admin\\chitietkyquy.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\admin\\chitietkyquy.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\admin\\categorymanagement.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\admin\\categorymanagement.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\admin\\categorydetails.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\admin\\categorydetails.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|d:\\it\\datn\\medinet-datn\\medinet\\webapplication1\\views\\home\\sanpham.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A6D392A3-34C1-47CC-B83C-B5081FDCA6BE}|WebApplication1\\DATN.csproj|solutionrelative:webapplication1\\views\\home\\sanpham.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     }
   ],
   "DocumentGroupContainers": [
@@ -154,7 +34,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 5,
           "Children": [
             {
               "$type": "Bookmark",
@@ -162,470 +42,80 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "ThongBaoController.cs",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\ThongBaoController.cs",
-              "RelativeDocumentMoniker": "WebApplication1\\Controllers\\ThongBaoController.cs",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\ThongBaoController.cs",
-              "RelativeToolTip": "WebApplication1\\Controllers\\ThongBaoController.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAAA4AAAATAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-23T15:20:45.004Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "ThanhToanController.cs",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\ThanhToanController.cs",
-              "RelativeDocumentMoniker": "WebApplication1\\Controllers\\ThanhToanController.cs",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\ThanhToanController.cs",
-              "RelativeToolTip": "WebApplication1\\Controllers\\ThanhToanController.cs",
-              "ViewState": "AgIAAI8CAAAAAAAAAAAwwNcCAAATAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-23T15:20:04.376Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "NguoiDungsController.cs",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\NguoiDungsController.cs",
-              "RelativeDocumentMoniker": "WebApplication1\\Controllers\\NguoiDungsController.cs",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\NguoiDungsController.cs",
-              "RelativeToolTip": "WebApplication1\\Controllers\\NguoiDungsController.cs",
-              "ViewState": "AgIAABwEAAAAAAAAAAA5wAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-23T15:19:23.93Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "NguoiBansController.cs",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\NguoiBansController.cs",
-              "RelativeDocumentMoniker": "WebApplication1\\Controllers\\NguoiBansController.cs",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\NguoiBansController.cs",
-              "RelativeToolTip": "WebApplication1\\Controllers\\NguoiBansController.cs",
-              "ViewState": "AgIAANUEAAAAAAAAAAAgwLQFAAATAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-23T15:17:35.97Z",
+              "DocumentIndex": 5,
+              "Title": "SanPham.cshtml",
+              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Home\\SanPham.cshtml",
+              "RelativeDocumentMoniker": "WebApplication1\\Views\\Home\\SanPham.cshtml",
+              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Home\\SanPham.cshtml",
+              "RelativeToolTip": "WebApplication1\\Views\\Home\\SanPham.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-04-23T16:18:57.778Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 4,
+              "Title": "DangNhap.cshtml",
+              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\DangNhap\\DangNhap.cshtml",
+              "RelativeDocumentMoniker": "WebApplication1\\Views\\DangNhap\\DangNhap.cshtml",
+              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\DangNhap\\DangNhap.cshtml",
+              "RelativeToolTip": "WebApplication1\\Views\\DangNhap\\DangNhap.cshtml",
+              "ViewState": "AgIAAIoAAAAAAAAAAAAAAAgAAAAGAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-04-23T16:12:45.873Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "ChiTiet.cshtml",
+              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Home\\ChiTiet.cshtml",
+              "RelativeDocumentMoniker": "WebApplication1\\Views\\Home\\ChiTiet.cshtml",
+              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Home\\ChiTiet.cshtml",
+              "RelativeToolTip": "WebApplication1\\Views\\Home\\ChiTiet.cshtml",
+              "ViewState": "AgIAAGMDAAAAAAAAAAAAAMADAAA2AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-04-23T15:28:41.694Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Home\\Index.cshtml",
+              "RelativeDocumentMoniker": "WebApplication1\\Views\\Home\\Index.cshtml",
+              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Home\\Index.cshtml",
+              "RelativeToolTip": "WebApplication1\\Views\\Home\\Index.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAA0AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-04-23T15:28:34.047Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
               "Title": "HomeController.cs",
               "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\HomeController.cs",
               "RelativeDocumentMoniker": "WebApplication1\\Controllers\\HomeController.cs",
               "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\HomeController.cs",
               "RelativeToolTip": "WebApplication1\\Controllers\\HomeController.cs",
-              "ViewState": "AgIAAEsAAAAAAAAAAAAgwAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEYBAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-23T15:17:25.849Z",
+              "WhenOpened": "2025-04-23T15:27:19.256Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "GioHangsController.cs",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\GioHangsController.cs",
-              "RelativeDocumentMoniker": "WebApplication1\\Controllers\\GioHangsController.cs",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\GioHangsController.cs",
-              "RelativeToolTip": "WebApplication1\\Controllers\\GioHangsController.cs",
-              "ViewState": "AgIAAKsBAAAAAAAAAADwv/8BAAATAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-23T15:16:33.875Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "GiaoDichController.cs",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\GiaoDichController.cs",
-              "RelativeDocumentMoniker": "WebApplication1\\Controllers\\GiaoDichController.cs",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\GiaoDichController.cs",
-              "RelativeToolTip": "WebApplication1\\Controllers\\GiaoDichController.cs",
-              "ViewState": "AgIAAIcCAAAAAAAAAAAcwGgBAAATAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-23T15:15:46.243Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "DonHangController.cs",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\DonHangController.cs",
-              "RelativeDocumentMoniker": "WebApplication1\\Controllers\\DonHangController.cs",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\DonHangController.cs",
-              "RelativeToolTip": "WebApplication1\\Controllers\\DonHangController.cs",
-              "ViewState": "AgIAAOYEAAAAAAAAAAAcwOQEAABGAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-23T15:14:43.902Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "AdminController.cs",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\AdminController.cs",
-              "RelativeDocumentMoniker": "WebApplication1\\Controllers\\AdminController.cs",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\AdminController.cs",
-              "RelativeToolTip": "WebApplication1\\Controllers\\AdminController.cs",
-              "ViewState": "AgIAADsDAAAAAAAAAAAYwAkGAAATAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-23T15:11:45.056Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 11,
-              "Title": "_Layout.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Shared\\_Layout.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\Shared\\_Layout.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Shared\\_Layout.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\Shared\\_Layout.cshtml",
-              "ViewState": "AgIAAPcEAAAAAAAAAAAAwP8EAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T15:08:09.848Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 1,
               "Title": "DangNhapController.cs",
               "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\DangNhapController.cs",
               "RelativeDocumentMoniker": "WebApplication1\\Controllers\\DangNhapController.cs",
               "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\DangNhapController.cs",
               "RelativeToolTip": "WebApplication1\\Controllers\\DangNhapController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAACMBAAAoAAAAAAAAAA==",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAACIAAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-23T15:02:45.527Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "DangKyController.cs",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\DangKyController.cs",
-              "RelativeDocumentMoniker": "WebApplication1\\Controllers\\DangKyController.cs",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Controllers\\DangKyController.cs",
-              "RelativeToolTip": "WebApplication1\\Controllers\\DangKyController.cs",
-              "ViewState": "AgIAADABAAAAAAAAAAAwwAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-23T15:02:32.713Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 12,
-              "Title": "Dashboard.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\Dashboard.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\Admin\\Dashboard.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\Dashboard.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\Admin\\Dashboard.cshtml",
-              "ViewState": "AgIAAPMAAAAAAAAAAAAAAAcBAAAbAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:57:33.956Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 13,
-              "Title": "WalletLogs.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\WalletLogs.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\GiaoDich\\WalletLogs.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\WalletLogs.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\GiaoDich\\WalletLogs.cshtml",
-              "ViewState": "AgIAALcAAAAAAAAAAAAAAO4AAAAbAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:56:59.406Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 14,
-              "Title": "WalletLogDetails.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\WalletLogDetails.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\GiaoDich\\WalletLogDetails.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\WalletLogDetails.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\GiaoDich\\WalletLogDetails.cshtml",
-              "ViewState": "AgIAAMMAAAAAAAAAAAAAAN8AAAAbAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:56:49.666Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 15,
-              "Title": "ViNguoiBan.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\ViNguoiBan.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\GiaoDich\\ViNguoiBan.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\ViNguoiBan.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\GiaoDich\\ViNguoiBan.cshtml",
-              "ViewState": "AgIAADsBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:56:41.352Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 17,
-              "Title": "GiaoDichNguoiBan.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\GiaoDichNguoiBan.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\GiaoDich\\GiaoDichNguoiBan.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\GiaoDichNguoiBan.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\GiaoDich\\GiaoDichNguoiBan.cshtml",
-              "ViewState": "AgIAANIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:56:32.65Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 18,
-              "Title": "EscrowDetails.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\EscrowDetails.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\GiaoDich\\EscrowDetails.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\EscrowDetails.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\GiaoDich\\EscrowDetails.cshtml",
-              "ViewState": "AgIAAOcAAAAAAAAAAAAAAPwAAAAbAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:56:22.133Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 19,
-              "Title": "Escrow.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\Escrow.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\GiaoDich\\Escrow.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\Escrow.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\GiaoDich\\Escrow.cshtml",
-              "ViewState": "AgIAANUAAAAAAAAAAAAAAO0AAAAbAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:56:11.786Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 20,
-              "Title": "Details.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\Details.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\GiaoDich\\Details.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\Details.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\GiaoDich\\Details.cshtml",
-              "ViewState": "AgIAANUAAAAAAAAAAAAAAOIAAAAbAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:55:59.337Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 21,
-              "Title": "Dashboard.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\Dashboard.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\GiaoDich\\Dashboard.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\Dashboard.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\GiaoDich\\Dashboard.cshtml",
-              "ViewState": "AgIAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:55:50.8Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 22,
-              "Title": "ChiTietGiaoDichNguoiBan.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\ChiTietGiaoDichNguoiBan.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\GiaoDich\\ChiTietGiaoDichNguoiBan.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\ChiTietGiaoDichNguoiBan.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\GiaoDich\\ChiTietGiaoDichNguoiBan.cshtml",
-              "ViewState": "AgIAAPkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:55:44.135Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 23,
-              "Title": "ChiTietGhiChepViNguoiBan.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\ChiTietGhiChepViNguoiBan.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\GiaoDich\\ChiTietGhiChepViNguoiBan.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\ChiTietGhiChepViNguoiBan.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\GiaoDich\\ChiTietGhiChepViNguoiBan.cshtml",
-              "ViewState": "AgIAAGsBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:55:26.672Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 16,
-              "Title": "Index.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\Index.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\GiaoDich\\Index.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\GiaoDich\\Index.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\GiaoDich\\Index.cshtml",
-              "ViewState": "AgIAAM8AAAAAAAAAAAAAANgAAAAbAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:55:00.115Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 24,
-              "Title": "QuanLyDonHang.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\DonHang\\QuanLyDonHang.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\DonHang\\QuanLyDonHang.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\DonHang\\QuanLyDonHang.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\DonHang\\QuanLyDonHang.cshtml",
-              "ViewState": "AgIAAPkAAAAAAAAAAAAAAAkBAAAbAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:54:27.001Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 25,
-              "Title": "ChiTietAdmin.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\DonHang\\ChiTietAdmin.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\DonHang\\ChiTietAdmin.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\DonHang\\ChiTietAdmin.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\DonHang\\ChiTietAdmin.cshtml",
-              "ViewState": "AgIAAFABAAAAAAAAAAAAAGUBAAAbAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:54:10.087Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 26,
-              "Title": "UserManagement.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\UserManagement.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\Admin\\UserManagement.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\UserManagement.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\Admin\\UserManagement.cshtml",
-              "ViewState": "AgIAALcAAAAAAAAAAAAAAMsAAAAbAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:53:35.338Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 27,
-              "Title": "UserDetails.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\UserDetails.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\Admin\\UserDetails.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\UserDetails.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\Admin\\UserDetails.cshtml",
-              "ViewState": "AgIAAKsAAAAAAAAAAAAAAMQAAAAbAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:53:24.227Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 28,
-              "Title": "ThongKeDoanhThu.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\ThongKeDoanhThu.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\Admin\\ThongKeDoanhThu.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\ThongKeDoanhThu.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\Admin\\ThongKeDoanhThu.cshtml",
-              "ViewState": "AgIAAK4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:53:16.886Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 29,
-              "Title": "ProductManagement.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\ProductManagement.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\Admin\\ProductManagement.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\ProductManagement.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\Admin\\ProductManagement.cshtml",
-              "ViewState": "AgIAAMkAAAAAAAAAAAAAAOEAAAAbAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:53:06.191Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 30,
-              "Title": "ProductDetails.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\ProductDetails.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\Admin\\ProductDetails.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\ProductDetails.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\Admin\\ProductDetails.cshtml",
-              "ViewState": "AgIAAMAAAAAAAAAAAAAAANsAAAAbAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:52:54.74Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 32,
-              "Title": "EditCategory.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\EditCategory.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\Admin\\EditCategory.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\EditCategory.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\Admin\\EditCategory.cshtml",
-              "ViewState": "AgIAAKUAAAAAAAAAAAAAAMIAAAAbAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:52:41.071Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 31,
-              "Title": "CreateCategory.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\CreateCategory.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\Admin\\CreateCategory.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\CreateCategory.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\Admin\\CreateCategory.cshtml",
-              "ViewState": "AgIAAKIAAAAAAAAAAAAAAK0AAAAxAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:52:31.699Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 33,
-              "Title": "ChiTietKyQuy.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\ChiTietKyQuy.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\Admin\\ChiTietKyQuy.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\ChiTietKyQuy.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\Admin\\ChiTietKyQuy.cshtml",
-              "ViewState": "AgIAAIoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:52:21.087Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 34,
-              "Title": "CategoryManagement.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\CategoryManagement.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\Admin\\CategoryManagement.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\CategoryManagement.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\Admin\\CategoryManagement.cshtml",
-              "ViewState": "AgIAAMAAAAAAAAAAAAAAANcAAAAwAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:52:03.933Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 35,
-              "Title": "CategoryDetails.cshtml",
-              "DocumentMoniker": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\CategoryDetails.cshtml",
-              "RelativeDocumentMoniker": "WebApplication1\\Views\\Admin\\CategoryDetails.cshtml",
-              "ToolTip": "D:\\IT\\DATN\\Medinet-DATN\\Medinet\\WebApplication1\\Views\\Admin\\CategoryDetails.cshtml",
-              "RelativeToolTip": "WebApplication1\\Views\\Admin\\CategoryDetails.cshtml",
-              "ViewState": "AgIAALcAAAAAAAAAAAAAAMgAAAAyAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-23T14:51:41.807Z",
+              "WhenOpened": "2025-04-23T15:27:01.064Z",
               "EditorCaption": ""
             }
           ]

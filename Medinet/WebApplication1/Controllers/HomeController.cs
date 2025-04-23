@@ -239,6 +239,9 @@ namespace WebApplication1.Controllers
         //21/4/2025
         // POST: Home/ThemVaoGio - Thêm sản phẩm vào giỏ hàng
         [HttpPost]
+        //23/4/2025
+        // POST: Home/ThemVaoGio - Thêm sản phẩm vào giỏ hàng
+        // Bỏ attribute [Authorize] để cho phép người dùng không đăng nhập gửi request
         public ActionResult ThemVaoGio(int maSanPham, int soLuong)
         {
             // Kiểm tra sản phẩm tồn tại
@@ -252,6 +255,17 @@ namespace WebApplication1.Controllers
             if (sanPham.SoLuongTonKho < soLuong)
             {
                 return Json(new { success = false, message = "Số lượng sản phẩm không đủ" });
+            }
+
+            // Kiểm tra đăng nhập
+            if (!Request.IsAuthenticated)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng",
+                    requireLogin = true
+                });
             }
 
             // Lấy thông tin người dùng hiện tại
@@ -291,9 +305,9 @@ namespace WebApplication1.Controllers
             {
                 con.Open();
                 string cartQuery = @"
-            SELECT COUNT(*) as SoLoaiSanPham
-            FROM GioHang
-            WHERE MaNguoiDung = @MaNguoiDung";
+                    SELECT COUNT(*) as SoLoaiSanPham
+                    FROM GioHang
+                    WHERE MaNguoiDung = @MaNguoiDung";
 
                 SqlCommand cartCmd = new SqlCommand(cartQuery, con);
                 cartCmd.Parameters.AddWithValue("@MaNguoiDung", nguoiDung.MaNguoiDung);
@@ -311,6 +325,7 @@ namespace WebApplication1.Controllers
                 });
             }
         }
+        //23/4/2025
 
         // Thêm action mới vào HomeController
         [HttpGet]

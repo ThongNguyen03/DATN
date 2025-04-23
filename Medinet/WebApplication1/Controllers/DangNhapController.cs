@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Security;
@@ -16,11 +18,7 @@ namespace WebApplication1.Controllers
         // Database connection string
         private string connectionString = "Data Source=DESKTOP-C6TH3H0;Initial Catalog=MediNet;Integrated Security=True";
         private MedinetDATN db = new MedinetDATN(); // Thêm DbContext
-        // GET: DangNhap
-        public ActionResult DangNhap()
-        {
-            return View();
-        }
+
         // Hàm mã hóa mật khẩu
         private string HashPassword(string MatKhau)
         {
@@ -33,124 +31,6 @@ namespace WebApplication1.Controllers
         }
         // POST: DangNhap
         [HttpPost]
-        //, bool rememberMe
-        public ActionResult DangNhap(string Email, string password, string returnUrl)
-        {
-            // Kiểm tra input
-            if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(password))
-            {
-                ViewBag.MessageLogin = "Email và mật khẩu không được để trống";
-                return View();
-            }
-            using (SqlConnection con = new SqlConnection(connectionString))
-            {
-                con.Open();
-                if (!string.IsNullOrEmpty(password))
-                {
-                    string MatKhauMaHoa = HashPassword(password);
-                    string query = @"
-                    SELECT
-                            *
-                        FROM
-                            NguoiDung
-                        WHERE
-                            Email = @Email
-                            AND MatKhauMaHoa = @MatKhauMaHoa
-                            AND TrangThai IN ('Active', 'Upgrade')";
-
-                    SqlCommand cmd = new SqlCommand(query, con);
-                    cmd.Parameters.AddWithValue("@Email", Email);
-                    cmd.Parameters.AddWithValue("@MatKhauMaHoa", MatKhauMaHoa);
-
-                    int maNguoiDung = 0;
-                    string tenNguoiDung = string.Empty;
-                    string vaiTro = string.Empty;
-                    string anhDaiDien = string.Empty;
-                    bool isAuthenticated = false;
-
-                    using (SqlDataReader reader = cmd.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            isAuthenticated = true;
-                            maNguoiDung = Convert.ToInt32(reader["MaNguoiDung"]);
-                            tenNguoiDung = reader["TenNguoiDung"].ToString();
-                            vaiTro = reader["VaiTro"].ToString();
-                            anhDaiDien = reader["AnhDaiDien"] != DBNull.Value ? reader["AnhDaiDien"].ToString() : "~/Content/Images/default-avatar.png";
-                        }
-                    }
-
-                    if (isAuthenticated)
-                    {
-                        // Lưu thông tin vào session
-                        Session["MaNguoiDung"] = maNguoiDung;
-                        Session["TenNguoiDung"] = tenNguoiDung;
-                        Session["VaiTro"] = vaiTro;
-                        Session["AnhDaiDien"] = anhDaiDien;
-
-                        // Tính số lượng sản phẩm trong giỏ hàng
-                        string cartQuery = @"
-                            SELECT COUNT(*) as SoLoaiSanPham
-                            FROM GioHang
-                            WHERE MaNguoiDung = @MaNguoiDung";
-
-                        SqlCommand cartCmd = new SqlCommand(cartQuery, con);
-                        cartCmd.Parameters.AddWithValue("@MaNguoiDung", maNguoiDung);
-                        object result = cartCmd.ExecuteScalar();
-
-                        // Lưu số lượng sản phẩm vào session
-                        Session["SoLuongGioHang"] = Convert.ToInt32(result);
-
-                        // Thiết lập cookie xác thực để Forms Authentication hoạt động
-                        System.Web.Security.FormsAuthentication.SetAuthCookie(Email, false);
-
-                        //21/4/2025
-                        // Thiết lập session để check stock nếu người dùng là người bán
-                        if (vaiTro == "Seller")
-                        {
-                            Session["CheckStock"] = true;
-
-                            // Kiểm tra sản phẩm hết hàng ngay khi đăng nhập
-                            KiemTraSanPhamHetHang(maNguoiDung);
-                        }
-                        //21/4/2025
-                        // Xử lý chuyển hướng sau đăng nhập
-                        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                        {
-                            return Redirect(returnUrl);
-                        }
-                        else
-                        {
-                            // Chuyển hướng theo vai trò nếu không có returnUrl
-                            switch (vaiTro)
-                            {
-                                case "Admin":
-                                    return RedirectToAction("Dashboard", "Admin");
-                                case "Seller":
-                                    return RedirectToAction("EditSellerProfile", "NguoiDungs");
-                                case "Buyer":
-                                    return RedirectToAction("Index", "Home");
-                                default:
-                                    return RedirectToAction("Index", "Home");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        ViewBag.MessageLogin = "Thông tin đăng nhập không hợp lệ";
-                    }
-
-                    return View();
-                }
-                else
-                {
-                    // Xử lý trường hợp MatKhau null (ví dụ: thông báo lỗi cho người dùng)
-                    ModelState.AddModelError("MatKhau", "Mật khẩu không được để trống.");
-                    return RedirectToAction("DangKy", "DangKy"); // Trả về view đăng ký để người dùng nhập lại
-                }
-            }
-        }
-
         //21/4/2025
         // Hàm kiểm tra sản phẩm hết hàng
         private void KiemTraSanPhamHetHang(int maNguoiDung)
@@ -303,6 +183,264 @@ namespace WebApplication1.Controllers
         }
         //21/4/2025
 
+
+        //23/4/2025
+        // Action GET cho trang đăng nhập
+        public ActionResult DangNhap(string returnUrl, string action = "", string productId = "", string quantity = "")
+        {
+            // Lưu thông tin về hành động vào ViewBag để có thể sử dụng nếu cần
+            ViewBag.ReturnUrl = returnUrl;
+            ViewBag.Action = action;
+            ViewBag.ProductId = productId;
+            ViewBag.Quantity = quantity;
+
+            // Nếu người dùng đã đăng nhập, chuyển họ đến trang sau đăng nhập
+            if (Request.IsAuthenticated)
+            {
+                return RedirectToAction("AfterLogin", new
+                {
+                    returnUrl = returnUrl,
+                    action = action,
+                    productId = productId,
+                    quantity = quantity
+                });
+            }
+
+            return View();
+        }
+
+        // Action POST cho trang đăng nhập
+        [HttpPost]
+        public ActionResult DangNhap(DangNhapViewModel model, string returnUrl = "", string action = "", string productId = "", string quantity = "")
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // Lấy kết nối đến database
+            MedinetDATN db = new MedinetDATN();
+
+            // Kiểm tra thông tin đăng nhập trong bảng NguoiDung
+            var nguoiDung = db.NguoiDungs.FirstOrDefault(u => u.Email == model.Email);
+
+            if (nguoiDung != null)
+            {
+                // Mã hóa mật khẩu người dùng nhập để so sánh với mật khẩu đã mã hóa trong DB
+                string matKhauMaHoa = HashPassword(model.Password);
+
+                // Kiểm tra mật khẩu đã mã hóa
+                bool passwordCorrect = matKhauMaHoa == nguoiDung.MatKhauMaHoa;
+
+                if (passwordCorrect)
+                {
+                    // Tạo cookie xác thực
+                    FormsAuthentication.SetAuthCookie(model.Email, model.RememberMe);
+
+                    // Cập nhật Session
+                    Session["UserName"] = nguoiDung.TenNguoiDung;
+                    Session["UserID"] = nguoiDung.MaNguoiDung;
+                    Session["MaNguoiDung"] = nguoiDung.MaNguoiDung;
+                    Session["TenNguoiDung"] = nguoiDung.TenNguoiDung;
+                    Session["VaiTro"] = nguoiDung.VaiTro;
+                    Session["AnhDaiDien"] = !string.IsNullOrEmpty(nguoiDung.AnhDaiDien) ?
+                        nguoiDung.AnhDaiDien : "~/Content/Images/default-avatar.png";
+
+                    // Tính số lượng sản phẩm trong giỏ hàng
+                    var soLuongGioHang = db.GioHangs.Count(g => g.MaNguoiDung == nguoiDung.MaNguoiDung);
+                    Session["SoLuongGioHang"] = soLuongGioHang;
+
+                    //Kiểm tra và tạo thông báo hết hàng nếu là người bán
+                    if (nguoiDung.VaiTro == "Seller")
+                    {
+                        Session["CheckStock"] = true;
+                        KiemTraSanPhamHetHang(nguoiDung.MaNguoiDung);
+                    }
+
+                    // Chuyển hướng đến action xử lý sau đăng nhập
+                    return RedirectToAction("AfterLogin", new
+                    {
+                        returnUrl = returnUrl,
+                        action = action,
+                        productId = productId,
+                        quantity = quantity
+                    });
+                }
+            }
+
+            // Xử lý đăng nhập không thành công
+            ModelState.AddModelError("", "Email hoặc mật khẩu không đúng.");
+            return View(model);
+        }
+
+        // Action xử lý sau khi đăng nhập thành công
+        public ActionResult AfterLogin(string returnUrl, string action = "", string productId = "", string quantity = "")
+        {
+            try
+            {
+                // Kiểm tra xem có hành động cụ thể cần thực hiện không
+                if (!string.IsNullOrEmpty(action) && !string.IsNullOrEmpty(productId))
+                {
+                    int maSanPham;
+                    int soLuong = 1; // Mặc định
+
+                    // Chuyển đổi productId thành số nguyên
+                    if (int.TryParse(productId, out maSanPham))
+                    {
+                        // Chuyển đổi quantity thành số nguyên nếu có
+                        if (!string.IsNullOrEmpty(quantity))
+                        {
+                            int.TryParse(quantity, out soLuong);
+                        }
+
+                        // Xử lý các hành động khác nhau
+                        if (action.Equals("addToCart", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Thêm vào giỏ hàng và chuyển hướng về trang trước đó
+                            return RedirectToAction("ProcessAddToCart", new
+                            {
+                                maSanPham = maSanPham,
+                                soLuong = soLuong,
+                                returnUrl = returnUrl
+                            });
+                        }
+                        else if (action.Equals("buyNow", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Mua ngay và chuyển hướng đến trang thanh toán
+                            return RedirectToAction("ProcessBuyNow", new
+                            {
+                                maSanPham = maSanPham,
+                                soLuong = soLuong
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Ghi log lỗi nếu cần
+                System.Diagnostics.Debug.WriteLine("Lỗi trong AfterLogin: " + ex.Message);
+
+                // Thêm thông báo lỗi vào TempData
+                TempData["ErrorMessage"] = "Đã xảy ra lỗi khi xử lý. Vui lòng thử lại.";
+            }
+
+            // Nếu không có hành động đặc biệt hoặc có lỗi, quay lại trang trước đó
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+
+            // Mặc định là quay về trang chủ
+            return RedirectToAction("Index", "Home");
+        }
+
+        // Action xử lý thêm vào giỏ hàng sau đăng nhập
+        public ActionResult ProcessAddToCart(int maSanPham, int soLuong, string returnUrl)
+        {
+            try
+            {
+                // Kiểm tra xem người dùng đã đăng nhập chưa
+                if (!Request.IsAuthenticated)
+                {
+                    TempData["ErrorMessage"] = "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng";
+                    return RedirectToAction("DangNhap", new { returnUrl = returnUrl });
+                }
+
+                // Tạo đối tượng HomeController mới
+                var homeController = DependencyResolver.Current.GetService<HomeController>() ?? new HomeController();
+
+                // Sao chép ControllerContext để có thể truy cập Session, User, v.v.
+                homeController.ControllerContext = new ControllerContext(this.Request.RequestContext, homeController);
+
+                // Gọi action ThemVaoGio từ HomeController
+                var result = homeController.ThemVaoGio(maSanPham, soLuong);
+
+                // Lưu thông báo thành công vào TempData để hiển thị
+                TempData["SuccessMessage"] = "Đã thêm sản phẩm vào giỏ hàng";
+
+                // Quay lại trang trước đó
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
+
+                return RedirectToAction("Index", "Home");
+            }
+            catch (Exception ex)
+            {
+                // Ghi log lỗi
+                System.Diagnostics.Debug.WriteLine("Lỗi trong ProcessAddToCart: " + ex.Message);
+
+                // Xử lý lỗi
+                TempData["ErrorMessage"] = "Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng";
+
+                // Quay lại trang trước đó nếu có
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
+
+                return RedirectToAction("Index", "Home");
+            }
+        }
+
+        // Action xử lý mua ngay sau đăng nhập
+        public ActionResult ProcessBuyNow(int maSanPham, int soLuong)
+        {
+            try
+            {
+                // Kiểm tra xem người dùng đã đăng nhập chưa
+                if (!Request.IsAuthenticated)
+                {
+                    TempData["ErrorMessage"] = "Vui lòng đăng nhập để tiếp tục mua hàng";
+                    return RedirectToAction("DangNhap");
+                }
+
+                // Tạo đối tượng ThanhToanController mới
+                var thanhToanController = DependencyResolver.Current.GetService<ThanhToanController>() ?? new ThanhToanController();
+
+                // Sao chép ControllerContext để có thể truy cập Session, User, v.v.
+                thanhToanController.ControllerContext = new ControllerContext(this.Request.RequestContext, thanhToanController);
+
+                // Gọi MuaNgay từ ThanhToanController
+                var result = thanhToanController.MuaNgay(maSanPham, soLuong);
+
+                // Xử lý kết quả từ MuaNgay
+                var jsonResult = result as JsonResult;
+                if (jsonResult != null)
+                {
+                    try
+                    {
+                        // Lấy data từ JsonResult
+                        dynamic jsonData = jsonResult.Data;
+                        if (jsonData != null && jsonData.success == true && jsonData.redirectUrl != null)
+                        {
+                            // Chuyển hướng đến URL từ kết quả
+                            return Redirect(jsonData.redirectUrl.ToString());
+                        }
+                    }
+                    catch
+                    {
+                        // Xử lý lỗi khi truy cập dữ liệu JSON
+                        TempData["ErrorMessage"] = "Có lỗi xảy ra khi xử lý dữ liệu";
+                    }
+                }
+
+                // Mặc định là chuyển đến trang giỏ hàng
+                return RedirectToAction("GioHang", "Home");
+            }
+            catch (Exception ex)
+            {
+                // Ghi log lỗi
+                System.Diagnostics.Debug.WriteLine("Lỗi trong ProcessBuyNow: " + ex.Message);
+
+                // Xử lý lỗi
+                TempData["ErrorMessage"] = "Có lỗi xảy ra khi xử lý mua ngay";
+                return RedirectToAction("Index", "Home");
+            }
+        }
+        //23/4/2025
         public NguoiDung GetUserById(int MaNguoiDung)
         {
             NguoiDung user = null;
@@ -334,5 +472,24 @@ namespace WebApplication1.Controllers
             }
             return user;
         }
+
+        //23/4/2025
+        // Định nghĩa DangNhapViewModel ngay trong controller
+        public class DangNhapViewModel
+        {
+            [Required(ErrorMessage = "Vui lòng nhập email")]
+            [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+            [Display(Name = "Email")]
+            public string Email { get; set; }
+
+            [Required(ErrorMessage = "Vui lòng nhập mật khẩu")]
+            [DataType(DataType.Password)]
+            [Display(Name = "Mật khẩu")]
+            public string Password { get; set; }
+
+            [Display(Name = "Nhớ đăng nhập")]
+            public bool RememberMe { get; set; }
+        }
+        //23/4/2025
     }
 }

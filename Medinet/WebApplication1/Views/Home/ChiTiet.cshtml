@@ -383,31 +383,16 @@
                     <button type="button" class="quantity-btn" onclick="increaseQuantity(@Model.SoLuongTonKho)">+</button>
                 </div>
 
+                <!-- Thay thế phần nút với điều kiện đăng nhập -->
                 <div class="action-buttons">
-                    @if (Request.IsAuthenticated)
-                    {
-                        <!-- Người dùng đã đăng nhập, hiển thị nút bình thường -->
-                        <button type="button" class="add-to-cart-btn" onclick="addToCart(@Model.MaSanPham)">
-                            <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
-                        </button>
-                        <button type="button" class="buy-now-btn" onclick="buyNow(@Model.MaSanPham)">
-                            <i class="fas fa-bolt"></i> Mua ngay
-                        </button>
-                    }
-                    else
-                    {
-                        <!-- Người dùng chưa đăng nhập, hiển thị nút vô hiệu hóa và thêm thông báo -->
-                        <button type="button" class="add-to-cart-btn" style="opacity: 1;" onclick="redirectToLogin()">
-                            <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
-                        </button>
-                        <button type="button" class="buy-now-btn" style="opacity: 1; " onclick="redirectToLogin()">
-                            <i class="fas fa-bolt"></i> Mua ngay
-                        </button>
-                        @*<div class="mt-2 text-danger">
-                            <small><i class="fas fa-info-circle"></i> Vui lòng <a href="@Url.Action("DangNhap", "DangNhap", new { returnUrl = Request.Url.PathAndQuery })">đăng nhập</a> để mua hàng</small>
-                        </div>*@
-                    }
+                    <button type="button" class="add-to-cart-btn" onclick="addToCart(@Model.MaSanPham)">
+                        <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
+                    </button>
+                    <button type="button" class="buy-now-btn" onclick="buyNow(@Model.MaSanPham)">
+                        <i class="fas fa-bolt"></i> Mua ngay
+                    </button>
                 </div>
+
             }
             <!-- Bọc toàn bộ thông tin cửa hàng trong thẻ a để tạo liên kết -->
             <a href="@Url.Action("ThongTinNguoiBan", "NguoiBans", new { id = Model.NguoiBan.MaNguoiBan })" class="text-dark text-decoration-none store-info-link">
@@ -761,58 +746,42 @@
 </div>
 
 <script>
-    // Thêm hàm này vào phần <script> ở cuối trang
-    function redirectToLogin() {
+
+    //23/4/2025
+    // Cập nhật hàm redirectToLogin để bao gồm thông tin về hành động
+    function redirectToLogin(action, productId, quantity) {
         var returnUrl = window.location.pathname + window.location.search;
-        window.location.href = '@Url.Action("DangNhap", "DangNhap")?returnUrl=' + encodeURIComponent(returnUrl);
-    }
-    // Hàm đổi ảnh chính khi nhấp vào ảnh thumbnail
-    function changeMainImage(element) {
-        // Cập nhật ảnh chính
-        document.getElementById('main-product-image').src = element.src;
 
-        // Thay đổi trạng thái active thumbnail
-        const thumbnails = document.querySelectorAll('.thumbnail');
-        thumbnails.forEach(thumb => {
-            thumb.classList.remove('active');
-        });
-        element.classList.add('active');
-    }
+        // Tạo URL cho việc chuyển hướng đến trang đăng nhập với thông tin về hành động
+        var loginUrl = '@Url.Action("DangNhap", "DangNhap")' +
+                      '?returnUrl=' + encodeURIComponent(returnUrl) +
+                      '&action=' + encodeURIComponent(action) +
+                      '&productId=' + encodeURIComponent(productId);
 
-    // Hàm tăng số lượng sản phẩm
-    function increaseQuantity(maxQuantity) {
-        const quantityInput = document.getElementById('product-quantity');
-        let currentValue = parseInt(quantityInput.value);
-
-        if (currentValue < maxQuantity) {
-            quantityInput.value = currentValue + 1;
+        // Thêm số lượng nếu được cung cấp
+        if (quantity) {
+            loginUrl += '&quantity=' + encodeURIComponent(quantity);
         }
+
+        window.location.href = loginUrl;
     }
 
-    // Hàm giảm số lượng sản phẩm
-    function decreaseQuantity() {
-        const quantityInput = document.getElementById('product-quantity');
-        let currentValue = parseInt(quantityInput.value);
-
-        if (currentValue > 1) {
-            quantityInput.value = currentValue - 1;
-        }
-    }
-
-    // Hàm kiểm tra và giới hạn số lượng nhập vào
-    function validateQuantity(maxQuantity) {
-        const quantityInput = document.getElementById('product-quantity');
-        let value = parseInt(quantityInput.value);
-
-        if (isNaN(value) || value < 1) {
-            quantityInput.value = 1;
-        } else if (value > maxQuantity) {
-            quantityInput.value = maxQuantity;
-        }
-    }
-
-    // Hàm thêm sản phẩm vào giỏ hàng
+    // Cập nhật hàm addToCart để kiểm tra đăng nhập
     function addToCart(maSanPham) {
+        // Kiểm tra xem người dùng đã đăng nhập chưa
+        var isAuthenticated = @(Request.IsAuthenticated.ToString().ToLower());
+
+        if (!isAuthenticated) {
+            // Lấy số lượng từ input
+            const quantityInput = document.getElementById('product-quantity');
+            const soLuong = parseInt(quantityInput.value) || 1;
+
+            // Chuyển hướng đến trang đăng nhập với thông tin về việc thêm vào giỏ
+            redirectToLogin('addToCart', maSanPham, soLuong);
+            return;
+        }
+
+        // Nếu đã đăng nhập, tiếp tục với hành động thêm vào giỏ
         // Lấy số lượng từ input
         const quantityInput = document.getElementById('product-quantity');
         const soLuong = parseInt(quantityInput.value) || 1;
@@ -858,6 +827,94 @@
                 alert('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
             }
         });
+    }
+
+    // Cập nhật hàm buyNow để kiểm tra đăng nhập
+    function buyNow(maSanPham) {
+        // Kiểm tra xem người dùng đã đăng nhập chưa
+        var isAuthenticated = @(Request.IsAuthenticated.ToString().ToLower());
+
+        if (!isAuthenticated) {
+            // Lấy số lượng từ input
+            const quantityInput = document.getElementById('product-quantity');
+            const soLuong = parseInt(quantityInput.value) || 1;
+
+            // Chuyển hướng đến trang đăng nhập với thông tin về việc mua ngay
+            redirectToLogin('buyNow', maSanPham, soLuong);
+            return;
+        }
+
+        // Nếu đã đăng nhập, tiếp tục với hành động mua ngay
+        // Lấy số lượng từ input
+        const quantityInput = document.getElementById('product-quantity');
+        const soLuong = parseInt(quantityInput.value) || 1;
+
+        // Gọi AJAX để thêm sản phẩm vào giỏ hàng tạm thời và chuyển đến trang thanh toán
+        $.ajax({
+            url: '@Url.Action("MuaNgay", "ThanhToan")',
+            type: 'POST',
+            data: {
+                maSanPham: maSanPham,
+                soLuong: soLuong
+            },
+            success: function(result) {
+                if (result.success) {
+                    // Chuyển hướng đến trang thanh toán
+                    window.location.href = result.redirectUrl;
+                } else {
+                    // Hiển thị thông báo lỗi
+                    alert(result.message);
+                }
+            },
+            error: function() {
+                alert('Đã xảy ra lỗi khi xử lý. Vui lòng thử lại sau.');
+            }
+        });
+    }
+    //23/4/2025
+    // Hàm đổi ảnh chính khi nhấp vào ảnh thumbnail
+    function changeMainImage(element) {
+        // Cập nhật ảnh chính
+        document.getElementById('main-product-image').src = element.src;
+
+        // Thay đổi trạng thái active thumbnail
+        const thumbnails = document.querySelectorAll('.thumbnail');
+        thumbnails.forEach(thumb => {
+            thumb.classList.remove('active');
+        });
+        element.classList.add('active');
+    }
+
+    // Hàm tăng số lượng sản phẩm
+    function increaseQuantity(maxQuantity) {
+        const quantityInput = document.getElementById('product-quantity');
+        let currentValue = parseInt(quantityInput.value);
+
+        if (currentValue < maxQuantity) {
+            quantityInput.value = currentValue + 1;
+        }
+    }
+
+    // Hàm giảm số lượng sản phẩm
+    function decreaseQuantity() {
+        const quantityInput = document.getElementById('product-quantity');
+        let currentValue = parseInt(quantityInput.value);
+
+        if (currentValue > 1) {
+            quantityInput.value = currentValue - 1;
+        }
+    }
+
+    // Hàm kiểm tra và giới hạn số lượng nhập vào
+    function validateQuantity(maxQuantity) {
+        const quantityInput = document.getElementById('product-quantity');
+        let value = parseInt(quantityInput.value);
+
+        if (isNaN(value) || value < 1) {
+            quantityInput.value = 1;
+        } else if (value > maxQuantity) {
+            quantityInput.value = maxQuantity;
+        }
     }
 
     // Cập nhật script xử lý phân trang sản phẩm liên quan
@@ -966,34 +1023,4 @@
         }
     });
 
-
-
-    // Hàm mua ngay cập nhật
-    function buyNow(maSanPham) {
-        // Lấy số lượng từ input
-        const quantityInput = document.getElementById('product-quantity');
-        const soLuong = parseInt(quantityInput.value) || 1;
-
-        // Gọi AJAX để thêm sản phẩm vào giỏ hàng tạm thời và chuyển đến trang thanh toán
-        $.ajax({
-            url: '@Url.Action("MuaNgay", "ThanhToan")',
-            type: 'POST',
-            data: {
-                maSanPham: maSanPham,
-                soLuong: soLuong
-            },
-            success: function(result) {
-                if (result.success) {
-                    // Chuyển hướng đến trang thanh toán
-                    window.location.href = result.redirectUrl;
-                } else {
-                    // Hiển thị thông báo lỗi
-                    alert(result.message);
-                }
-            },
-            error: function() {
-                alert('Đã xảy ra lỗi khi xử lý. Vui lòng thử lại sau.');
-            }
-        });
-    }
 </script>
