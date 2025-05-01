@@ -39,6 +39,10 @@ namespace WebApplication1.Models
         //2/4/2025
         public DbSet<PhanHoiDanhGia> PhanHoiDanhGias { get; set; }
         //2/4/2025
+
+        //27/4/2025
+        public DbSet<BaoCaoDonHang> BaoCaoDonHangs { get; set; }
+        //27/4/2025
         public DbSet<GhiChepVi> GhiChepVis { get; set; }
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -332,7 +336,26 @@ namespace WebApplication1.Models
                 .HasPrecision(10, 2);
 
 
+            //27/4/2025
+            // Cấu hình các quan hệ cho BaoCaoDonHang
+            modelBuilder.Entity<BaoCaoDonHang>()
+                .HasRequired(b => b.DonHang)
+                .WithMany()
+                .HasForeignKey(b => b.MaDonHang)
+                .WillCascadeOnDelete(false);
 
+            modelBuilder.Entity<BaoCaoDonHang>()
+                .HasRequired(b => b.NguoiDung)
+                .WithMany()
+                .HasForeignKey(b => b.MaNguoiDung)
+                .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<BaoCaoDonHang>()
+                .HasRequired(b => b.NguoiBan)
+                .WithMany()
+                .HasForeignKey(b => b.MaNguoiBan)
+                .WillCascadeOnDelete(false);
+            //27/4/2025
 
             //27/3/2025
             // Thiết lập cơ bản

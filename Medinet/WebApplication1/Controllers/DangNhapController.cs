@@ -250,21 +250,30 @@ namespace WebApplication1.Controllers
                     var soLuongGioHang = db.GioHangs.Count(g => g.MaNguoiDung == nguoiDung.MaNguoiDung);
                     Session["SoLuongGioHang"] = soLuongGioHang;
 
-                    //Kiểm tra và tạo thông báo hết hàng nếu là người bán
                     if (nguoiDung.VaiTro == "Seller")
                     {
                         Session["CheckStock"] = true;
                         KiemTraSanPhamHetHang(nguoiDung.MaNguoiDung);
-                    }
 
-                    // Chuyển hướng đến action xử lý sau đăng nhập
-                    return RedirectToAction("AfterLogin", new
+                        // Đối với Seller, chuyển hướng đến trang quản lý sản phẩm sau khi đăng nhập
+                        return RedirectToAction("EditSellerProfile", "NguoiDungs", new { id = nguoiDung.MaNguoiDung });
+                    }
+                    else if (nguoiDung.VaiTro == "Admin")
                     {
-                        returnUrl = returnUrl,
-                        action = action,
-                        productId = productId,
-                        quantity = quantity
-                    });
+                        // Đối với Admin, chuyển hướng đến trang dashboard sau khi đăng nhập
+                        return RedirectToAction("Dashboard", "Admin");
+                    }
+                    else
+                    {
+                        // Chỉ áp dụng luồng mua hàng đặc biệt cho Buyer
+                        return RedirectToAction("AfterLogin", new
+                        {
+                            returnUrl = returnUrl,
+                            action = action,
+                            productId = productId,
+                            quantity = quantity
+                        });
+                    }
                 }
             }
 

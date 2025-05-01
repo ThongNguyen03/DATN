@@ -117,48 +117,90 @@ namespace WebApplication1.Controllers
 
         // GET: DonHang/ChiTiet/5 - Cho người mua
         [Authorize]
+        /// <summary>
+        /// Hiển thị chi tiết đơn hàng cho người dùng
+        /// </summary>
+        /// <param name="id">Mã đơn hàng cần xem chi tiết</param>
+        /// <returns>View chi tiết đơn hàng</returns>
         public ActionResult ChiTiet(int id)
         {
             try
             {
+                // Lấy ID người dùng hiện tại
+                int currentUserId = GetCurrentUserId();
+                if (currentUserId <= 0)
+                {
+                    return RedirectToAction("DangNhap", "DangNhap");
+                }
+
+                // Lấy thông tin đơn hàng từ database, kèm các thông tin liên quan
                 var donHang = db.DonHangs
-                    .Include(d => d.NguoiBan)
                     .Include(d => d.NguoiDung)
+                    .Include(d => d.NguoiBan)
+                    .Include(d => d.NguoiBan.NguoiDung)
                     .Include(d => d.ChiTietDonHangs)
                     .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham))
-                    .Include(d => d.ChiTietDonHangs.Select(c => c.SanPham.AnhSanPhams))
                     .FirstOrDefault(d => d.MaDonHang == id);
 
                 if (donHang == null)
                 {
-                    return HttpNotFound();
+                    TempData["Error"] = "Không tìm thấy thông tin đơn hàng!";
+                    return RedirectToAction("DonHangCuaToi");
                 }
 
                 // Kiểm tra quyền truy cập
-                if (donHang.MaNguoiDung != GetCurrentUserId())
+                if (donHang.MaNguoiDung != currentUserId)
                 {
-                    return new HttpStatusCodeResult(HttpStatusCode.Forbidden);
+                    TempData["Error"] = "Bạn không có quyền xem đơn hàng này!";
+                    return RedirectToAction("DonHangCuaToi");
+                }
+
+                // Kiểm tra xem đơn hàng này đã có báo cáo nào đang xử lý hay không
+                // Cách 1: Lấy tất cả báo cáo của đơn hàng từ người dùng hiện tại
+                var baoCaos = db.BaoCaoDonHangs
+                    .Where(b => b.MaDonHang == id && b.MaNguoiDung == currentUserId)
+                    .ToList(); // Chuyển thành danh sách trong bộ nhớ
+
+                // Lọc danh sách báo cáo trong bộ nhớ để tìm những báo cáo đang xử lý
+                bool daBaoCao = baoCaos.Any(b => b.TrangThai == "Đang xử lý" || b.TrangThai == null);
+                ViewBag.DaBaoCao = daBaoCao;
+
+                // Nếu muốn hiển thị chi tiết báo cáo
+                if (daBaoCao)
+                {
+                    // Lấy báo cáo gần nhất đang xử lý
+                    var baoCaoGanNhat = baoCaos
+                        .Where(b => b.TrangThai == "Đang xử lý" || b.TrangThai == null)
+                        .OrderByDescending(b => b.NgayTao)
+                        .FirstOrDefault();
+
+                    if (baoCaoGanNhat != null)
+                    {
+                        ViewBag.BaoCaoGanNhat = baoCaoGanNhat;
+                    }
                 }
 
                 // Lấy thông tin escrow nếu có
                 var escrow = db.Escrows.FirstOrDefault(e => e.MaDonHang == id);
                 ViewBag.Escrow = escrow;
 
+                // Kiểm tra trạng thái đánh giá
+                var danhGia = db.DanhGiaSanPhams.FirstOrDefault(d => d.MaDonHang == id);
+                ViewBag.DaCoSao = danhGia != null;
 
-                // Nếu đơn hàng đã được đánh giá, lấy thông tin đánh giá cho từng sản phẩm
-                if (donHang.DaDanhGia)
-                {
-                    var danhGiaSanPhams = db.DanhGiaSanPhams
-                        .Where(d => d.MaDonHang == id)
-                        .ToList();
-                    ViewBag.DanhGiaSanPhams = danhGiaSanPhams;
-                }
+                // Trả về view với model là đơn hàng
                 return View(donHang);
             }
             catch (Exception ex)
             {
+                // Ghi log lỗi
                 System.Diagnostics.Debug.WriteLine("Lỗi xem chi tiết đơn hàng: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("Chi tiết lỗi: " + ex.StackTrace);
+
+                // Thông báo lỗi cho người dùng
                 TempData["Error"] = "Đã xảy ra lỗi khi tải thông tin đơn hàng. Vui lòng thử lại sau!";
+
+                // Chuyển hướng về trang danh sách đơn hàng
                 return RedirectToAction("DonHangCuaToi");
             }
         }
@@ -660,6 +702,119 @@ namespace WebApplication1.Controllers
             }
         }
 
+
+        // POST: DonHang/BaoCaoChuaNhanHang/5
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> BaoCaoChuaNhanHang(int id, string lyDoBaoCao, string chiTietBaoCao, string soDienThoaiLienHe)
+        {
+            try
+            {
+                int maNguoiDung = GetCurrentUserId();
+                if (maNguoiDung <= 0)
+                {
+                    return RedirectToAction("DangNhap", "DangNhap");
+                }
+
+                var donHang = db.DonHangs.Find(id);
+                if (donHang == null)
+                {
+                    return HttpNotFound();
+                }
+
+                // Kiểm tra quyền truy cập
+                if (donHang.MaNguoiDung != maNguoiDung)
+                {
+                    return new HttpStatusCodeResult(HttpStatusCode.Forbidden);
+                }
+
+                // Kiểm tra trạng thái đơn hàng
+                if (donHang.TrangThaiDonHang != "Đã giao" && donHang.TrangThaiDonHang != "Đã vận chuyển")
+                {
+                    TempData["Error"] = "Chỉ có thể báo cáo cho đơn hàng đã giao hoặc đang vận chuyển!";
+                    return RedirectToAction("ChiTiet", new { id = id });
+                }
+
+                // Tạo báo cáo và lưu vào DB
+                var baoCao = new BaoCaoDonHang
+                {
+                    MaDonHang = id,
+                    MaNguoiDung = maNguoiDung,
+                    MaNguoiBan = donHang.MaNguoiBan,
+                    LoaiBaoCao = "Chưa nhận được hàng",
+                    LyDoBaoCao = lyDoBaoCao,
+                    ChiTietBaoCao = chiTietBaoCao,
+                    SoDienThoaiLienHe = soDienThoaiLienHe,
+                    TrangThai = "Đang xử lý",
+                    NgayTao = DateTime.Now
+                };
+
+                // Thêm báo cáo trước khi lưu
+                db.BaoCaoDonHangs.Add(baoCao);
+
+                // Lưu để có MaBaoCao
+                await db.SaveChangesAsync();
+
+                // Log để theo dõi
+                System.Diagnostics.Debug.WriteLine($"Đã tạo báo cáo với MaBaoCao: {baoCao.MaBaoCao}");
+
+                // Gửi thông báo cho người mua
+                var thongBaoNguoiMua = new ThongBao
+                {
+                    MaNguoiDung = maNguoiDung,
+                    LoaiThongBao = "DonHang",
+                    TieuDe = "Đã gửi báo cáo chưa nhận được hàng",
+                    TinNhan = $"Bạn đã gửi báo cáo chưa nhận được hàng cho đơn hàng #{donHang.MaDonHang}. Chúng tôi sẽ xử lý trong thời gian sớm nhất.",
+                    MucDoQuanTrong = 1,
+                    DuongDanChiTiet = "/DonHang/ChiTiet/" + id,
+                    NgayTao = DateTime.Now
+                };
+                db.ThongBaos.Add(thongBaoNguoiMua);
+
+                // Gửi thông báo cho người bán
+                var thongBaoNguoiBan = new ThongBao
+                {
+                    MaNguoiDung = donHang.NguoiBan.MaNguoiDung,
+                    LoaiThongBao = "DonHang",
+                    TieuDe = "Người mua báo cáo chưa nhận được hàng",
+                    TinNhan = $"Người mua đã báo cáo chưa nhận được hàng cho đơn hàng #{donHang.MaDonHang}. Vui lòng kiểm tra và xử lý.",
+                    MucDoQuanTrong = 2, // Quan trọng cao
+                    DuongDanChiTiet = "/DonHang/ChiTietDonHangNguoiMua/" + id,
+                    NgayTao = DateTime.Now
+                };
+                db.ThongBaos.Add(thongBaoNguoiBan);
+
+                // Gửi thông báo cho admin
+                var adminUsers = db.NguoiDungs.Where(n => n.VaiTro == "Admin").ToList();
+                foreach (var admin in adminUsers)
+                {
+                    var thongBaoAdmin = new ThongBao
+                    {
+                        MaNguoiDung = admin.MaNguoiDung,
+                        LoaiThongBao = "BaoCao",
+                        TieuDe = "Báo cáo chưa nhận được hàng mới",
+                        TinNhan = $"Có báo cáo mới cho đơn hàng #{donHang.MaDonHang}: Người mua báo cáo chưa nhận được hàng.",
+                        MucDoQuanTrong = 2, // Quan trọng cao
+                        DuongDanChiTiet = "/Admin/ChiTietBaoCao/" + baoCao.MaBaoCao,
+                        NgayTao = DateTime.Now
+                    };
+                    db.ThongBaos.Add(thongBaoAdmin);
+                }
+
+                // Lưu tất cả thông báo
+                await db.SaveChangesAsync();
+
+                TempData["Success"] = "Báo cáo chưa nhận được hàng đã được gửi thành công. Chúng tôi sẽ xử lý trong thời gian sớm nhất.";
+                return RedirectToAction("ChiTiet", new { id = id });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Lỗi báo cáo chưa nhận hàng: " + ex.Message);
+                TempData["Error"] = "Đã xảy ra lỗi khi gửi báo cáo. Vui lòng thử lại sau!";
+                return RedirectToAction("ChiTiet", new { id = id });
+            }
+        }
 
         // Phương thức hỗ trợ tạo cell trong PDF
         private PdfPCell CreateCell(string text, Font font, int alignment)

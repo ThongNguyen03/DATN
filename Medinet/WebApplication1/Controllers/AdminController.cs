@@ -1,9 +1,14 @@
-﻿using System;
+﻿using Org.BouncyCastle.Utilities.Net;
+using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data.Entity;
 using System.Data.Entity.Core.Objects;
+using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Mail;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
@@ -1263,6 +1268,446 @@ namespace WebApplication1.Controllers
         }
 
 
+        //27/4/2025
+        // GET: Admin/QuanLyBaoCaoDonHang
+        [Authorize]
+        // GET: Admin/QuanLyBaoCaoDonHang
+        [Authorize]
+        public ActionResult QuanLyBaoCaoDonHang(int page = 1, string trangThai = "", string tuNgay = "", string denNgay = "")
+        {
+            try
+            {
+                int pageSize = 10; // Số báo cáo hiển thị trên mỗi trang
+                var query = db.BaoCaoDonHangs.AsQueryable();
+
+                // Áp dụng bộ lọc trạng thái
+                if (!string.IsNullOrEmpty(trangThai))
+                {
+                    query = query.Where(r => r.TrangThai == trangThai);
+                }
+
+                // Áp dụng bộ lọc thời gian
+                if (!string.IsNullOrEmpty(tuNgay) && DateTime.TryParse(tuNgay, out DateTime tuNgayDate))
+                {
+                    query = query.Where(r => r.NgayTao >= tuNgayDate);
+                }
+
+                if (!string.IsNullOrEmpty(denNgay) && DateTime.TryParse(denNgay, out DateTime denNgayDate))
+                {
+                    // Đảm bảo đến hết ngày
+                    denNgayDate = denNgayDate.AddDays(1).AddSeconds(-1);
+                    query = query.Where(r => r.NgayTao <= denNgayDate);
+                }
+
+                // Tính toán tổng số trang
+                int totalItems = query.Count();
+                int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+                // Đảm bảo trang hiện tại hợp lệ
+                page = Math.Max(1, Math.Min(page, Math.Max(1, totalPages)));
+
+                // Lấy dữ liệu cho trang hiện tại
+                var reports = query
+                    .OrderByDescending(r => r.NgayTao)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList(); // Tách thành ToList() trước khi include
+
+                // Tải thủ công các thuộc tính navigation nếu cần
+                foreach (var report in reports)
+                {
+                    if (report.MaDonHang > 0)
+                        db.Entry(report).Reference(r => r.DonHang).Load();
+
+                    if (report.MaNguoiDung > 0)
+                        db.Entry(report).Reference(r => r.NguoiDung).Load();
+
+                    if (report.MaNguoiBan > 0)
+                        db.Entry(report).Reference(r => r.NguoiBan).Load();
+                }
+
+                // Truyền dữ liệu phân trang vào ViewBag
+                ViewBag.CurrentPage = page;
+                ViewBag.TotalPages = totalPages;
+                ViewBag.TotalItems = totalItems;
+                ViewBag.PageSize = pageSize;
+
+                // Truyền các tham số lọc vào ViewBag để duy trì trạng thái khi phân trang
+                ViewBag.TrangThai = trangThai;
+                ViewBag.TuNgay = tuNgay;
+                ViewBag.DenNgay = denNgay;
+
+                return View(reports);
+            }
+            catch (Exception ex)
+            {
+                var innerException = ex.InnerException;
+                string innerMessage = innerException != null ? innerException.Message : "Không có inner exception";
+                System.Diagnostics.Debug.WriteLine("Lỗi quản lý báo cáo: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("Inner exception: " + innerMessage);
+                TempData["Error"] = "Đã xảy ra lỗi khi tải danh sách báo cáo: " + ex.Message;
+                return RedirectToAction("Dashboard", "Admin");
+            }
+        }
+
+        // GET: Admin/ChiTietBaoCao/5
+        [Authorize]
+        public ActionResult ChiTietBaoCao(int id)
+        {
+            try
+            {
+                var baoCao = db.BaoCaoDonHangs
+                    .Include(r => r.DonHang)
+                    .Include(r => r.DonHang.NguoiDung)
+                    .Include(r => r.DonHang.NguoiBan)
+                    .Include(r => r.DonHang.ChiTietDonHangs)
+                    .Include(r => r.DonHang.ChiTietDonHangs.Select(c => c.SanPham))
+                    .FirstOrDefault(r => r.MaBaoCao == id);
+
+                if (baoCao == null)
+                {
+                    return HttpNotFound();
+                }
+
+                return View(baoCao);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Lỗi xem chi tiết báo cáo: " + ex.Message);
+                TempData["Error"] = "Đã xảy ra lỗi khi tải thông tin báo cáo. Vui lòng thử lại sau!";
+                return RedirectToAction("QuanLyBaoCaoDonHang", "Admin");
+            }
+        }
+
+        // POST: Admin/CapNhatTrangThaiBaoCao
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> CapNhatTrangThaiBaoCao(int id, string trangThai, string ketQuaXuLy)
+        {
+            try
+            {
+                // Thêm log để theo dõi luồng xử lý
+                System.Diagnostics.Debug.WriteLine($"Bắt đầu cập nhật trạng thái báo cáo ID: {id}, trạng thái: {trangThai}");
+
+                var baoCao = db.BaoCaoDonHangs.Find(id);
+                if (baoCao == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Không tìm thấy báo cáo ID: {id}");
+                    return HttpNotFound();
+                }
+
+                System.Diagnostics.Debug.WriteLine($"Tìm thấy báo cáo - MaDonHang: {baoCao.MaDonHang}");
+
+                // Lấy thông tin đơn hàng để tính phạt
+                var donHang = db.DonHangs.Find(baoCao.MaDonHang);
+                if (donHang == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Không tìm thấy đơn hàng ID: {baoCao.MaDonHang}");
+                    TempData["Error"] = "Không tìm thấy thông tin đơn hàng!";
+                    return RedirectToAction("ChiTietBaoCao", new { id = id });
+                }
+
+                System.Diagnostics.Debug.WriteLine($"Trạng thái hiện tại của đơn hàng: {donHang.TrangThaiDonHang}");
+
+                // Lấy thông tin người bán
+                var nguoiBan = db.NguoiBans.Find(donHang.MaNguoiBan);
+                if (nguoiBan == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Không tìm thấy thông tin người bán ID: {donHang.MaNguoiBan}");
+                    TempData["Error"] = "Không tìm thấy thông tin người bán!";
+                    return RedirectToAction("ChiTietBaoCao", new { id = id });
+                }
+
+                // Lấy thông tin người mua và người bán (người dùng)
+                var nguoiDungMua = db.NguoiDungs.Find(donHang.MaNguoiDung);
+                var nguoiDungBan = db.NguoiDungs.Find(nguoiBan.MaNguoiDung);
+
+                // CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG THÀNH "ĐÃ HỦY" NẾU BÁO CÁO LÀ "ĐÃ XỬ LÝ"
+                // Chú ý: thực hiện việc này TRƯỚC khi cập nhật các thông tin khác
+                if (trangThai == "Đã xử lý")
+                {
+                    System.Diagnostics.Debug.WriteLine($"Bắt đầu cập nhật trạng thái đơn hàng sang Đã hủy - MaDonHang: {donHang.MaDonHang}");
+
+                    try
+                    {
+                        // Lấy đơn hàng mới từ database để tránh vấn đề theo dõi
+                        var orderToUpdate = new DonHang();
+
+                        // Lấy đơn hàng từ database bằng DbSet.Find
+                        orderToUpdate = db.DonHangs.Find(donHang.MaDonHang);
+
+                        if (orderToUpdate != null)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Đã tìm thấy đơn hàng #{orderToUpdate.MaDonHang}, trạng thái hiện tại: {orderToUpdate.TrangThaiDonHang}");
+
+                            // Cập nhật trạng thái
+                            orderToUpdate.TrangThaiDonHang = "Đã hủy";
+                            orderToUpdate.NgayHuy = DateTime.Now;
+                            orderToUpdate.LyDoHuy = "Đơn hàng bị hủy do người bán vi phạm quy định: " + ketQuaXuLy;
+
+                            // Lưu thay đổi
+                            db.Entry(orderToUpdate).State = EntityState.Modified;
+                            int rowsAffected = db.SaveChanges();
+                            System.Diagnostics.Debug.WriteLine($"Cập nhật trạng thái đơn hàng: {rowsAffected} dòng bị ảnh hưởng");
+
+                            // Lấy lại đơn hàng để kiểm tra trạng thái
+                            var checkOrder = db.DonHangs.Find(donHang.MaDonHang);
+                            System.Diagnostics.Debug.WriteLine($"Trạng thái của đơn hàng sau khi cập nhật: {checkOrder.TrangThaiDonHang}");
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine($"CẢNH BÁO: Không tìm thấy đơn hàng {donHang.MaDonHang}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"LỖI khi cập nhật trạng thái đơn hàng: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"Chi tiết lỗi: {ex.StackTrace}");
+                        // Không throw exception ở đây, cho phép tiếp tục quy trình
+                    }
+
+                    // Rest of your code for processing "Đã xử lý" reports...
+                    // (Phần còn lại của mã xử lý phạt, gửi email, v.v.)
+
+                    // Tính số tiền phạt (150% giá trị đơn hàng)
+                    decimal tongTienPhat = donHang.TongSoTien * 1.5m;
+                    decimal tienHoanTraNguoiMua = donHang.TongSoTien; // 100% giá trị đơn hàng
+                    decimal phiChoNenTang = donHang.TongSoTien * 0.5m; // 50% giá trị đơn hàng
+
+                    // Kiểm tra số dư của người bán
+                    if (nguoiBan.SoDuVi < tongTienPhat)
+                    {
+                        TempData["Error"] = "Số dư của người bán không đủ để thực hiện phạt. Vui lòng kiểm tra lại!";
+                        return RedirectToAction("ChiTietBaoCao", new { id = id });
+                    }
+
+                    // Cập nhật số dư của người bán (trừ 150% giá trị đơn hàng)
+                    nguoiBan.SoDuVi -= tongTienPhat;
+                    db.Entry(nguoiBan).State = EntityState.Modified;
+
+                    // Tạo ghi chép ví hoàn tiền cho người mua (trừ 100% từ ví người bán)
+                    var ghiChepViHoanTien = new GhiChepVi
+                    {
+                        MaNguoiBan = nguoiBan.MaNguoiBan,
+                        SoTien = -tienHoanTraNguoiMua, // Số âm để thể hiện trừ tiền từ ví người bán
+                        LoaiGiaoDich = "Hoàn tiền người mua",
+                        MoTa = $"Hoàn tiền 100% giá trị đơn hàng #{donHang.MaDonHang} cho người mua do vi phạm quy định",
+                        NgayGiaoDich = DateTime.Now,
+                        TrangThai = "Thành công",
+                        MaDonHang = donHang.MaDonHang
+                    };
+                    db.GhiChepVis.Add(ghiChepViHoanTien);
+
+                    // Tạo ghi chép ví phí nền tảng (trừ 50% từ ví người bán)
+                    var ghiChepViPhiNenTang = new GhiChepVi
+                    {
+                        MaNguoiBan = nguoiBan.MaNguoiBan,
+                        SoTien = -phiChoNenTang, // Số âm để thể hiện trừ tiền từ ví người bán
+                        LoaiGiaoDich = "Phí nền tảng",
+                        MoTa = $"Phí phạt 50% giá trị đơn hàng #{donHang.MaDonHang} cho nền tảng do vi phạm quy định",
+                        NgayGiaoDich = DateTime.Now,
+                        TrangThai = "Thành công",
+                        MaDonHang = donHang.MaDonHang
+                    };
+                    db.GhiChepVis.Add(ghiChepViPhiNenTang);
+
+                    // Lưu các bản ghi tạm thời để lấy MaGhiChep cho đường dẫn
+                    db.SaveChanges();
+                    // Tạo thông báo hoàn tiền cho người bán (100% giá trị đơn hàng)
+                    var thongBaoHoanTienNguoiBan = new ThongBao
+                    {
+                        MaNguoiDung = nguoiBan.MaNguoiDung,
+                        LoaiThongBao = "Hoàn tiền",
+                        TieuDe = "Hoàn tiền cho người mua do vi phạm",
+                        TinNhan = $"Số tiền {tienHoanTraNguoiMua.ToString("N0")} VND (100% giá trị đơn hàng) đã được trừ từ ví của bạn để hoàn trả cho người mua do vi phạm quy định trên đơn hàng #{donHang.MaDonHang}.",
+                        MucDoQuanTrong = 3, // Mức độ rất quan trọng
+                        DuongDanChiTiet = "/GiaoDich/ChiTietGhiChepViNguoiBan/" + ghiChepViHoanTien.MaGhiChep,
+                        NgayTao = DateTime.Now
+                    };
+                    db.ThongBaos.Add(thongBaoHoanTienNguoiBan);
+
+                    // Tạo thông báo phí nền tảng cho người bán (50% giá trị đơn hàng)
+                    var thongBaoPhiNenTangNguoiBan = new ThongBao
+                    {
+                        MaNguoiDung = nguoiBan.MaNguoiDung,
+                        LoaiThongBao = "Phí nền tảng",
+                        TieuDe = "Phí phạt vi phạm cho nền tảng",
+                        TinNhan = $"Số tiền {phiChoNenTang.ToString("N0")} VND (50% giá trị đơn hàng) đã được trừ từ ví của bạn làm phí phạt cho nền tảng do vi phạm quy định trên đơn hàng #{donHang.MaDonHang}.\nChi tiết vi phạm: {ketQuaXuLy}",
+                        MucDoQuanTrong = 3, // Mức độ rất quan trọng
+                        DuongDanChiTiet = "/GiaoDich/ChiTietGhiChepViNguoiBan/" + ghiChepViPhiNenTang.MaGhiChep,
+                        NgayTao = DateTime.Now
+                    };
+                    db.ThongBaos.Add(thongBaoPhiNenTangNguoiBan);
+
+                    // Hoàn tiền cho người mua
+                    if (nguoiDungMua != null)
+                    {
+                        // Tạo thông báo hoàn tiền cho người mua
+                        var thongBaoHoanTien = new ThongBao
+                        {
+                            MaNguoiDung = donHang.MaNguoiDung,
+                            LoaiThongBao = "HoanTien",
+                            TieuDe = "Hoàn tiền đơn hàng",
+                            TinNhan = $"Bạn đã được hoàn {tienHoanTraNguoiMua.ToString("N0")} VND (100% giá trị đơn hàng) cho đơn hàng #{donHang.MaDonHang} do người bán vi phạm quy định.",
+                            MucDoQuanTrong = 2,
+                            DuongDanChiTiet = "/DonHang/ChiTiet/" + baoCao.MaDonHang,
+                            NgayTao = DateTime.Now
+                        };
+                        db.ThongBaos.Add(thongBaoHoanTien);
+                    }
+
+                    // Gửi email thông báo cho người bán
+                    if (nguoiDungBan != null && !string.IsNullOrEmpty(nguoiDungBan.Email))
+                    {
+                        try
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Gửi email tới người bán: {nguoiDungBan.Email}");
+                            await SendEmailAsync(
+                                nguoiDungBan.Email,
+                                "Thông báo phạt vi phạm",
+                                $"<p>Kính gửi {nguoiDungBan.TenNguoiDung},</p>" +
+                                $"<p>Bạn đã bị phạt <strong>{tongTienPhat.ToString("N0")} VND</strong> (150% giá trị đơn hàng) cho đơn hàng #{donHang.MaDonHang} do vi phạm quy định.</p>" +
+                                $"<p>Cụ thể:</p>" +
+                                $"<ul>" +
+                                $"<li>100% ({tienHoanTraNguoiMua.ToString("N0")} VND) hoàn trả cho người mua</li>" +
+                                $"<li>50% ({phiChoNenTang.ToString("N0")} VND) là phí phạt cho nền tảng</li>" +
+                                $"</ul>" +
+                                $"<p>Chi tiết vi phạm: {ketQuaXuLy}</p>" +
+                                $"<p>Số tiền phạt đã được trừ từ số dư ví của bạn.</p>" +
+                                "<p>Vui lòng tuân thủ quy định khi bán hàng trên hệ thống của chúng tôi.</p>" +
+                                "<p>Trân trọng,<br/>Ban quản trị</p>"
+                            );
+                            System.Diagnostics.Debug.WriteLine("Đã gửi email thành công cho người bán");
+                        }
+                        catch (Exception emailEx)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Lỗi khi gửi email cho người bán: {emailEx.Message}");
+                            // Không throw exception, tiếp tục quy trình
+                        }
+                    }
+
+                    // Gửi email thông báo cho người mua
+                    if (nguoiDungMua != null && !string.IsNullOrEmpty(nguoiDungMua.Email))
+                    {
+                        try
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Gửi email tới người mua: {nguoiDungMua.Email}");
+                            await SendEmailAsync(
+                                nguoiDungMua.Email,
+                                "Thông báo xử lý báo cáo đơn hàng",
+                                $"<p>Kính gửi {nguoiDungMua.TenNguoiDung},</p>" +
+                                $"<p>Báo cáo của bạn về đơn hàng #{donHang.MaDonHang} đã được xử lý với kết quả: <strong>{trangThai}</strong>.</p>" +
+                                $"<p>Chi tiết: {ketQuaXuLy}</p>" +
+                                $"<p>Số tiền <strong>{tienHoanTraNguoiMua.ToString("N0")} VND</strong> (100% giá trị đơn hàng) đã được hoàn trả cho bạn.</p>" +
+                                "<p>Cảm ơn bạn đã báo cáo vi phạm và giúp cộng đồng của chúng tôi an toàn hơn.</p>" +
+                                "<p>Trân trọng,<br/>Ban quản trị</p>"
+                            );
+                            System.Diagnostics.Debug.WriteLine("Đã gửi email thành công cho người mua");
+                        }
+                        catch (Exception emailEx)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Lỗi khi gửi email cho người mua: {emailEx.Message}");
+                            // Không throw exception, tiếp tục quy trình
+                        }
+                    }
+                }
+                else if (trangThai == "Đã huỷ")
+                {
+                    // Xử lý logic khi báo cáo bị hủy
+                    // ...
+                }
+
+                // Cập nhật trạng thái báo cáo
+                baoCao.TrangThai = trangThai;
+                baoCao.KetQuaXuLy = ketQuaXuLy;
+                baoCao.NgayXuLy = DateTime.Now;
+                db.Entry(baoCao).State = EntityState.Modified;
+
+                // Tạo thông báo cho người mua
+                var thongBaoNguoiMua = new ThongBao
+                {
+                    MaNguoiDung = donHang.MaNguoiDung,
+                    LoaiThongBao = "BaoCao",
+                    TieuDe = "Báo cáo đơn hàng đã được xử lý",
+                    TinNhan = $"Báo cáo cho đơn hàng #{baoCao.MaDonHang} đã được xử lý. Kết quả: {trangThai}. {ketQuaXuLy}",
+                    MucDoQuanTrong = 2, // Quan trọng cao
+                    DuongDanChiTiet = "/DonHang/ChiTiet/" + baoCao.MaDonHang,
+                    NgayTao = DateTime.Now
+                };
+                db.ThongBaos.Add(thongBaoNguoiMua);
+
+                // Lưu tất cả các thay đổi
+                try
+                {
+                    System.Diagnostics.Debug.WriteLine("Bắt đầu lưu các thay đổi vào cơ sở dữ liệu");
+                    int changes = await db.SaveChangesAsync();
+                    System.Diagnostics.Debug.WriteLine($"Đã lưu thành công: {changes} thay đổi");
+
+                    // Kiểm tra lại trạng thái đơn hàng sau khi lưu
+                    var updatedOrder = db.DonHangs.Find(donHang.MaDonHang);
+                    System.Diagnostics.Debug.WriteLine($"Trạng thái đơn hàng sau khi lưu: {updatedOrder.TrangThaiDonHang}");
+                }
+                catch (Exception saveEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"LỖI khi lưu các thay đổi: {saveEx.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Chi tiết lỗi: {saveEx.StackTrace}");
+                    throw; // Ném lại ngoại lệ để xử lý ở bên ngoài
+                }
+
+                TempData["Success"] = "Cập nhật trạng thái báo cáo thành công!";
+                return RedirectToAction("ChiTietBaoCao", new { id = id });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Lỗi cập nhật trạng thái báo cáo: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("Chi tiết lỗi: " + ex.StackTrace);
+                TempData["Error"] = "Đã xảy ra lỗi khi cập nhật trạng thái báo cáo: " + ex.Message;
+                return RedirectToAction("ChiTietBaoCao", new { id = id });
+            }
+        }
+
+        // Phương thức gửi email
+        private async Task SendEmailAsync(string email, string subject, string htmlMessage)
+        {
+            try
+            {
+                // Đọc cấu hình SMTP từ AppSettings
+                string smtpHost = ConfigurationManager.AppSettings["SmtpHost"];
+                int smtpPort = Convert.ToInt32(ConfigurationManager.AppSettings["SmtpPort"]);
+                string smtpEmail = ConfigurationManager.AppSettings["SmtpEmail"];
+                string smtpPassword = ConfigurationManager.AppSettings["SmtpPassword"];
+                bool enableSsl = Convert.ToBoolean(ConfigurationManager.AppSettings["SmtpEnableSSL"]);
+                string fromName = ConfigurationManager.AppSettings["EmailFromName"];
+
+                var message = new MailMessage();
+                message.To.Add(new MailAddress(email));
+                message.From = new MailAddress(smtpEmail, fromName);
+                message.Subject = subject;
+                message.Body = htmlMessage;
+                message.IsBodyHtml = true;
+
+                using (var client = new SmtpClient())
+                {
+                    client.Host = smtpHost;
+                    client.Port = smtpPort;
+                    client.EnableSsl = enableSsl;
+                    client.DeliveryMethod = SmtpDeliveryMethod.Network;
+                    client.UseDefaultCredentials = false;
+                    client.Credentials = new NetworkCredential(smtpEmail, smtpPassword);
+
+                    await client.SendMailAsync(message);
+                    System.Diagnostics.Debug.WriteLine("Email đã được gửi thành công đến " + email);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Lỗi gửi email: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("Chi tiết lỗi: " + ex.ToString());
+                // Không ném lại ngoại lệ để không gián đoạn luồng chính
+            }
+        }
+        //27/4/2025
 
         // GET: Admin/Dashboard
         [Authorize]

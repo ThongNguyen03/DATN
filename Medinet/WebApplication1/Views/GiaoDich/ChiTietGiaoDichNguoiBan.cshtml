@@ -229,7 +229,7 @@
 <div class="container mt-4">
     <div class="row">
         <!-- Sidebar -->
-        <div class="col-md-3">
+        @*<div class="col-md-3">
             <div class="card seller-sidebar">
                 <div class="card-header text-black">
                     <h5 class="mb-0">Trang người bán</h5>
@@ -261,10 +261,10 @@
                     </a>
                 </div>
             </div>
-        </div>
+        </div>*@
 
         <!-- Main content -->
-        <div class="col-md-9">
+        <div class="col-md-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h4 class="mb-0">Chi tiết giao dịch</h4>
                 <a href="@Url.Action("GiaoDichNguoiBan", "GiaoDich")" class="btn btn-outline-primary">
@@ -365,17 +365,33 @@
                                 <div class="detail-item">
                                     <div class="detail-label">Trạng thái đơn hàng</div>
                                     <div class="detail-value">
-                                        @if (Model.DonHang.TrangThaiDonHang == "Đã giao hàng")
+                                        @if (Model.DonHang.TrangThaiDonHang == "Đã hoàn thành")
                                         {
-                                            <span class="badge badge-completed">Đã giao hàng</span>
+                                            <span class="badge badge-completed">Đã hoàn thành</span>
                                         }
-                                        else if (Model.DonHang.TrangThaiDonHang == "Đang vận chuyển")
+                                        else if (Model.DonHang.TrangThaiDonHang == "Đã xác nhận nhận hàng")
                                         {
-                                            <span class="badge badge-info">Đang vận chuyển</span>
+                                            <span class="badge badge-completed">Đã xác nhận nhận hàng</span>
                                         }
-                                        else if (Model.DonHang.TrangThaiDonHang == "Đang xử lý")
+                                        else if (Model.DonHang.TrangThaiDonHang == "Đã giao")
                                         {
-                                            <span class="badge badge-pending">Đang xử lý</span>
+                                            <span class="badge badge-completed">Đã giao</span>
+                                        }
+                                        else if (Model.DonHang.TrangThaiDonHang == "Đã vận chuyển")
+                                        {
+                                            <span class="badge badge-info">Đã vận chuyển</span>
+                                        }
+                                        else if (Model.DonHang.TrangThaiDonHang == "Đã thanh toán")
+                                        {
+                                            <span class="badge badge-info">Đã thanh toán</span>
+                                        }
+                                        else if (Model.DonHang.TrangThaiDonHang == "Chờ thanh toán")
+                                        {
+                                            <span class="badge badge-pending">Chờ thanh toán</span>
+                                        }
+                                        else if (Model.DonHang.TrangThaiDonHang == "Đang chờ xử lý")
+                                        {
+                                            <span class="badge badge-pending">Đang chờ xử lý</span>
                                         }
                                         else if (Model.DonHang.TrangThaiDonHang == "Đã hủy")
                                         {

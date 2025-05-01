@@ -184,6 +184,7 @@
     </Compile>
     <Compile Include="Models\AnhChungChi.cs" />
     <Compile Include="Models\AnhSanPham.cs" />
+    <Compile Include="Models\BaoCaoDonHang.cs" />
     <Compile Include="Models\ChiTietDonHang.cs" />
     <Compile Include="Models\ChuongTrinhKhuyenMai.cs" />
     <Compile Include="Models\DanhGiaSanPham.cs" />
@@ -440,6 +441,8 @@
     <Content Include="Views\GiaoDich\ChiTietGiaoDichNguoiBan.cshtml" />
     <Content Include="Views\ThongBao\Index.cshtml" />
     <Content Include="Views\DangKy\XacNhanEmail.cshtml" />
+    <Content Include="Views\Admin\QuanLyBaoCaoDonHang.cshtml" />
+    <Content Include="Views\Admin\ChiTietBaoCao.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

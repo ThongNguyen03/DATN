@@ -524,17 +524,12 @@
                             </a>
                             break;
                         case "Seller":
-                            <a href="#" class="logo">
+                            <a href="@Url.Action("EditSellerProfile", "NguoiDungs")" class="logo">
                                 <img src="~/Content/images/medinet-logo.png" alt="Logo" />
                             </a>
                             break;
                         case "Admin":
-                            <a href="#" class="logo">
-                                <img src="~/Content/images/medinet-logo.png" alt="Logo" />
-                            </a>
-                            break;
-                        default:
-                            <a href="@Url.Action("Index", "Home")" class="logo">
+                            <a href="@Url.Action("DangNhap", "DangNhap")" class="logo">
                                 <img src="~/Content/images/medinet-logo.png" alt="Logo" />
                             </a>
                             break;
@@ -647,8 +642,11 @@
                         case "Buyer":
                             profileUrl = Url.Action("Profile", "NguoiDungs");
                             break;
+                        case "Admin":
+                            profileUrl = Url.Action("DangXuat", "DangNhap");
+                            break;
                         default:
-                            profileUrl = Url.Action("DangNhap", "DangNhap");
+                            profileUrl = Url.Action("DangXuat", "DangNhap");
                             break;
                     }
                     <a href="@profileUrl" class="icon-button">

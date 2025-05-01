@@ -127,12 +127,12 @@
 
     /* Additional styles for wallet logs */
     .amount-positive {
-        color: #198754; /* Bootstrap success color */
+        color: #198754 !important; /* Bootstrap success color */
         font-weight: 600;
     }
 
     .amount-negative {
-        color: #dc3545; /* Bootstrap danger color */
+        color: #dc3545 !important; /* Bootstrap danger color */
         font-weight: 600;
     }
 
@@ -224,6 +224,12 @@
                     <span>Quản lý đơn hàng</span>
                 </a>
             </li>
+            <li class="sidebar-item ">
+                <a href="@Url.Action("QuanLyBaoCaoDonHang", "Admin")" class="sidebar-link">
+                    <i class="bi bi-flag"></i>
+                    <span>Quản lý báo cáo</span>
+                </a>
+            </li>
             <li class="sidebar-item">
                 <a href="javascript:void(0);" class="sidebar-link" id="transactionDropdown">
                     <i class="bi bi-currency-exchange"></i>
@@ -232,11 +238,11 @@
                 </a>
                 <ul class="sidebar-submenu" id="transactionSubmenu">
                     @*<li class="sidebar-item ">
-                        <a href="@Url.Action("Dashboard", "GiaoDich")" class="sidebar-link">
-                            <i class="bi bi-bar-chart"></i>
-                            <span>Tổng quan</span>
-                        </a>
-                    </li>*@
+                    <a href="@Url.Action("Dashboard", "GiaoDich")" class="sidebar-link">
+                        <i class="bi bi-bar-chart"></i>
+                        <span>Tổng quan</span>
+                    </a>
+                </li>*@
                     <li class="sidebar-item">
                         <a href="@Url.Action("Index", "GiaoDich")" class="sidebar-link">
                             <i class="bi bi-credit-card"></i>
@@ -409,7 +415,23 @@
                                         @foreach (var item in Model)
                                         {
                                             var statusClass = item.TrangThai == "Thành công" ? "bg-success" : "bg-danger";
-                                            var amountClass = item.SoTien > 0 ? "amount-positive" : "amount-negative";
+
+                                            // Xác định màu dựa trên loại giao dịch và số tiền
+                                            var amountClass = "";  // Dùng var thay vì string
+                                            if (item.LoaiGiaoDich == "Nạp tiền ví" ||
+                                                item.LoaiGiaoDich == "Hoàn tiền" ||
+                                                item.LoaiGiaoDich == "Hoàn trả đặt cọc" ||
+                                                item.LoaiGiaoDich == "Hoàn trả phí nền tảng" ||
+                                                item.LoaiGiaoDich == "Thanh toán đơn hàng" ||
+                                                item.SoTien > 0)
+                                            {
+                                                amountClass = "amount-positive"; // Màu xanh
+                                            }
+                                            else
+                                            {
+                                                amountClass = "amount-negative"; // Màu đỏ
+                                            }
+
                                             var amountSymbol = item.SoTien > 0 ? "+" : "";
 
                                             <tr>
@@ -425,7 +447,14 @@
                                                     }
                                                 </td>
                                                 <td class="@amountClass">
-                                                    @amountSymbol@string.Format("{0:N0} VNĐ", item.SoTien)
+                                                    @if (item.SoTien < 0)
+                                                    {
+                                                        @String.Format("{0:N0} VNĐ", item.SoTien)
+                                                    }
+                                                    else
+                                                    {
+                                                        @String.Format("+{0:N0} VNĐ", item.SoTien)
+                                                    }
                                                 </td>
                                                 <td>@item.LoaiGiaoDich</td>
                                                 <td>
@@ -441,7 +470,7 @@
                                                 </td>
                                                 <td>
                                                     <a href="@Url.Action("WalletLogDetails", "GiaoDich", new { id = item.MaGhiChep })" class="btn btn-sm btn-secondary">
-                                                        <i class="bi bi-info-circle"></i> 
+                                                        <i class="bi bi-info-circle"></i>
                                                     </a>
                                                 </td>
                                             </tr>

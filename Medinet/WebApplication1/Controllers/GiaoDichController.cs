@@ -715,6 +715,17 @@ namespace WebApplication1.Controllers
             viewModel.TrangHienTai = page;
             viewModel.TongTrang = totalPages;
 
+            // Tính số tiền tối thiểu phải giữ lại
+            var donHangChuaHoanThanh = db.DonHangs
+                .Where(d => d.MaNguoiBan == nguoiBan.MaNguoiBan
+                    && d.TrangThaiDonHang != "Đã hoàn thành"
+                    && d.TrangThaiDonHang != "Đã hủy"
+                    && d.PhuongThucThanhToan == "VNPAY")
+                .ToList();
+
+            decimal tongTienDonHangChuaHoanThanh = donHangChuaHoanThanh.Sum(d => d.TongSoTien);
+            decimal soTienToiThieuPhaiGiuLai = tongTienDonHangChuaHoanThanh * 1.5m;
+            ViewBag.SoTienToiThieuPhaiGiuLai = soTienToiThieuPhaiGiuLai;
             return View(viewModel);
         }
 

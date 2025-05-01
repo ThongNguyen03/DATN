@@ -247,43 +247,141 @@
 
 <!-- JavaScript để thêm sản phẩm vào giỏ hàng và mua ngay -->
 <script>
-    function addToCart(maSanPham) {
-        $.ajax({
-            url: '@Url.Action("ThemVaoGio", "Home")',
-            type: 'POST',
-            data: { maSanPham: maSanPham, soLuong: 1 },
-            success: function (result) {
-                if (result.success) {
-                    toastr.success('Đã thêm sản phẩm vào giỏ hàng');
-                } else {
-                    toastr.error(result.message);
-                }
-            },
-            error: function () {
-                toastr.error('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
-            }
-        });
+// Hàm chuyển hướng đến trang đăng nhập với thông tin hành động
+function redirectToLogin(action, productId, quantity) {
+    var returnUrl = window.location.pathname + window.location.search;
+
+    // Tạo URL cho việc chuyển hướng đến trang đăng nhập với thông tin về hành động
+    var loginUrl = '@Url.Action("DangNhap", "DangNhap")' +
+                  '?returnUrl=' + encodeURIComponent(returnUrl) +
+                  '&action=' + encodeURIComponent(action) +
+                  '&productId=' + encodeURIComponent(productId);
+
+    // Thêm số lượng nếu được cung cấp
+    if (quantity) {
+        loginUrl += '&quantity=' + encodeURIComponent(quantity);
     }
 
-    function buyNow(maSanPham) {
-        // Đầu tiên thêm vào giỏ hàng
-        $.ajax({
-            url: '@Url.Action("ThemVaoGio", "Home")',
-            type: 'POST',
-            data: { maSanPham: maSanPham, soLuong: 1 },
-            success: function (result) {
-                if (result.success) {
-                    // Sau đó chuyển hướng đến trang giỏ hàng/thanh toán
-                    window.location.href = '@Url.Action("Index", "GioHang")';
-                } else {
-                    toastr.error(result.message);
-                }
-            },
-            error: function () {
-                toastr.error('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
-            }
-        });
+    window.location.href = loginUrl;
+}
+
+// Hàm thêm vào giỏ hàng có kiểm tra đăng nhập
+function addToCart(maSanPham) {
+    console.log("Hàm addToCart được gọi với maSanPham =", maSanPham);
+
+    // Kiểm tra xem người dùng đã đăng nhập chưa
+    var isAuthenticated = @(Request.IsAuthenticated.ToString().ToLower());
+    console.log("isAuthenticated =", isAuthenticated);
+
+    if (!isAuthenticated) {
+        console.log("Người dùng chưa đăng nhập, chuyển hướng đến trang đăng nhập");
+        // Chuyển hướng đến trang đăng nhập với thông tin về việc thêm vào giỏ
+        redirectToLogin('addToCart', maSanPham, 1);
+        return;
     }
+
+    // Nếu đã đăng nhập, tiếp tục với hành động thêm vào giỏ
+    $.ajax({
+        url: '@Url.Action("ThemVaoGio", "Home")',
+        type: 'POST',
+        data: { maSanPham: maSanPham, soLuong: 1 },
+        success: function (result) {
+            if (result.success) {
+                toastr.success('Đã thêm sản phẩm vào giỏ hàng');
+                console.log("Thêm vào giỏ thành công, gọi API lấy số lượng giỏ hàng");
+
+                // Luôn gọi API để lấy số lượng giỏ hàng hiện tại
+                $.ajax({
+                    url: '@Url.Action("GetCartCount", "Home")',
+                    type: 'GET',
+                    success: function(countData) {
+                        console.log("API GetCartCount trả về:", countData);
+                        var cartBadge = $(".cart-badge");
+
+                        if (cartBadge.length > 0) {
+                            console.log("Tìm thấy cart-badge, cập nhật số lượng:", countData.count);
+                            cartBadge.text(countData.count);
+                            cartBadge.show();
+                        } else {
+                            console.log("Không tìm thấy cart-badge, tạo mới");
+                            $(".cart-container").append('<span class="cart-badge" style="position: absolute; top: -8px; right: -8px; background-color: #dc3545; color: white; border-radius: 50%; min-width: 18px; height: 18px; font-size: 11px; font-weight: bold; display: flex; align-items: center; justify-content: center; padding: 2px;">' + countData.count + '</span>');
+                        }
+                    },
+                    error: function(error) {
+                        console.error("Lỗi khi gọi API GetCartCount:", error);
+                    }
+                });
+            } else {
+                toastr.error(result.message);
+                console.error("Lỗi khi thêm vào giỏ:", result.message);
+            }
+        },
+        error: function (error) {
+            toastr.error('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
+            console.error("Lỗi Ajax khi thêm vào giỏ:", error);
+        }
+    });
+}
+
+// Hàm mua ngay có kiểm tra đăng nhập
+function buyNow(maSanPham) {
+    console.log("Hàm buyNow được gọi với maSanPham =", maSanPham);
+
+    // Kiểm tra xem người dùng đã đăng nhập chưa
+    var isAuthenticated = @(Request.IsAuthenticated.ToString().ToLower());
+    console.log("isAuthenticated =", isAuthenticated);
+
+    if (!isAuthenticated) {
+        console.log("Người dùng chưa đăng nhập, chuyển hướng đến trang đăng nhập");
+        // Chuyển hướng đến trang đăng nhập với thông tin về việc mua ngay
+        redirectToLogin('buyNow', maSanPham, 1);
+        return;
+    }
+
+    // Nếu đã đăng nhập, tiếp tục với hành động mua ngay
+    // Gọi AJAX để thêm sản phẩm vào giỏ hàng tạm thời và chuyển đến trang thanh toán
+    $.ajax({
+        url: '@Url.Action("MuaNgay", "ThanhToan")',
+        type: 'POST',
+        data: {
+            maSanPham: maSanPham,
+            soLuong: 1
+        },
+        success: function(result) {
+            if (result.success) {
+                console.log("Mua ngay thành công, chuyển hướng đến:", result.redirectUrl);
+                // Chuyển hướng đến trang thanh toán
+                window.location.href = result.redirectUrl;
+            } else {
+                // Hiển thị thông báo lỗi
+                toastr.error(result.message);
+                console.error("Lỗi khi mua ngay:", result.message);
+            }
+        },
+        error: function(error) {
+            toastr.error('Đã xảy ra lỗi khi xử lý. Vui lòng thử lại sau.');
+            console.error("Lỗi Ajax khi mua ngay:", error);
+        }
+    });
+}
+
+// Thêm đoạn code debug để kiểm tra jQuery và các phần tử giỏ hàng khi trang tải
+$(document).ready(function() {
+    console.log("Document ready được chạy");
+    console.log("jQuery version:", $.fn.jquery);
+    console.log("Tìm thấy .cart-badge:", $(".cart-badge").length);
+    console.log("Tìm thấy .cart-container:", $(".cart-container").length);
+
+    // Kiểm tra xem toastr đã được định nghĩa chưa
+    if (typeof toastr === 'undefined') {
+        console.warn("Toastr chưa được tải! Sử dụng alert thay thế.");
+        // Định nghĩa toastr giả
+        window.toastr = {
+            success: function(msg) { alert(msg); },
+            error: function(msg) { alert(msg); }
+        };
+    }
+});
 </script>
 
 <!-- CSS bổ sung -->

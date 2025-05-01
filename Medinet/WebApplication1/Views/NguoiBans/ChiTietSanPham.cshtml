@@ -931,7 +931,7 @@
                             @if (sanPham.AnhSanPhams != null && sanPham.AnhSanPhams.Count > 0)
                             {
                                 <a href="@Url.Action("ChiTietSanPham", "NguoiBans", new { id = sanPham.MaSanPham })">
-                                    <img src="@sanPham.AnhSanPhams[0].DuongDanAnh" alt="@sanPham.TenSanPham" class="img-fluid" />
+                                    <img src="@Model.DanhSachAnh[0].DuongDanAnh" alt="@sanPham.TenSanPham" class="img-fluid" />
                                 </a>
                             }
                             else

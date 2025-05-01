@@ -1,0 +1,594 @@
+﻿@model IEnumerable<WebApplication1.Models.BaoCaoDonHang>
+@{
+    ViewBag.Title = "Quản lý báo cáo đơn hàng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var today = DateTime.Now.ToString("yyyy-MM-dd");
+}
+
+<style>
+    /* Sidebar styles */
+    .page-container {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    .sidebar {
+        width: 250px;
+        background-color: #fff;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 100;
+        padding-top: 15px;
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        margin-bottom: 15px;
+    }
+
+    .sidebar-logo {
+        height: 40px;
+        margin-right: 10px;
+    }
+
+    .sidebar-heading {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #6c757d;
+        padding: 0 20px;
+        margin-bottom: 10px;
+    }
+
+    .sidebar-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-item {
+        position: relative;
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        color: #495057;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+        .sidebar-link i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .sidebar-link:hover, .sidebar-item.active .sidebar-link {
+            color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+
+            .sidebar-item.active .sidebar-link:before {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 3px;
+                background-color: #0d6efd;
+            }
+
+    /* CSS cho menu con */
+    .sidebar-submenu {
+        list-style: none;
+        padding-left: 15px;
+        margin: 0;
+        display: none; /* Mặc định ẩn */
+    }
+
+        .sidebar-submenu .sidebar-link {
+            padding: 8px 20px 8px 30px;
+            font-size: 0.9em;
+        }
+
+        .sidebar-submenu .sidebar-item.active .sidebar-link:before {
+            left: 15px;
+        }
+
+        /* Hiển thị menu con khi có class 'show' */
+        .sidebar-submenu.show {
+            display: block;
+        }
+
+    /* Xoay mũi tên khi mở rộng */
+    .sidebar-link .bi-chevron-down {
+        transition: transform 0.3s;
+    }
+
+    .sidebar-link.expanded .bi-chevron-down {
+        transform: rotate(180deg);
+    }
+
+    /* Main content styles */
+    .main-content {
+        flex: 1;
+        padding: 20px;
+    }
+
+    /* Styles cho phần lọc */
+    .filter-container {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .filter-header {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+
+        .filter-header i {
+            margin-right: 8px;
+            color: #0d6efd;
+        }
+
+    .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .filter-group {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .filter-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: #555;
+    }
+
+    .filter-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+        .filter-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+            outline: none;
+        }
+
+    .filter-button {
+        background-color: #0d6efd;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 8px 20px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 40px;
+    }
+
+        .filter-button i {
+            margin-right: 8px;
+        }
+
+        .filter-button:hover {
+            background-color: #0b5ed7;
+        }
+
+    /* Validation styles */
+    .date-error {
+        color: #dc3545;
+        font-size: 12px;
+        margin-top: 5px;
+        display: none;
+    }
+
+    .error-input {
+        border-color: #dc3545 !important;
+    }
+
+        .error-input:focus {
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+        }
+
+    /* Bảng danh sách báo cáo */
+    .content-table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+        .content-table th {
+            background-color: #f8f9fa;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .content-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: middle;
+        }
+
+        .content-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .content-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+    .badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .action-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+        background-color: #0d6efd;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+        .action-button:hover {
+            background-color: #0b5ed7;
+        }
+</style>
+
+<div class="page-container">
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h6 class="sidebar-heading">CHỨC NĂNG</h6>
+        <ul class="sidebar-nav">
+            <li class="sidebar-item">
+                <a href="@Url.Action("Dashboard", "Admin")" class="sidebar-link">
+                    <i class="bi bi-grid"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="@Url.Action("UserManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-people"></i>
+                    <span>Quản lý người dùng</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="@Url.Action("ProductManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-box"></i>
+                    <span>Quản lý sản phẩm</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="@Url.Action("CategoryManagement", "Admin")" class="sidebar-link">
+                    <i class="bi bi-list-nested"></i>
+                    <span>Quản lý danh mục</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="@Url.Action("QuanLyDonHang", "DonHang")" class="sidebar-link">
+                    <i class="bi bi-cart3"></i>
+                    <span>Quản lý đơn hàng</span>
+                </a>
+            </li>
+            <li class="sidebar-item active">
+                <a href="@Url.Action("QuanLyBaoCaoDonHang", "Admin")" class="sidebar-link">
+                    <i class="bi bi-flag"></i>
+                    <span>Quản lý báo cáo</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="javascript:void(0);" class="sidebar-link" id="transactionDropdown">
+                    <i class="bi bi-currency-exchange"></i>
+                    <span>Quản lý giao dịch</span>
+                    <i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul class="sidebar-submenu" id="transactionSubmenu">
+                    <li class="sidebar-item">
+                        <a href="@Url.Action("Index", "GiaoDich")" class="sidebar-link">
+                            <i class="bi bi-credit-card"></i>
+                            <span>Giao dịch</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="@Url.Action("Escrow", "GiaoDich")" class="sidebar-link">
+                            <i class="bi bi-safe"></i>
+                            <span>Ký quỹ (Escrow)</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="@Url.Action("WalletLogs", "GiaoDich")" class="sidebar-link">
+                            <i class="bi bi-wallet2"></i>
+                            <span>Ghi chép ví</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        @using (Html.BeginForm("EmptyForm", "Admin", FormMethod.Post, new { id = "csrfForm" }))
+        {
+            @Html.AntiForgeryToken()
+        }
+
+        <h1 class="h3 mb-3">@ViewBag.Title</h1>
+
+        <!-- Phần lọc báo cáo -->
+        <div class="filter-container">
+            <div class="filter-header">
+                <i class="bi bi-funnel-fill"></i> Lọc báo cáo
+            </div>
+
+            <form action="@Url.Action("QuanLyBaoCaoDonHang", "Admin")" method="get" id="filterForm">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label class="filter-label" for="trangThai">Trạng thái</label>
+                        <select class="filter-control" id="trangThai" name="trangThai">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="Đang xử lý" @(ViewBag.TrangThai == "Đang xử lý" ? "selected" : "")>Đang xử lý</option>
+                            <option value="Đã xử lý" @(ViewBag.TrangThai == "Đã xử lý" ? "selected" : "")>Đã xử lý</option>
+                            <option value="Đã huỷ" @(ViewBag.TrangThai == "Đã huỷ" ? "selected" : "")>Đã huỷ</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label" for="tuNgay">Từ ngày</label>
+                        <input type="date" class="filter-control" id="tuNgay" name="tuNgay" value="@ViewBag.TuNgay" max="@today">
+                        <span id="tuNgayError" class="date-error">Ngày không hợp lệ</span>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label" for="denNgay">Đến ngày</label>
+                        <input type="date" class="filter-control" id="denNgay" name="denNgay" value="@ViewBag.DenNgay" max="@today">
+                        <span id="denNgayError" class="date-error">Ngày không hợp lệ</span>
+                    </div>
+
+                    <div class="filter-group d-flex align-items-end">
+                        <button type="submit" class="filter-button" id="filterButton">
+                            <i class="bi bi-search"></i> Tìm kiếm
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Bảng danh sách báo cáo -->
+        <div class="table-responsive">
+            <table class="content-table">
+                <thead>
+                    <tr>
+                        <th>Mã báo cáo</th>
+                        <th>Mã đơn hàng</th>
+                        <th>Người báo cáo</th>
+                        <th>Người bán</th>
+                        <th>Loại báo cáo</th>
+                        <th>Ngày báo cáo</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            string statusClass = "";
+                            switch (item.TrangThai)
+                            {
+                                case "Đang xử lý":
+                                    statusClass = "bg-warning text-dark";
+                                    break;
+                                case "Đã xử lý":
+                                    statusClass = "bg-success text-white";
+                                    break;
+                                case "Đã huỷ":
+                                    statusClass = "bg-danger text-white";
+                                    break;
+                                default:
+                                    statusClass = "bg-secondary text-white";
+                                    break;
+                            }
+
+                            <tr>
+                                <td>@item.MaBaoCao</td>
+                                <td>@item.MaDonHang</td>
+                                <td>@(item.NguoiDung?.TenNguoiDung ?? "Không xác định")</td>
+                                <td>@(item.NguoiBan?.TenCuaHang ?? "Không xác định")</td>
+                                <td>@item.LoaiBaoCao</td>
+                                <td>@item.NgayTao.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td><span class="badge @statusClass">@item.TrangThai</span></td>
+                                <td>
+                                    <a href="@Url.Action("ChiTietBaoCao", "Admin", new { id = item.MaBaoCao })" class="action-button" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-4">Không có báo cáo nào</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Phân trang -->
+        @if (ViewBag.TotalPages > 1)
+        {
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    @if (ViewBag.CurrentPage > 1)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action("QuanLyBaoCaoDonHang", "Admin", new { page = ViewBag.CurrentPage - 1, trangThai = ViewBag.TrangThai, tuNgay = ViewBag.TuNgay, denNgay = ViewBag.DenNgay })">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="page-item disabled">
+                            <span class="page-link">
+                                <i class="bi bi-chevron-left"></i>
+                            </span>
+                        </li>
+                    }
+
+                    @for (int i = Math.Max(1, ViewBag.CurrentPage - 2); i <= Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 2); i++)
+                    {
+                        <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("QuanLyBaoCaoDonHang", "Admin", new { page = i, trangThai = ViewBag.TrangThai, tuNgay = ViewBag.TuNgay, denNgay = ViewBag.DenNgay })">@i</a>
+                        </li>
+                    }
+
+                    @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action("QuanLyBaoCaoDonHang", "Admin", new { page = ViewBag.CurrentPage + 1, trangThai = ViewBag.TrangThai, tuNgay = ViewBag.TuNgay, denNgay = ViewBag.DenNgay })">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="page-item disabled">
+                            <span class="page-link">
+                                <i class="bi bi-chevron-right"></i>
+                            </span>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Xử lý menu giao dịch
+            if ($('#transactionSubmenu .sidebar-item.active').length > 0) {
+                $('#transactionSubmenu').addClass('show');
+                $('#transactionDropdown').addClass('expanded');
+            }
+
+            // Bắt sự kiện click
+            $('#transactionDropdown').on('click', function (e) {
+                e.preventDefault();
+                $('#transactionSubmenu').toggleClass('show');
+                $(this).toggleClass('expanded');
+            });
+
+            // Validate date inputs before form submission
+            $('#filterForm').on('submit', function (e) {
+                var isValid = true;
+                var tuNgay = $('#tuNgay').val();
+                var denNgay = $('#denNgay').val();
+                var today = new Date().toISOString().split('T')[0];
+
+                // Reset validation
+                $('#tuNgay, #denNgay').removeClass('error-input');
+                $('#tuNgayError, #denNgayError').hide();
+
+                // Check if tuNgay is greater than today
+                if (tuNgay && tuNgay > today) {
+                    $('#tuNgay').addClass('error-input');
+                    $('#tuNgayError').text('Từ ngày không được lớn hơn ngày hiện tại').show();
+                    isValid = false;
+                }
+
+                // Check if denNgay is greater than today
+                if (denNgay && denNgay > today) {
+                    $('#denNgay').addClass('error-input');
+                    $('#denNgayError').text('Đến ngày không được lớn hơn ngày hiện tại').show();
+                    isValid = false;
+                }
+
+                // Check if denNgay is less than tuNgay
+                if (tuNgay && denNgay && denNgay < tuNgay) {
+                    $('#denNgay').addClass('error-input');
+                    $('#denNgayError').text('Đến ngày phải lớn hơn hoặc bằng từ ngày').show();
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                }
+            });
+
+            // Validate on change
+            $('#tuNgay, #denNgay').on('change', function () {
+                var tuNgay = $('#tuNgay').val();
+                var denNgay = $('#denNgay').val();
+
+                // Reset validation for this input
+                $(this).removeClass('error-input');
+
+                if (this.id === 'tuNgay') {
+                    $('#tuNgayError').hide();
+
+                    // If both dates are filled, check if denNgay is less than tuNgay
+                    if (tuNgay && denNgay && denNgay < tuNgay) {
+                        $('#denNgay').addClass('error-input');
+                        $('#denNgayError').text('Đến ngày phải lớn hơn hoặc bằng từ ngày').show();
+                    } else {
+                        $('#denNgay').removeClass('error-input');
+                        $('#denNgayError').hide();
+                    }
+                }
+
+                if (this.id === 'denNgay') {
+                    $('#denNgayError').hide();
+
+                    // If both dates are filled, check if denNgay is less than tuNgay
+                    if (tuNgay && denNgay && denNgay < tuNgay) {
+                        $(this).addClass('error-input');
+                        $('#denNgayError').text('Đến ngày phải lớn hơn hoặc bằng từ ngày').show();
+                    }
+                }
+            });
+        });
+    </script>
+}

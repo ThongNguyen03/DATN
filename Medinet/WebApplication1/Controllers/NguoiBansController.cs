@@ -127,7 +127,6 @@ namespace WebApplication1.Controllers
         }
 
         // GET: NguoiBans/ThongTinNguoiBan/5
-        [Authorize]
         public ActionResult ThongTinNguoiBan(int? id, int? page = 1, string sort = "newest", int pageSize = 9)
         {
             if (id == null)
@@ -1256,6 +1255,44 @@ namespace WebApplication1.Controllers
                     return RedirectToAction("QuanLyTaiKhoan", new { id = maNguoiBan });
                 }
 
+                // Tính toán số tiền tối thiểu phải giữ lại
+                // Lấy tất cả đơn hàng chưa hoàn thành, được thanh toán bằng VNPAY của người bán này
+                // Các trạng thái được tính: Đang chờ xử lý, Chờ thanh toán, Đã thanh toán, Đã vận chuyển, Đã giao, Đã xác nhận nhận hàng, Đã hủy
+                // Chỉ loại trừ trạng thái: Đã hoàn thành
+                var donHangChuaHoanThanh = db.DonHangs
+                    .Where(d => d.MaNguoiBan == maNguoiBan
+                        && d.TrangThaiDonHang != "Đã hoàn thành"
+                        && d.TrangThaiDonHang != "Đã hủy"
+                        && d.PhuongThucThanhToan =="VNPAY")
+                    .ToList();
+
+                // Tính tổng số tiền của các đơn hàng chưa hoàn thành * 150%
+                decimal tongTienDonHangChuaHoanThanh = 0;
+                foreach (var donHang in donHangChuaHoanThanh)
+                {
+                    tongTienDonHangChuaHoanThanh += donHang.TongSoTien;
+                }
+
+                decimal soTienToiThieuPhaiGiuLai = tongTienDonHangChuaHoanThanh * 1.5m;
+
+                // Kiểm tra số dư sau khi rút
+                decimal soDuSauKhiRut = nguoiBan.SoDuVi - soTien;
+
+                if (soDuSauKhiRut < soTienToiThieuPhaiGiuLai)
+                {
+                    decimal soTienToiDaCoTheRut = nguoiBan.SoDuVi - soTienToiThieuPhaiGiuLai;
+
+                    if (soTienToiDaCoTheRut <= 0)
+                    {
+                        TempData["Error"] = $"Bạn không thể rút tiền lúc này. Bạn cần giữ lại ít nhất {soTienToiThieuPhaiGiuLai:N0} VNĐ cho các đơn hàng đang xử lý.";
+                    }
+                    else
+                    {
+                        TempData["Error"] = $"Số tiền rút vượt quá giới hạn cho phép. Bạn chỉ có thể rút tối đa {soTienToiDaCoTheRut:N0} VNĐ. Cần giữ lại {soTienToiThieuPhaiGiuLai:N0} VNĐ cho các đơn hàng đang xử lý.";
+                    }
+                    return RedirectToAction("QuanLyTaiKhoan", new { id = maNguoiBan });
+                }
+
                 // Kiểm tra số dư
                 if (nguoiBan.SoDuVi < soTien)
                 {
@@ -1271,7 +1308,8 @@ namespace WebApplication1.Controllers
                     LoaiGiaoDich = "Rút tiền",
                     MoTa = $"Rút tiền về tài khoản: {thongTinTaiKhoan}",
                     NgayGiaoDich = DateTime.Now,
-                    TrangThai = "Đang xử lý" // Trạng thái ban đầu là đang xử lý, sau đó cần có quá trình xác nhận
+                    TrangThai = "Đang xử lý", // Trạng thái ban đầu là đang xử lý, sau đó cần có quá trình xác nhận
+                    IP = Request.UserHostAddress
                 };
                 db.GhiChepVis.Add(ghiChep);
 
@@ -1281,14 +1319,14 @@ namespace WebApplication1.Controllers
                     MaNguoiDung = nguoiBan.MaNguoiDung,
                     LoaiThongBao = "Vi",
                     TieuDe = "Yêu cầu rút tiền đã được ghi nhận",
-                    TinNhan = $"Yêu cầu rút {soTien:N0} VNĐ từ ví về tài khoản {thongTinTaiKhoan} đã được ghi nhận. Tiền sẽ được chuyển vào tài khoản của bạn trong vòng 24h làm việc.",
+                    TinNhan = $"Yêu cầu rút {soTien:N0} VNĐ từ ví về tài khoản {thongTinTaiKhoan} đã được ghi nhận. Tiền sẽ được chuyển vào tài khoản của bạn trong vòng 24h làm việc. Số dư ví sau khi rút: {soDuSauKhiRut:N0} VNĐ.",
                     MucDoQuanTrong = 1, // Thông báo thông thường
                     DuongDanChiTiet = "/GiaoDich/ViNguoiBan",
                     NgayTao = DateTime.Now
                 };
                 db.ThongBaos.Add(thongBaoNguoiBan);
 
-                // Tạo thông báo cho admin về yêu cầu trở thành người bán
+                // Tạo thông báo cho admin về yêu cầu rút tiền
                 var adminList = db.NguoiDungs.Where(n => n.VaiTro == "Admin").ToList();
                 if (adminList != null && adminList.Count > 0)
                 {
@@ -1296,18 +1334,17 @@ namespace WebApplication1.Controllers
                     {
                         var thongBaoAdmin = new ThongBao
                         {
-                            MaNguoiDung = admin.MaNguoiDung, // Giả sử có trường MaQuanTriVien
+                            MaNguoiDung = admin.MaNguoiDung,
                             LoaiThongBao = "Vi",
                             TieuDe = "Yêu cầu rút tiền mới cần xử lý",
-                            TinNhan = $"Người bán (ID: {maNguoiBan}) đã yêu cầu rút {soTien:N0} VNĐ về tài khoản {thongTinTaiKhoan}. Vui lòng kiểm tra và xử lý yêu cầu này.",
+                            TinNhan = $"Người bán (ID: {maNguoiBan}) đã yêu cầu rút {soTien:N0} VNĐ về tài khoản {thongTinTaiKhoan}. Số dư ví hiện tại: {nguoiBan.SoDuVi:N0} VNĐ. Số dư sau khi rút: {soDuSauKhiRut:N0} VNĐ. Vui lòng kiểm tra và xử lý yêu cầu này.",
                             MucDoQuanTrong = 2, // Thông báo quan trọng cần xử lý
-                            DuongDanChiTiet = "/GiaoDich/WalletLogs" ,
+                            DuongDanChiTiet = "/GiaoDich/WalletLogs",
                             NgayTao = DateTime.Now
                         };
                         db.ThongBaos.Add(thongBaoAdmin);
                     }
                 }
-
 
                 // Cập nhật số dư ví
                 nguoiBan.SoDuVi -= soTien;
@@ -1315,7 +1352,7 @@ namespace WebApplication1.Controllers
 
                 db.SaveChanges();
 
-                TempData["Success"] = "Yêu cầu rút tiền đã được ghi nhận. Tiền sẽ được chuyển vào tài khoản của bạn trong vòng 24h làm việc!";
+                TempData["Success"] = $"Yêu cầu rút tiền đã được ghi nhận. Tiền sẽ được chuyển vào tài khoản của bạn trong vòng 24h làm việc! Số dư ví còn lại: {soDuSauKhiRut:N0} VNĐ.";
                 return RedirectToAction("QuanLyTaiKhoan", new { id = maNguoiBan });
             }
             catch (Exception ex)

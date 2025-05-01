@@ -485,7 +485,7 @@
                                                         badgeClass = "transaction-deposit";
                                                     }
                                                     else if (ghiChep.LoaiGiaoDich == "Rút tiền" || ghiChep.LoaiGiaoDich == "Đặt cọc" ||
-                                                             ghiChep.LoaiGiaoDich == "Phí nền tảng")
+                                                             ghiChep.LoaiGiaoDich == "Phí nền tảng" || ghiChep.LoaiGiaoDich == "Hoàn tiền người mua")
                                                     {
                                                         badgeClass = "transaction-withdraw";
                                                     }
@@ -697,12 +697,23 @@
                 <input type="hidden" name="thongTinTaiKhoan" id="fullAccountInfo" />
                 <div class="modal-body">
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle mr-1"></i> Số dư khả dụng: <strong>@String.Format("{0:N0} VNĐ", Model.SoDuVi)</strong>
+                        <i class="fas fa-info-circle mr-1"></i> Số dư hiện tại: <strong>@String.Format("{0:N0} VNĐ", Model.SoDuVi)</strong>
                     </div>
+                    <!-- Thêm phần thông báo số tiền tối thiểu phải giữ lại -->
+                    @if (ViewBag.SoTienToiThieuPhaiGiuLai != null && (decimal)ViewBag.SoTienToiThieuPhaiGiuLai > 0)
+                    {
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                            <strong>Lưu ý:</strong> Bạn cần giữ lại tối thiểu <strong>@String.Format("{0:N0} VNĐ", (decimal)ViewBag.SoTienToiThieuPhaiGiuLai)</strong>
+                            cho các đơn hàng đang xử lý (150% giá trị đơn hàng VNPAY chưa hoàn thành).
+                            <br />
+                            Số tiền tối đa có thể rút: <strong>@String.Format("{0:N0} VNĐ", Math.Max(0, Model.SoDuVi - (decimal)ViewBag.SoTienToiThieuPhaiGiuLai))</strong>
+                        </div>
+                    }
                     <div class="form-group">
                         <label for="soTienRut">Số tiền rút</label>
                         <div class="input-group">
-                            <input type="number" class="form-control" id="soTienRut" name="soTien" min="50000" max="@Model.SoDuVi" required>
+                            <input type="number" class="form-control" id="soTienRut" name="soTien" min="50000" max="@Math.Max(0, Model.SoDuVi - ViewBag.SoTienToiThieuPhaiGiuLai)" required>
                             <div class="input-group-append">
                                 <span class="input-group-text">VNĐ</span>
                             </div>
@@ -825,7 +836,7 @@
 
                 var soTienRut = parseFloat($('#soTienRut').val());
                 var soDuVi = parseFloat('@Model.SoDuVi');
-
+                var soTienToiThieuPhaiGiuLai = @(ViewBag.SoTienToiThieuPhaiGiuLai == null ? "0" : ViewBag.SoTienToiThieuPhaiGiuLai.ToString());
                 if (isNaN(soTienRut) || soTienRut <= 0) {
                     e.preventDefault();
                     alert('Vui lòng nhập số tiền hợp lệ!');
@@ -837,7 +848,24 @@
                     alert('Số tiền rút không được vượt quá số dư ví!');
                     return false;
                 }
+                // Kiểm tra số tiền tối thiểu phải giữ lại
+                var soDuSauKhiRut = soDuVi - soTienRut;
+                if (soDuSauKhiRut < soTienToiThieuPhaiGiuLai) {
+                    e.preventDefault();
+                    var soTienToiDaCoTheRut = soDuVi - soTienToiThieuPhaiGiuLai;
 
+                    if (soTienToiDaCoTheRut <= 0) {
+                        alert('Bạn không thể rút tiền lúc này. Bạn cần giữ lại ít nhất ' +
+                            soTienToiThieuPhaiGiuLai.toLocaleString('vi-VN') +
+                            ' VNĐ cho các đơn hàng đang xử lý.');
+                    } else {
+                        alert('Số tiền rút vượt quá giới hạn cho phép. Bạn chỉ có thể rút tối đa ' +
+                            soTienToiDaCoTheRut.toLocaleString('vi-VN') +
+                            ' VNĐ. Cần giữ lại ' + soTienToiThieuPhaiGiuLai.toLocaleString('vi-VN') +
+                            ' VNĐ cho các đơn hàng đang xử lý.');
+                    }
+                    return false;
+                }
                 // Xác định tên ngân hàng (từ dropdown hoặc input "ngân hàng khác")
                 var bankName = $('#tenNganHang').val();
                 if (bankName === "Ngân hàng khác") {
