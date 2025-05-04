@@ -116,10 +116,40 @@ namespace WebApplication1.Controllers
         }
 
         // POST: Admin/RestoreUser/5
+        //[Authorize]
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public ActionResult RestoreUser(int id)
+        //{
+        //    try
+        //    {
+        //        var nguoiDung = db.NguoiDungs.Find(id);
+        //        if (nguoiDung == null)
+        //        {
+        //            return Json(new { success = false, message = "Không tìm thấy người dùng." });
+        //        }
+
+        //        // Kiểm tra trạng thái hiện tại
+        //        if (nguoiDung.TrangThai != "Inactive")
+        //        {
+        //            return Json(new { success = false, message = "Người dùng không ở trạng thái bị xóa." });
+        //        }
+
+        //        // Khôi phục trạng thái Active
+        //        nguoiDung.TrangThai = "Active";
+        //        db.SaveChanges();
+
+        //        return Json(new { success = true });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Json(new { success = false, message = "Lỗi: " + ex.Message });
+        //    }
+        //}
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult RestoreUser(int id)
+        public async Task<ActionResult> RestoreUser(int id)
         {
             try
             {
@@ -139,7 +169,63 @@ namespace WebApplication1.Controllers
                 nguoiDung.TrangThai = "Active";
                 db.SaveChanges();
 
-                return Json(new { success = true });
+                // Tạo thông báo cho người dùng
+                var thongBao = new ThongBao
+                {
+                    MaNguoiDung = nguoiDung.MaNguoiDung,
+                    LoaiThongBao = "TaiKhoan",
+                    TieuDe = "Tài khoản đã được khôi phục",
+                    TinNhan = "Chúc mừng! Tài khoản của bạn đã được khôi phục thành công. Bạn đã có thể đăng nhập và sử dụng tất cả các tính năng.",
+                    MucDoQuanTrong = 2, // Mức độ quan trọng cao
+                    DuongDanChiTiet = "/NguoiDungs/Profile",
+                    NgayTao = DateTime.Now,
+                    TrangThai = "Chưa đọc"
+                };
+                db.ThongBaos.Add(thongBao);
+                db.SaveChanges();
+
+                // Gửi email thông báo
+                if (!string.IsNullOrEmpty(nguoiDung.Email))
+                {
+                    try
+                    {
+                        string emailContent = $@"
+                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;'>
+                        <div style='background-color: #5cb85c; padding: 20px; text-align: center; border-radius: 5px;'>
+                            <h2 style='color: white; margin: 0;'>Tài khoản đã được khôi phục</h2>
+                        </div>
+                        
+                        <div style='background-color: white; padding: 20px; margin-top: 20px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
+                            <p>Kính gửi {nguoiDung.TenNguoiDung},</p>
+                            
+                            <p>Chúng tôi xin thông báo rằng tài khoản của bạn đã được khôi phục thành công.</p>
+                            
+                            <div style='background-color: #d1e7dd; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                                <h3 style='margin-top: 0; color: #0f5132;'>✓ Tài khoản đã kích hoạt</h3>
+                                <p style='margin-bottom: 0;'>Bây giờ bạn có thể đăng nhập và sử dụng tất cả các tính năng của hệ thống.</p>
+                            </div>
+                            
+                            <p>Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với bộ phận hỗ trợ của chúng tôi.</p>
+                            
+                            <p>Trân trọng,<br/><strong>Ban Quản Trị</strong></p>
+                        </div>
+                        
+                        <div style='text-align: center; margin-top: 20px; color: #6c757d; font-size: 12px;'>
+                            <p>Đây là email tự động, vui lòng không trả lời email này.</p>
+                        </div>
+                    </div>";
+
+                        await SendEmailAsync(nguoiDung.Email, "Thông báo khôi phục tài khoản", emailContent);
+                        System.Diagnostics.Debug.WriteLine($"Email khôi phục tài khoản đã được gửi tới {nguoiDung.Email}");
+                    }
+                    catch (Exception emailEx)
+                    {
+                        // Log lỗi nhưng vẫn trả về thành công vì tài khoản đã được khôi phục
+                        System.Diagnostics.Debug.WriteLine($"Lỗi gửi email khôi phục tài khoản: {emailEx.Message}");
+                    }
+                }
+
+                return Json(new { success = true, message = "Khôi phục tài khoản thành công và đã gửi thông báo." });
             }
             catch (Exception ex)
             {
@@ -148,10 +234,41 @@ namespace WebApplication1.Controllers
         }
 
         // POST: Admin/LockUser/5
+        //[Authorize]
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public ActionResult LockUser(int id)
+        //{
+        //    try
+        //    {
+        //        var nguoiDung = db.NguoiDungs.Find(id);
+        //        if (nguoiDung == null)
+        //        {
+        //            return Json(new { success = false, message = "Không tìm thấy người dùng." });
+        //        }
+
+        //        // Kiểm tra xem có phải Admin không
+        //        if (nguoiDung.VaiTro == "Admin")
+        //        {
+        //            return Json(new { success = false, message = "Không thể khóa tài khoản Admin." });
+        //        }
+
+        //        nguoiDung.TrangThai = "Banned";
+        //        db.SaveChanges();
+
+        //        return Json(new { success = true });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Json(new { success = false, message = "Lỗi: " + ex.Message });
+        //    }
+        //}
+
+        // POST: Admin/UnlockUser/5
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult LockUser(int id)
+        public async Task<ActionResult> LockUser(int id)
         {
             try
             {
@@ -170,19 +287,119 @@ namespace WebApplication1.Controllers
                 nguoiDung.TrangThai = "Banned";
                 db.SaveChanges();
 
-                return Json(new { success = true });
+                //// Tạo thông báo cho người dùng
+                //var thongBao = new ThongBao
+                //{
+                //    MaNguoiDung = nguoiDung.MaNguoiDung,
+                //    LoaiThongBao = "TaiKhoan",
+                //    TieuDe = "Tài khoản đã bị khóa",
+                //    TinNhan = "Tài khoản của bạn đã bị khóa do vi phạm quy định của hệ thống. Vui lòng liên hệ ban quản trị để biết thêm chi tiết.",
+                //    MucDoQuanTrong = 3, // Mức độ khẩn cấp cao nhất
+                //    DuongDanChiTiet = "#",
+                //    NgayTao = DateTime.Now,
+                //    TrangThai = "Chưa đọc"
+                //};
+                //db.ThongBaos.Add(thongBao);
+                //db.SaveChanges();
+
+                // Gửi email thông báo
+                if (!string.IsNullOrEmpty(nguoiDung.Email))
+                {
+                    try
+                    {
+                        string emailContent = $@"
+                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;'>
+                        <div style='background-color: #dc3545; padding: 20px; text-align: center; border-radius: 5px;'>
+                            <h2 style='color: white; margin: 0;'>Tài khoản đã bị khóa</h2>
+                        </div>
+                        
+                        <div style='background-color: white; padding: 20px; margin-top: 20px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
+                            <p>Kính gửi {nguoiDung.TenNguoiDung},</p>
+                            
+                            <p>Chúng tôi xin thông báo rằng tài khoản của bạn đã bị khóa do vi phạm các quy định của hệ thống.</p>
+                            
+                            <div style='background-color: #f8d7da; padding: 15px; border-radius: 5px; margin: 20px 0; border: 1px solid #f5c6cb;'>
+                                <h3 style='margin-top: 0; color: #721c24;'>⚠️ Thông tin quan trọng</h3>
+                                <ul style='margin-bottom: 0; padding-left: 20px;'>
+                                    <li>Ngày khóa: {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")}</li>
+                                    <li>Trạng thái: Tài khoản đã bị khóa</li>
+                                    <li>Tác động: Bạn không thể đăng nhập vào hệ thống</li>
+                                </ul>
+                            </div>
+                            
+                            <h3 style='color: #dc3545;'>Các bước tiếp theo:</h3>
+                            <p>1. Liên hệ với ban quản trị để biết lý do cụ thể</p>
+                            <p>2. Cung cấp thông tin cần thiết để xem xét khôi phục tài khoản</p>
+                            <p>3. Cải thiện hành vi để tuân thủ quy định hệ thống</p>
+                            
+                            <div style='background-color: #cce5ff; padding: 15px; border-radius: 5px; margin: 20px 0; border: 1px solid #b8daff;'>
+                                <h3 style='margin-top: 0; color: #004085;'>📞 Thông tin liên hệ hỗ trợ</h3>
+                                <p style='margin-bottom: 0;'>Email: medinetpro183@gmail.com</p>
+                                <p style='margin-bottom: 0;'>Hotline: 19006666</p>
+                            </div>
+                            
+                            <p>Chúng tôi rất tiếc về sự bất tiện này và mong rằng bạn sẽ hiểu và hợp tác với chúng tôi.</p>
+                            
+                            <p>Trân trọng,<br/><strong>Ban Quản Trị</strong></p>
+                        </div>
+                        
+                        <div style='text-align: center; margin-top: 20px; color: #6c757d; font-size: 12px;'>
+                            <p>Đây là email tự động, vui lòng không trả lời email này.</p>
+                        </div>
+                    </div>";
+
+                        await SendEmailAsync(nguoiDung.Email, "THÔNG BÁO QUAN TRỌNG: Tài khoản đã bị khóa", emailContent);
+                        System.Diagnostics.Debug.WriteLine($"Email thông báo khóa tài khoản đã được gửi tới {nguoiDung.Email}");
+                    }
+                    catch (Exception emailEx)
+                    {
+                        // Log lỗi nhưng vẫn trả về thành công vì tài khoản đã được khóa
+                        System.Diagnostics.Debug.WriteLine($"Lỗi gửi email thông báo khóa tài khoản: {emailEx.Message}");
+                    }
+                }
+
+                return Json(new { success = true, message = "Khóa tài khoản thành công và đã gửi thông báo." });
             }
             catch (Exception ex)
             {
                 return Json(new { success = false, message = "Lỗi: " + ex.Message });
             }
         }
+        //[Authorize]
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public ActionResult UnlockUser(int id)
+        //{
+        //    try
+        //    {
+        //        var nguoiDung = db.NguoiDungs.Find(id);
+        //        if (nguoiDung == null)
+        //        {
+        //            return Json(new { success = false, message = "Không tìm thấy người dùng." });
+        //        }
 
-        // POST: Admin/UnlockUser/5
+        //        // Chỉ mở khóa nếu trạng thái hiện tại là Banned
+        //        if (nguoiDung.TrangThai != "Banned")
+        //        {
+        //            return Json(new { success = false, message = "Người dùng không ở trạng thái bị khóa." });
+        //        }
+
+        //        nguoiDung.TrangThai = "Active";
+        //        db.SaveChanges();
+
+        //        return Json(new { success = true });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Json(new { success = false, message = "Lỗi: " + ex.Message });
+        //    }
+        //}
+
+        // POST: Admin/UpgradeToSeller/5
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult UnlockUser(int id)
+        public async Task<ActionResult> UnlockUser(int id)
         {
             try
             {
@@ -201,15 +418,83 @@ namespace WebApplication1.Controllers
                 nguoiDung.TrangThai = "Active";
                 db.SaveChanges();
 
-                return Json(new { success = true });
+                // Tạo thông báo cho người dùng
+                var thongBao = new ThongBao
+                {
+                    MaNguoiDung = nguoiDung.MaNguoiDung,
+                    LoaiThongBao = "TaiKhoan",
+                    TieuDe = "Tài khoản đã được mở khóa",
+                    TinNhan = "Tài khoản của bạn đã được mở khóa thành công. Giờ đây bạn có thể đăng nhập và sử dụng tất cả các tính năng của hệ thống.",
+                    MucDoQuanTrong = 2, // Mức độ quan trọng cao
+                    DuongDanChiTiet = "/NguoiDungs/Profile",
+                    NgayTao = DateTime.Now,
+                    TrangThai = "Chưa đọc"
+                };
+                db.ThongBaos.Add(thongBao);
+                db.SaveChanges();
+
+                // Gửi email thông báo
+                if (!string.IsNullOrEmpty(nguoiDung.Email))
+                {
+                    try
+                    {
+                        string emailContent = $@"
+                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;'>
+                        <div style='background-color: #28a745; padding: 20px; text-align: center; border-radius: 5px;'>
+                            <h2 style='color: white; margin: 0;'>Tài khoản đã được mở khóa</h2>
+                        </div>
+                        
+                        <div style='background-color: white; padding: 20px; margin-top: 20px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
+                            <p>Kính gửi {nguoiDung.TenNguoiDung},</p>
+                            
+                            <p>Chúng tôi xin thông báo rằng tài khoản của bạn đã được mở khóa thành công.</p>
+                            
+                            <div style='background-color: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0; border: 1px solid #c3e6cb;'>
+                                <h3 style='margin-top: 0; color: #155724;'>✓ Trạng thái hiện tại</h3>
+                                <ul style='margin-bottom: 0; padding-left: 20px;'>
+                                    <li>Ngày mở khóa: {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")}</li>
+                                    <li>Trạng thái: Tài khoản đã kích hoạt</li>
+                                    <li>Quyền truy cập: Đã được khôi phục</li>
+                                </ul>
+                            </div>
+                            
+                            <h3 style='color: #28a745;'>Bạn có thể:</h3>
+                            <p>• Đăng nhập vào hệ thống</p>
+                            <p>• Sử dụng tất cả các tính năng như trình bày</p>
+                            <p>• Tham gia lại các hoạt động bình thường</p>
+                            
+                            <div style='background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; border: 1px solid #ffeeba;'>
+                                <h3 style='margin-top: 0; color: #856404;'>⚠️ Lưu ý quan trọng</h3>
+                                <p style='margin-bottom: 0;'>Vui lòng tuân thủ các quy định của hệ thống để tránh bị khóa lại tài khoản.</p>
+                            </div>
+                            
+                            <p>Cảm ơn sự hiểu biết và hợp tác của bạn!</p>
+                            
+                            <p>Trân trọng,<br/><strong>Ban Quản Trị</strong></p>
+                        </div>
+                        
+                        <div style='text-align: center; margin-top: 20px; color: #6c757d; font-size: 12px;'>
+                            <p>Đây là email tự động, vui lòng không trả lời email này.</p>
+                        </div>
+                    </div>";
+
+                        await SendEmailAsync(nguoiDung.Email, "Thông báo: Tài khoản đã được mở khóa", emailContent);
+                        System.Diagnostics.Debug.WriteLine($"Email thông báo mở khóa tài khoản đã được gửi tới {nguoiDung.Email}");
+                    }
+                    catch (Exception emailEx)
+                    {
+                        // Log lỗi nhưng vẫn trả về thành công vì tài khoản đã được mở khóa
+                        System.Diagnostics.Debug.WriteLine($"Lỗi gửi email thông báo mở khóa tài khoản: {emailEx.Message}");
+                    }
+                }
+
+                return Json(new { success = true, message = "Mở khóa tài khoản thành công và đã gửi thông báo." });
             }
             catch (Exception ex)
             {
                 return Json(new { success = false, message = "Lỗi: " + ex.Message });
             }
         }
-
-        // POST: Admin/UpgradeToSeller/5
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -252,10 +537,42 @@ namespace WebApplication1.Controllers
         }
 
         // POST: Admin/DeleteUser/5
+        //[Authorize]
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public ActionResult DeleteUser(int id)
+        //{
+        //    try
+        //    {
+        //        var nguoiDung = db.NguoiDungs.Find(id);
+        //        if (nguoiDung == null)
+        //        {
+        //            return Json(new { success = false, message = "Không tìm thấy người dùng." });
+        //        }
+
+        //        // Kiểm tra xem có phải Admin không
+        //        if (nguoiDung.VaiTro == "Admin")
+        //        {
+        //            return Json(new { success = false, message = "Không thể xóa tài khoản Admin." });
+        //        }
+
+        //        // Đánh dấu là đã xóa thay vì xóa thật sự
+        //        nguoiDung.TrangThai = "Inactive";
+        //        db.SaveChanges();
+
+        //        return Json(new { success = true });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Json(new { success = false, message = "Lỗi: " + ex.Message });
+        //    }
+        //}
+
+        // POST: Admin/RejectUpgradeToSeller/5
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteUser(int id)
+        public async Task<ActionResult> DeleteUser(int id)
         {
             try
             {
@@ -275,15 +592,83 @@ namespace WebApplication1.Controllers
                 nguoiDung.TrangThai = "Inactive";
                 db.SaveChanges();
 
-                return Json(new { success = true });
+                //// Tạo thông báo cho người dùng
+                //var thongBao = new ThongBao
+                //{
+                //    MaNguoiDung = nguoiDung.MaNguoiDung,
+                //    LoaiThongBao = "TaiKhoan",
+                //    TieuDe = "Tài khoản đã bị vô hiệu hóa",
+                //    TinNhan = "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ ban quản trị để biết thêm chi tiết và yêu cầu khôi phục nếu cần.",
+                //    MucDoQuanTrong = 3, // Mức độ khẩn cấp cao nhất
+                //    DuongDanChiTiet = "#",
+                //    NgayTao = DateTime.Now,
+                //    TrangThai = "Chưa đọc"
+                //};
+                //db.ThongBaos.Add(thongBao);
+                //db.SaveChanges();
+
+                // Gửi email thông báo
+                if (!string.IsNullOrEmpty(nguoiDung.Email))
+                {
+                    try
+                    {
+                        string emailContent = $@"
+                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;'>
+                        <div style='background-color: #ffc107; padding: 20px; text-align: center; border-radius: 5px;'>
+                            <h2 style='color: #000; margin: 0;'>Tài khoản đã bị vô hiệu hóa</h2>
+                        </div>
+                        
+                        <div style='background-color: white; padding: 20px; margin-top: 20px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
+                            <p>Kính gửi {nguoiDung.TenNguoiDung},</p>
+                            
+                            <p>Chúng tôi xin thông báo rằng tài khoản của bạn đã bị vô hiệu hóa theo quyết định của Ban Quản Trị.</p>
+                            
+                            <div style='background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; border: 1px solid #ffeeba;'>
+                                <h3 style='margin-top: 0; color: #856404;'>⚠️ Trạng thái tài khoản</h3>
+                                <ul style='margin-bottom: 0; padding-left: 20px;'>
+                                    <li>Ngày vô hiệu hóa: {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")}</li>
+                                    <li>Trạng thái: Không hoạt động</li>
+                                    <li>Quyền truy cập: Đã bị hạn chế</li>
+                                </ul>
+                            </div>
+                            
+                            <h3 style='color: #bd8415;'>Những gì sẽ xảy ra:</h3>
+                            <p>• Bạn không thể đăng nhập vào hệ thống</p>
+                            <p>• Dữ liệu và thông tin cá nhân sẽ được bảo mật</p>
+                            <p>• Tất cả hoạt động liên quan đã bị tạm dừng</p>
+                            
+                            <div style='background-color: #d1ecf1; padding: 15px; border-radius: 5px; margin: 20px 0; border: 1px solid #bee5eb;'>
+                                <h3 style='margin-top: 0; color: #0c5460;'>📋 Để khôi phục tài khoản</h3>
+                                <p>1. Gửi email đến: medinetpro183@gmail.com</p>
+                                <p>2. Cung cấp đầy đủ thông tin xác thực</p>
+                                <p>3. Giải thích lý do yêu cầu khôi phục</p>
+                                <p style='margin-bottom: 0;'>4. Chờ phản hồi từ Ban Quản Trị (3-5 ngày làm việc)</p>
+                            </div>
+                            
+                            <p>Chúng tôi rất tiếc vì sự bất tiện này. Nếu bạn cảm thấy có nhầm lẫn, vui lòng liên hệ ngay với ban quản trị.</p>
+                            
+                            <p>Trân trọng,<br/><strong>Ban Quản Trị</strong></p>
+                        </div>
+                       
+                    </div>";
+
+                        await SendEmailAsync(nguoiDung.Email, "THÔNG BÁO: Tài khoản đã bị vô hiệu hóa", emailContent);
+                        System.Diagnostics.Debug.WriteLine($"Email thông báo vô hiệu hóa tài khoản đã được gửi tới {nguoiDung.Email}");
+                    }
+                    catch (Exception emailEx)
+                    {
+                        // Log lỗi nhưng vẫn trả về thành công vì tài khoản đã được xóa
+                        System.Diagnostics.Debug.WriteLine($"Lỗi gửi email thông báo xóa tài khoản: {emailEx.Message}");
+                    }
+                }
+
+                return Json(new { success = true, message = "Xóa tài khoản thành công và đã gửi thông báo." });
             }
             catch (Exception ex)
             {
                 return Json(new { success = false, message = "Lỗi: " + ex.Message });
             }
         }
-
-        // POST: Admin/RejectUpgradeToSeller/5
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]

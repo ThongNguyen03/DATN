@@ -234,6 +234,26 @@ namespace WebApplication1.Controllers
 
                 if (passwordCorrect)
                 {
+                    // Kiểm tra trạng thái tài khoản trước khi cho đăng nhập
+                    if (nguoiDung.TrangThai != "Active" && nguoiDung.TrangThai != "Upgrade")
+                    {
+                        // Tài khoản bị khóa hoặc không hoạt động
+                        string errorMessage = "";
+                        switch (nguoiDung.TrangThai)
+                        {
+                            case "Inactive":
+                                errorMessage = "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.";
+                                break;
+                            case "Banned":
+                                errorMessage = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.";
+                                break;
+                            default:
+                                errorMessage = "Tài khoản của bạn không thể đăng nhập. Vui lòng liên hệ quản trị viên.";
+                                break;
+                        }
+                        ModelState.AddModelError("", errorMessage);
+                        return View(model);
+                    }
                     // Tạo cookie xác thực
                     FormsAuthentication.SetAuthCookie(model.Email, model.RememberMe);
 

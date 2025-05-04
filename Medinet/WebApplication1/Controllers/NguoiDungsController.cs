@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Configuration;
 using System.Data;
 using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -991,10 +993,67 @@ namespace WebApplication1.Controllers
         }
 
         // POST: NguoiDungs/SellerDeleteAccount
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //[Authorize]
+        //public ActionResult SellerDeleteAccount(DeleteAccountViewModel model)
+        //{
+        //    string email = User.Identity.Name;
+        //    var nguoiDung = db.NguoiDungs.FirstOrDefault(u => u.Email == email);
+
+        //    if (nguoiDung == null)
+        //    {
+        //        return RedirectToAction("DangNhap", "DangNhap");
+        //    }
+
+        //    // Kiểm tra xem người dùng có phải là người bán không
+        //    var nguoiBan = db.NguoiBans.FirstOrDefault(s => s.MaNguoiDung == nguoiDung.MaNguoiDung);
+        //    if (nguoiBan == null)
+        //    {
+        //        return RedirectToAction("SellerUpgrade", "NguoiDungs");
+        //    }
+
+        //    if (ModelState.IsValid)
+        //    {
+        //        // Kiểm tra email xác nhận
+        //        if (model.Email != nguoiDung.Email)
+        //        {
+        //            ModelState.AddModelError("Email", "Email không khớp với tài khoản của bạn.");
+        //            ViewBag.UserEmail = nguoiDung.Email;
+        //            return View(model);
+        //        }
+
+        //        // Xóa thông tin người bán
+        //        db.NguoiBans.Remove(nguoiBan);
+
+        //        // Đánh dấu tài khoản là không còn là người bán
+        //        nguoiDung.XetDuyetThanhNguoiBan = false;
+        //        nguoiDung.VaiTro = "Buyer";
+
+        //        // Tùy chọn: đánh dấu tài khoản là không hoạt động nếu muốn vô hiệu hóa hoàn toàn
+        //        // nguoiDung.TrangThai = "Inactive";
+
+        //        db.SaveChanges();
+
+        //        // Đăng xuất người dùng
+        //        FormsAuthentication.SignOut();
+        //        Session.Clear();
+        //        Session.Abandon();
+
+        //        return RedirectToAction("DangNhap", "DangNhap", new { message = "Tài khoản người bán của bạn đã được xóa thành công." });
+        //    }
+
+        //    ViewBag.AnhDaiDien = nguoiDung.AnhDaiDien;
+        //    ViewBag.TenNguoiDung = nguoiDung.TenNguoiDung;
+        //    ViewBag.UserEmail = nguoiDung.Email;
+        //    return View(model);
+        //}
+
+        // Thêm action để xóa chứng chỉ
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public ActionResult SellerDeleteAccount(DeleteAccountViewModel model)
+        public async Task<ActionResult> SellerDeleteAccount(DeleteAccountViewModel model)
         {
             string email = User.Identity.Name;
             var nguoiDung = db.NguoiDungs.FirstOrDefault(u => u.Email == email);
@@ -1021,6 +1080,9 @@ namespace WebApplication1.Controllers
                     return View(model);
                 }
 
+                // Lưu thông tin người bán để sử dụng trong email
+                string tenCuaHang = nguoiBan.TenCuaHang;
+
                 // Xóa thông tin người bán
                 db.NguoiBans.Remove(nguoiBan);
 
@@ -1028,17 +1090,83 @@ namespace WebApplication1.Controllers
                 nguoiDung.XetDuyetThanhNguoiBan = false;
                 nguoiDung.VaiTro = "Buyer";
 
-                // Tùy chọn: đánh dấu tài khoản là không hoạt động nếu muốn vô hiệu hóa hoàn toàn
-                // nguoiDung.TrangThai = "Inactive";
+                // Tạo thông báo cho người dùng khi hủy tài khoản người bán
+                var thongBao = new ThongBao
+                {
+                    MaNguoiDung = nguoiDung.MaNguoiDung,
+                    LoaiThongBao = "TaiKhoan",
+                    TieuDe = "Đã hủy tài khoản người bán",
+                    TinNhan = $"Tài khoản người bán của bạn ({tenCuaHang}) đã được hủy thành công. Bạn vẫn có thể tiếp tục sử dụng tài khoản như người mua.",
+                    MucDoQuanTrong = 2, // Mức độ quan trọng cao
+                    DuongDanChiTiet = "/NguoiDungs/Profile",
+                    NgayTao = DateTime.Now,
+                    TrangThai = "Chưa đọc"
+                };
+                db.ThongBaos.Add(thongBao);
 
                 db.SaveChanges();
+
+                // Gửi email thông báo
+                try
+                {
+                    string emailContent = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;'>
+                    <div style='background-color: #ffc107; padding: 20px; text-align: center; border-radius: 5px;'>
+                        <h2 style='color: #000; margin: 0;'>Xác nhận hủy tài khoản người bán</h2>
+                    </div>
+                    
+                    <div style='background-color: white; padding: 20px; margin-top: 20px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
+                        <p>Kính gửi {nguoiDung.TenNguoiDung},</p>
+                        
+                        <p>Chúng tôi xác nhận đã xử lý yêu cầu xóa tài khoản người bán của bạn thành công.</p>
+                        
+                        <div style='background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; border: 1px solid #ffeeba;'>
+                            <h3 style='margin-top: 0; color: #856404;'>Thông tin cửa hàng</h3>
+                            <ul style='margin-bottom: 0; padding-left: 20px;'>
+                                <li>Tên cửa hàng: {tenCuaHang}</li>
+                                <li>Ngày xóa: {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")}</li>
+                                <li>Trạng thái: Đã xóa thành công</li>
+                            </ul>
+                        </div>
+                        
+                        <h3 style='color: #bd8415;'>Những gì đã thay đổi:</h3>
+                        <p>• Tài khoản người bán đã bị xóa</p>
+                        <p>• Bạn không thể đăng bán sản phẩm nữa</p>
+                        <p>• Tài khoản đã được chuyển sang vai trò Người mua</p>
+                        <p>• Bạn vẫn có thể sử dụng tài khoản để mua sắm</p>
+                        
+                        <div style='background-color: #d1ecf1; padding: 15px; border-radius: 5px; margin: 20px 0; border: 1px solid #bee5eb;'>
+                            <h3 style='margin-top: 0; color: #0c5460;'>Đăng ký lại người bán</h3>
+                            <p>Nếu bạn muốn trở lại bán hàng trong tương lai, bạn có thể đăng ký lại tài khoản người bán bất cứ lúc nào.</p>
+                            <p style='margin-bottom: 0;'>Vui lòng đăng nhập và chọn tùy chọn 'Nâng cấp thành người bán' trong trang cá nhân.</p>
+                        </div>
+                        
+                        <p>Cảm ơn bạn đã sử dụng dịch vụ bán hàng của chúng tôi.</p>
+                        
+                        <p>Trân trọng,<br/><strong>Ban Quản Trị</strong></p>
+                    </div>
+                    
+                    <div style='text-align: center; margin-top: 20px; color: #6c757d; font-size: 12px;'>
+                        <p>Đây là email tự động, vui lòng không trả lời email này.</p>
+                    </div>
+                </div>";
+
+                    // Gửi email (giả sử bạn có phương thức SendEmailAsync trong controller)
+                    await SendEmailAsync(nguoiDung.Email, "Xác nhận hủy tài khoản người bán", emailContent);
+                    System.Diagnostics.Debug.WriteLine($"Email xác nhận hủy tài khoản người bán đã được gửi tới {nguoiDung.Email}");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Lỗi gửi email hủy tài khoản người bán: {ex.Message}");
+                    // Không dừng quá trình ngay cả khi gửi email thất bại
+                }
 
                 // Đăng xuất người dùng
                 FormsAuthentication.SignOut();
                 Session.Clear();
                 Session.Abandon();
 
-                return RedirectToAction("DangNhap", "DangNhap", new { message = "Tài khoản người bán của bạn đã được xóa thành công." });
+                return RedirectToAction("DangNhap", "DangNhap", new { message = "Tài khoản người bán của bạn đã được xóa thành công. Một email xác nhận đã được gửi." });
             }
 
             ViewBag.AnhDaiDien = nguoiDung.AnhDaiDien;
@@ -1046,8 +1174,6 @@ namespace WebApplication1.Controllers
             ViewBag.UserEmail = nguoiDung.Email;
             return View(model);
         }
-
-        // Thêm action để xóa chứng chỉ
         [HttpPost]
         [Authorize]
         public ActionResult DeleteCertificate(int id)
@@ -1239,6 +1365,46 @@ namespace WebApplication1.Controllers
             }
         }
 
+        // Phương thức gửi email
+        private async Task SendEmailAsync(string email, string subject, string htmlMessage)
+        {
+            try
+            {
+                // Đọc cấu hình SMTP từ AppSettings
+                string smtpHost = ConfigurationManager.AppSettings["SmtpHost"];
+                int smtpPort = Convert.ToInt32(ConfigurationManager.AppSettings["SmtpPort"]);
+                string smtpEmail = ConfigurationManager.AppSettings["SmtpEmail"];
+                string smtpPassword = ConfigurationManager.AppSettings["SmtpPassword"];
+                bool enableSsl = Convert.ToBoolean(ConfigurationManager.AppSettings["SmtpEnableSSL"]);
+                string fromName = ConfigurationManager.AppSettings["EmailFromName"];
+
+                var message = new MailMessage();
+                message.To.Add(new MailAddress(email));
+                message.From = new MailAddress(smtpEmail, fromName);
+                message.Subject = subject;
+                message.Body = htmlMessage;
+                message.IsBodyHtml = true;
+
+                using (var client = new SmtpClient())
+                {
+                    client.Host = smtpHost;
+                    client.Port = smtpPort;
+                    client.EnableSsl = enableSsl;
+                    client.DeliveryMethod = SmtpDeliveryMethod.Network;
+                    client.UseDefaultCredentials = false;
+                    client.Credentials = new NetworkCredential(smtpEmail, smtpPassword);
+
+                    await client.SendMailAsync(message);
+                    System.Diagnostics.Debug.WriteLine("Email đã được gửi thành công đến " + email);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Lỗi gửi email: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("Chi tiết lỗi: " + ex.ToString());
+                // Không ném lại ngoại lệ để không gián đoạn luồng chính
+            }
+        }
         // Phương thức lấy ID người dùng hiện tại
         private int GetCurrentUserId()
         {
