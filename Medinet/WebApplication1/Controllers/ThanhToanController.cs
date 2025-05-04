@@ -290,6 +290,7 @@ namespace WebApplication1.Controllers
 
                             // Update stock
                             sanPham.SoLuongTonKho -= cartItem.SoLuong;
+                            sanPham.SoLuotMua += cartItem.SoLuong;
                             db.Entry(sanPham).State = EntityState.Modified;
                         }
 

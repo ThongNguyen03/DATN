@@ -264,12 +264,6 @@
                     <i class="bi bi-chevron-down ms-auto"></i>
                 </a>
                 <ul class="sidebar-submenu" id="transactionSubmenu">
-                    @*<li class="sidebar-item ">
-                    <a href="@Url.Action("Dashboard", "GiaoDich")" class="sidebar-link">
-                        <i class="bi bi-bar-chart"></i>
-                        <span>Tổng quan</span>
-                    </a>
-                </li>*@
                     <li class="sidebar-item">
                         <a href="@Url.Action("Index", "GiaoDich")" class="sidebar-link">
                             <i class="bi bi-credit-card"></i>
@@ -279,7 +273,7 @@
                     <li class="sidebar-item">
                         <a href="@Url.Action("Escrow", "GiaoDich")" class="sidebar-link">
                             <i class="bi bi-safe"></i>
-                            <span>Ký quỹ (Escrow)</span>
+                            <span>Ký quỹ </span>
                         </a>
                     </li>
                     <li class="sidebar-item">
@@ -355,11 +349,11 @@
                                 <table class="table table-striped mb-0">
                                     <thead>
                                         <tr>
-                                            <th>Mã đơn hàng</th>
-                                            <th>Khách hàng</th>
-                                            <th>Người bán</th>
-                                            <th>
-                                                <a href="@Url.Action("QuanLyDonHang", "DonHang", new { trangThai = ViewBag.TrangThai, sortOrder = ViewBag.DateSortParam })" class="sort-link">
+                                            <th style="text-align:center">Mã đơn hàng</th>
+                                            <th style="text-align:center">Khách hàng</th>
+                                            <th style="text-align:center">Người bán</th>
+                                            <th >
+                                                <a href="@Url.Action("QuanLyDonHang", "DonHang", new { trangThai = ViewBag.TrangThai, sortOrder = ViewBag.DateSortParam })" class="sort-link" style="text-align:center">
                                                     Ngày đặt
                                                     @if (ViewBag.SortOrder == "date_desc")
                                                     {
@@ -375,8 +369,8 @@
                                                     }
                                                 </a>
                                             </th>
-                                            <th>
-                                                <a href="@Url.Action("QuanLyDonHang", "DonHang", new { trangThai = ViewBag.TrangThai, sortOrder = ViewBag.PriceSortParam })" class="sort-link">
+                                            <th >
+                                                <a href="@Url.Action("QuanLyDonHang", "DonHang", new { trangThai = ViewBag.TrangThai, sortOrder = ViewBag.PriceSortParam })" class="sort-link" style="text-align:center">
                                                     Tổng tiền
                                                     @if (ViewBag.SortOrder == "price_desc")
                                                     {
@@ -392,20 +386,20 @@
                                                     }
                                                 </a>
                                             </th>
-                                            <th>Trạng thái</th>
-                                            <th>Thao tác</th>
+                                            <th style="text-align:center">Trạng thái</th>
+                                            <th style="text-align:center">Thao tác</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach (var item in Model)
                                         {
                                             <tr>
-                                                <td>#@item.MaDonHang</td>
-                                                <td>@(item.NguoiDung != null ? item.NguoiDung.TenNguoiDung : "Không có thông tin")</td>
-                                                <td>@(item.NguoiBan != null ? item.NguoiBan.TenCuaHang : "Không có thông tin")</td>
-                                                <td>@item.NgayTao.ToString("dd/MM/yyyy HH:mm")</td>
-                                                <td>@String.Format("{0:N0} VNĐ", item.TongSoTien)</td>
-                                                <td>
+                                                <td style="text-align:center">#@item.MaDonHang</td>
+                                                <td style="text-align:center">@(item.NguoiDung != null ? item.NguoiDung.TenNguoiDung : "Không có thông tin")</td>
+                                                <td style="text-align:center">@(item.NguoiBan != null ? item.NguoiBan.TenCuaHang : "Không có thông tin")</td>
+                                                <td style="text-align:center">@item.NgayTao.ToString("dd/MM/yyyy HH:mm")</td>
+                                                <td style="text-align:center">@String.Format("{0:N0} VNĐ", item.TongSoTien)</td>
+                                                <td style="text-align:center">
                                                     @if (item.TrangThaiDonHang == "Đang chờ xử lý")
                                                     {
                                                         <span class="badge bg-warning text-dark">Đang chờ xử lý</span>
@@ -431,7 +425,7 @@
                                                         <span class="badge bg-secondary">@item.TrangThaiDonHang</span>
                                                     }
                                                 </td>
-                                                <td>
+                                                <td style="text-align:center">
                                                     <div class="btn-group">
                                                         <a href="@Url.Action("ChiTietAdmin", "DonHang", new { id = item.MaDonHang })" class="btn btn-sm btn-primary">
                                                             <i class="bi bi-eye"></i>

@@ -386,9 +386,9 @@
                                 <table class="table table-hover transaction-table mb-0">
                                     <thead>
                                         <tr>
-                                            <th>Ngày</th>
-                                            <th>Loại</th>
-                                            <th>Số tiền</th>
+                                            <th style="text-align:center">Ngày</th>
+                                            <th style="text-align:center">Loại</th>
+                                            <th style="text-align:center">Số tiền</th>
                                         </tr>
                                     </thead>
                                     <tbody id="giaoDichTable">
@@ -402,8 +402,8 @@
                                             if (count < soLuongHienThi)
                                             {
                                                 <tr>
-                                                    <td>@giaoDich.NgayGiaoDich.ToString("dd/MM/yyyy")</td>
-                                                    <td>
+                                                    <td style="text-align:center">@giaoDich.NgayGiaoDich.ToString("dd/MM/yyyy")</td>
+                                                    <td style="text-align:center">
                                                         @if (giaoDich.LoaiGiaoDich == "Nạp tiền ví")
                                                         {
                                                             <span class="badge badge-deposit">Nạp tiền</span>
@@ -441,7 +441,7 @@
                                                             <span class="badge badge-secondary">@giaoDich.LoaiGiaoDich</span>
                                                         }
                                                     </td>
-                                                    <td class="@(giaoDich.SoTien > 0 ? "text-success" : "text-danger")">
+                                                    <td class="@(giaoDich.SoTien > 0 ? "text-success" : "text-danger")" style="text-align:center">
                                                         @(giaoDich.SoTien > 0 ? "+" : "")@String.Format("{0:N0} đ", giaoDich.SoTien)
                                                     </td>
                                                 </tr>
@@ -519,9 +519,9 @@
                                 <table class="table table-hover product-table mb-0">
                                     <thead>
                                         <tr>
-                                            <th>Sản phẩm</th>
-                                            <th>Số lượng bán</th>
-                                            <th>Tổng tiền</th>
+                                            <th style="text-align:center">Sản phẩm</th>
+                                            <th width="130">Số lượng bán</th>
+                                            <th width="100">Tổng tiền</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -531,10 +531,10 @@
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         <img src="@sanPham.AnhDaiDien" alt="@sanPham.TenSanPham" class="mr-2">
-                                                        <span>@sanPham.TenSanPham</span>
+                                                        <span style="margin-left:12px">@sanPham.TenSanPham</span>
                                                     </div>
                                                 </td>
-                                                <td>@sanPham.SoLuongBan</td>
+                                                <td style="text-align:center">@sanPham.SoLuongBan</td>
                                                 <td>@String.Format("{0:N0} đ", sanPham.TongTien)</td>
                                             </tr>
                                         }

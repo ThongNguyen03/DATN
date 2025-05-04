@@ -234,27 +234,6 @@
                         <span class="fw-bold fs-5 text-danger" id="selected-total">0</span>
                     </div>
 
-                    <!-- Phương thức thanh toán -->
-                    <!--<div class="payment-methods">
-                            <h6 class="mb-3">Phương thức thanh toán</h6>
-                            <div class="payment-method selected" data-method="COD">
-                                <input type="radio" name="payment-method" id="payment-cod" checked class="me-2">
-                                <label for="payment-cod" class="mb-0 w-100">Thanh toán khi nhận hàng (COD)</label>
-                            </div>
-                            <div class="payment-method" data-method="VNPAY">
-                                <input type="radio" name="payment-method" id="payment-vnpay" class="me-2">
-                                <img src="~/Content/images/vnpay-logo.png" alt="VNPAY" class="payment-method-icon">
-                                <label for="payment-vnpay" class="mb-0">Thanh toán qua VNPAY</label>
-                            </div>
-                        </div>-->
-                                        @*<form method="post" action="@Url.Action("TienHanhThanhToan", "GioHangs")" id="checkout-form">
-                                <input type="hidden" name="selectedItems" id="selected-items-input" value="" />
-                                <input type="hidden" name="paymentMethod" id="payment-method-input" value="COD" />
-                                <button type="submit" id="checkout-button" class="btn btn-primary w-100 mt-3 disabled">
-                                    Đặt Hàng
-                                </button>
-                            </form>*@
-
                     <!-- Sửa phần form trong trang giỏ hàng -->
                     <form method="post" action="@Url.Action("Index", "ThanhToan")" id="checkout-form">
                         <input type="hidden" name="selectedItems" id="selected-items-input" value="" />

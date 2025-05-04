@@ -262,12 +262,6 @@
                     <i class="bi bi-chevron-down ms-auto"></i>
                 </a>
                 <ul class="sidebar-submenu" id="transactionSubmenu">
-                    @*<li class="sidebar-item">
-                    <a href="@Url.Action("Dashboard", "GiaoDich")" class="sidebar-link">
-                        <i class="bi bi-bar-chart"></i>
-                        <span>Tổng quan</span>
-                    </a>
-                </li>*@
                     <li class="sidebar-item">
                         <a href="@Url.Action("Index", "GiaoDich")" class="sidebar-link">
                             <i class="bi bi-credit-card"></i>
@@ -277,7 +271,7 @@
                     <li class="sidebar-item">
                         <a href="@Url.Action("Escrow", "GiaoDich")" class="sidebar-link">
                             <i class="bi bi-safe"></i>
-                            <span>Ký quỹ (Escrow)</span>
+                            <span>Ký quỹ </span>
                         </a>
                     </li>
                     <li class="sidebar-item">
@@ -465,12 +459,12 @@
                                 <table class="table table-hover mb-0">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>Mã ĐH</th>
-                                            <th>Khách hàng</th>
-                                            <th>Tổng tiền</th>
-                                            <th>Trạng thái</th>
-                                            <th>Ngày đặt</th>
-                                            <th>Thao tác</th>
+                                            <th style="text-align:center">Mã ĐH</th>
+                                            <th style="text-align:center">Khách hàng</th>
+                                            <th style="text-align:center">Tổng tiền</th>
+                                            <th style="text-align:center">Trạng thái</th>
+                                            <th style="text-align:center">Ngày đặt</th>
+                                            <th style="text-align:center">Thao tác</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -482,12 +476,12 @@
                                                                  order.OrderStatus == "Đã hủy" ? "badge-rejected" : "badge-pending";
 
                                                 <tr>
-                                                    <td>#@order.OrderId</td>
-                                                    <td>@order.CustomerName</td>
-                                                    <td>@String.Format("{0:N0}", order.TotalAmount) ₫</td>
-                                                    <td><span class="badge-status @statusClass">@order.OrderStatus</span></td>
-                                                    <td>@order.OrderDate.ToString("dd/MM/yyyy")</td>
-                                                    <td>
+                                                    <td style="text-align:center">#@order.OrderId</td>
+                                                    <td style="text-align:center">@order.CustomerName</td>
+                                                    <td style="text-align:center">@String.Format("{0:N0}", order.TotalAmount) ₫</td>
+                                                    <td style="text-align:center"><span class="badge-status @statusClass">@order.OrderStatus</span></td>
+                                                    <td style="text-align:center">@order.OrderDate.ToString("dd/MM/yyyy")</td>
+                                                    <td style="text-align:center">
                                                         <a href="@Url.Action("ChiTietAdmin", "DonHang", new { id = order.OrderId })" class="btn btn-sm btn-outline-primary action-btn">
                                                             <i class="bi bi-eye"></i>
                                                         </a>
@@ -498,7 +492,7 @@
                                         else
                                         {
                                             <tr>
-                                                <td colspan="6" class="text-center py-3">Không có đơn hàng nào</td>
+                                                <td colspan="6" class="text-center py-3" style="text-align:center">Không có đơn hàng nào</td>
                                             </tr>
                                         }
                                     </tbody>
@@ -669,9 +663,9 @@
                                 <table class="table table-hover mb-0">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>Mã GD</th>
-                                            <th>Loại</th>
-                                            <th class="text-end">Số tiền</th>
+                                            <th style="text-align:center">Mã GD</th>
+                                            <th style="text-align:center">Loại</th>
+                                            <th style="text-align:center">Số tiền</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -683,9 +677,9 @@
                                                                 transaction.TransactionStatus == "Không thành công" ? "bg-danger" : "bg-warning";
 
                                                 <tr>
-                                                    <td>#@transaction.TransactionId</td>
-                                                    <td><span class="badge @statusClass">@transaction.TransactionStatus</span></td>
-                                                    <td class="text-end">@String.Format("{0:N0}", transaction.Amount) ₫</td>
+                                                    <td style="text-align:center">#@transaction.TransactionId</td>
+                                                    <td style="text-align:center"><span class="badge @statusClass">@transaction.TransactionStatus</span></td>
+                                                    <td style="text-align:center">@String.Format("{0:N0}", transaction.Amount) ₫</td>
                                                 </tr>
                                             }
                                         }

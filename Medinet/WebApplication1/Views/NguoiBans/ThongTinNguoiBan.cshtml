@@ -287,7 +287,7 @@ function addToCart(maSanPham) {
         data: { maSanPham: maSanPham, soLuong: 1 },
         success: function (result) {
             if (result.success) {
-                toastr.success('Đã thêm sản phẩm vào giỏ hàng');
+                //toastr.success('Đã thêm sản phẩm vào giỏ hàng');
                 console.log("Thêm vào giỏ thành công, gọi API lấy số lượng giỏ hàng");
 
                 // Luôn gọi API để lấy số lượng giỏ hàng hiện tại

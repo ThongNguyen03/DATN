@@ -1467,13 +1467,51 @@ namespace WebApplication1.Controllers
                         // Không throw exception ở đây, cho phép tiếp tục quy trình
                     }
 
+                    // CẬP NHẬT TRẠNG THÁI GIAO DỊCH THÀNH "KHÔNG THÀNH CÔNG"
+                    try
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Bắt đầu cập nhật trạng thái giao dịch cho đơn hàng {donHang.MaDonHang}");
+
+                        // Tìm tất cả giao dịch liên quan đến đơn hàng này
+                        var giaoDichList = db.GiaoDichs.Where(g => g.MaDonHang == donHang.MaDonHang
+                                                              && g.TrangThaiGiaoDich != "Không thành công").ToList();
+
+                        if (giaoDichList.Any())
+                        {
+                            foreach (var giaoDich in giaoDichList)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"Cập nhật giao dịch MaGiaoDich: {giaoDich.MaGiaoDich}");
+
+                                giaoDich.TrangThaiGiaoDich = "Không thành công";
+                                giaoDich.ThongTinGiaoDich = "Đơn hàng bị hủy do vi phạm quy định: " + ketQuaXuLy;
+                                db.Entry(giaoDich).State = EntityState.Modified;
+                            }
+
+                            // Lưu thay đổi
+                            int rowsAffected = db.SaveChanges();
+                            System.Diagnostics.Debug.WriteLine($"Đã cập nhật {rowsAffected} giao dịch");
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Không tìm thấy giao dịch nào cho đơn hàng {donHang.MaDonHang}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"LỖI khi cập nhật trạng thái giao dịch: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"Chi tiết lỗi: {ex.StackTrace}");
+                        // Không throw exception ở đây, cho phép tiếp tục quy trình
+                    }
                     // Rest of your code for processing "Đã xử lý" reports...
                     // (Phần còn lại của mã xử lý phạt, gửi email, v.v.)
 
-                    // Tính số tiền phạt (150% giá trị đơn hàng)
-                    decimal tongTienPhat = donHang.TongSoTien * 1.5m;
-                    decimal tienHoanTraNguoiMua = donHang.TongSoTien; // 100% giá trị đơn hàng
+                    // Kiểm tra phương thức thanh toán
+                    bool isVNPAY = donHang.PhuongThucThanhToan == "VNPAY";
+
+                    // Tính số tiền phạt dựa trên phương thức thanh toán
+                    decimal tienHoanTraNguoiMua = isVNPAY ? donHang.TongSoTien : 0; // 100% nếu VNPAY, 0 nếu COD
                     decimal phiChoNenTang = donHang.TongSoTien * 0.5m; // 50% giá trị đơn hàng
+                    decimal tongTienPhat = tienHoanTraNguoiMua + phiChoNenTang; // Tổng tiền phạt
 
                     // Kiểm tra số dư của người bán
                     if (nguoiBan.SoDuVi < tongTienPhat)
@@ -1482,28 +1520,32 @@ namespace WebApplication1.Controllers
                         return RedirectToAction("ChiTietBaoCao", new { id = id });
                     }
 
-                    // Cập nhật số dư của người bán (trừ 150% giá trị đơn hàng)
+                    // Cập nhật số dư của người bán
                     nguoiBan.SoDuVi -= tongTienPhat;
                     db.Entry(nguoiBan).State = EntityState.Modified;
 
-                    // Tạo ghi chép ví hoàn tiền cho người mua (trừ 100% từ ví người bán)
-                    var ghiChepViHoanTien = new GhiChepVi
+                    // Tạo ghi chép ví hoàn tiền cho người mua (nếu là VNPAY)
+                    GhiChepVi ghiChepViHoanTien = null;
+                    if (isVNPAY)
                     {
-                        MaNguoiBan = nguoiBan.MaNguoiBan,
-                        SoTien = -tienHoanTraNguoiMua, // Số âm để thể hiện trừ tiền từ ví người bán
-                        LoaiGiaoDich = "Hoàn tiền người mua",
-                        MoTa = $"Hoàn tiền 100% giá trị đơn hàng #{donHang.MaDonHang} cho người mua do vi phạm quy định",
-                        NgayGiaoDich = DateTime.Now,
-                        TrangThai = "Thành công",
-                        MaDonHang = donHang.MaDonHang
-                    };
-                    db.GhiChepVis.Add(ghiChepViHoanTien);
+                        ghiChepViHoanTien = new GhiChepVi
+                        {
+                            MaNguoiBan = nguoiBan.MaNguoiBan,
+                            SoTien = -tienHoanTraNguoiMua,
+                            LoaiGiaoDich = "Hoàn tiền người mua",
+                            MoTa = $"Hoàn tiền 100% giá trị đơn hàng #{donHang.MaDonHang} cho người mua do vi phạm quy định",
+                            NgayGiaoDich = DateTime.Now,
+                            TrangThai = "Thành công",
+                            MaDonHang = donHang.MaDonHang
+                        };
+                        db.GhiChepVis.Add(ghiChepViHoanTien);
+                    }
 
-                    // Tạo ghi chép ví phí nền tảng (trừ 50% từ ví người bán)
+                    // Tạo ghi chép ví phí nền tảng
                     var ghiChepViPhiNenTang = new GhiChepVi
                     {
                         MaNguoiBan = nguoiBan.MaNguoiBan,
-                        SoTien = -phiChoNenTang, // Số âm để thể hiện trừ tiền từ ví người bán
+                        SoTien = -phiChoNenTang,
                         LoaiGiaoDich = "Phí nền tảng",
                         MoTa = $"Phí phạt 50% giá trị đơn hàng #{donHang.MaDonHang} cho nền tảng do vi phạm quy định",
                         NgayGiaoDich = DateTime.Now,
@@ -1512,44 +1554,46 @@ namespace WebApplication1.Controllers
                     };
                     db.GhiChepVis.Add(ghiChepViPhiNenTang);
 
-                    // Lưu các bản ghi tạm thời để lấy MaGhiChep cho đường dẫn
+                    // Lưu các bản ghi để lấy MaGhiChep
                     db.SaveChanges();
-                    // Tạo thông báo hoàn tiền cho người bán (100% giá trị đơn hàng)
-                    var thongBaoHoanTienNguoiBan = new ThongBao
-                    {
-                        MaNguoiDung = nguoiBan.MaNguoiDung,
-                        LoaiThongBao = "Hoàn tiền",
-                        TieuDe = "Hoàn tiền cho người mua do vi phạm",
-                        TinNhan = $"Số tiền {tienHoanTraNguoiMua.ToString("N0")} VND (100% giá trị đơn hàng) đã được trừ từ ví của bạn để hoàn trả cho người mua do vi phạm quy định trên đơn hàng #{donHang.MaDonHang}.",
-                        MucDoQuanTrong = 3, // Mức độ rất quan trọng
-                        DuongDanChiTiet = "/GiaoDich/ChiTietGhiChepViNguoiBan/" + ghiChepViHoanTien.MaGhiChep,
-                        NgayTao = DateTime.Now
-                    };
-                    db.ThongBaos.Add(thongBaoHoanTienNguoiBan);
 
-                    // Tạo thông báo phí nền tảng cho người bán (50% giá trị đơn hàng)
+                    // Tạo thông báo cho người bán
+                    if (isVNPAY && ghiChepViHoanTien != null)
+                    {
+                        var thongBaoHoanTienNguoiBan = new ThongBao
+                        {
+                            MaNguoiDung = nguoiBan.MaNguoiDung,
+                            LoaiThongBao = "Hoàn tiền",
+                            TieuDe = "Thông báo xử phạt vi phạm - Hoàn tiền người mua",
+                            TinNhan = $"Số tiền {tienHoanTraNguoiMua.ToString("N0")} VND đã được trừ từ ví của bạn để hoàn trả cho người mua theo quy định xử lý vi phạm trên đơn hàng #{donHang.MaDonHang}.",
+                            MucDoQuanTrong = 3,
+                            DuongDanChiTiet = "/GiaoDich/ChiTietGhiChepViNguoiBan/" + ghiChepViHoanTien.MaGhiChep,
+                            NgayTao = DateTime.Now
+                        };
+                        db.ThongBaos.Add(thongBaoHoanTienNguoiBan);
+                    }
+
                     var thongBaoPhiNenTangNguoiBan = new ThongBao
                     {
                         MaNguoiDung = nguoiBan.MaNguoiDung,
                         LoaiThongBao = "Phí nền tảng",
-                        TieuDe = "Phí phạt vi phạm cho nền tảng",
-                        TinNhan = $"Số tiền {phiChoNenTang.ToString("N0")} VND (50% giá trị đơn hàng) đã được trừ từ ví của bạn làm phí phạt cho nền tảng do vi phạm quy định trên đơn hàng #{donHang.MaDonHang}.\nChi tiết vi phạm: {ketQuaXuLy}",
-                        MucDoQuanTrong = 3, // Mức độ rất quan trọng
+                        TieuDe = "Thông báo xử phạt vi phạm - Phí nền tảng",
+                        TinNhan = $"Số tiền {phiChoNenTang.ToString("N0")} VND đã được trừ từ ví của bạn làm phí xử lý vi phạm trên đơn hàng #{donHang.MaDonHang}.\nLý do: {ketQuaXuLy}",
+                        MucDoQuanTrong = 3,
                         DuongDanChiTiet = "/GiaoDich/ChiTietGhiChepViNguoiBan/" + ghiChepViPhiNenTang.MaGhiChep,
                         NgayTao = DateTime.Now
                     };
                     db.ThongBaos.Add(thongBaoPhiNenTangNguoiBan);
 
-                    // Hoàn tiền cho người mua
-                    if (nguoiDungMua != null)
+                    // Thông báo hoàn tiền cho người mua (chỉ với VNPAY)
+                    if (isVNPAY && nguoiDungMua != null)
                     {
-                        // Tạo thông báo hoàn tiền cho người mua
                         var thongBaoHoanTien = new ThongBao
                         {
                             MaNguoiDung = donHang.MaNguoiDung,
                             LoaiThongBao = "HoanTien",
-                            TieuDe = "Hoàn tiền đơn hàng",
-                            TinNhan = $"Bạn đã được hoàn {tienHoanTraNguoiMua.ToString("N0")} VND (100% giá trị đơn hàng) cho đơn hàng #{donHang.MaDonHang} do người bán vi phạm quy định.",
+                            TieuDe = "Thông báo hoàn tiền đơn hàng",
+                            TinNhan = $"Chúng tôi đã xử lý hoàn tiền {tienHoanTraNguoiMua.ToString("N0")} VND cho đơn hàng #{donHang.MaDonHang} do người bán vi phạm quy định.",
                             MucDoQuanTrong = 2,
                             DuongDanChiTiet = "/DonHang/ChiTiet/" + baoCao.MaDonHang,
                             NgayTao = DateTime.Now
@@ -1557,33 +1601,126 @@ namespace WebApplication1.Controllers
                         db.ThongBaos.Add(thongBaoHoanTien);
                     }
 
+                    // Xử lý Escrow cho cả COD và VNPAY
+                    var escrow = db.Escrows.FirstOrDefault(e => e.MaDonHang == donHang.MaDonHang);
+                    if (escrow != null && escrow.TrangThai == "Đang giữ")
+                    {
+                        // Cập nhật trạng thái Escrow thành "Đã hoàn tiền" cho cả COD và VNPAY
+                        escrow.TrangThai = "Đã hoàn tiền";
+                        escrow.NgayGiaiNgan = DateTime.Now;
+                        db.Entry(escrow).State = EntityState.Modified;
+
+                        // Xử lý hoàn tiền đặt cọc cho người bán nếu là COD
+                        if (!isVNPAY)
+                        {
+                            // Tìm ghi chép ví đặt cọc ban đầu để lấy số tiền
+                            var ghiChepDatCoc = db.GhiChepVis
+                                .FirstOrDefault(g => g.MaDonHang == donHang.MaDonHang
+                                    && g.LoaiGiaoDich == "Đặt cọc"
+                                    && g.TrangThai == "Thành công");
+
+                            if (ghiChepDatCoc != null)
+                            {
+                                // Lấy số tiền đặt cọc từ ghi chép ví (giá trị tuyệt đối vì có thể lưu âm)
+                                var tienDatCoc = Math.Abs(ghiChepDatCoc.SoTien);
+
+                                // Hoàn trả tiền đặt cọc cho người bán
+                                nguoiBan.SoDuVi += tienDatCoc;
+                                db.Entry(nguoiBan).State = EntityState.Modified;
+
+                                // Tạo ghi chép ví hoàn trả tiền đặt cọc
+                                var ghiChepViHoanDatCoc = new GhiChepVi
+                                {
+                                    MaNguoiBan = nguoiBan.MaNguoiBan,
+                                    SoTien = tienDatCoc,
+                                    LoaiGiaoDich = "Hoàn tiền đặt cọc",
+                                    MoTa = $"Hoàn tiền đặt cọc cho đơn hàng #{donHang.MaDonHang} do báo cáo vi phạm được xử lý",
+                                    NgayGiaoDich = DateTime.Now,
+                                    TrangThai = "Thành công",
+                                    MaDonHang = donHang.MaDonHang
+                                };
+                                db.GhiChepVis.Add(ghiChepViHoanDatCoc);
+
+                                // Lưu để lấy MaGhiChep
+                                db.SaveChanges();
+
+                                // Tạo thông báo hoàn tiền đặt cọc cho người bán
+                                var thongBaoHoanDatCoc = new ThongBao
+                                {
+                                    MaNguoiDung = nguoiBan.MaNguoiDung,
+                                    LoaiThongBao = "Hoàn tiền đặt cọc",
+                                    TieuDe = "Hoàn tiền đặt cọc do đơn hàng bị hủy",
+                                    TinNhan = $"Số tiền đặt cọc {tienDatCoc.ToString("N0")} VND của đơn hàng #{donHang.MaDonHang} đã được hoàn trả do đơn hàng bị hủy bởi vi phạm quy định.",
+                                    MucDoQuanTrong = 2,
+                                    DuongDanChiTiet = "/GiaoDich/ChiTietGhiChepViNguoiBan/" + ghiChepViHoanDatCoc.MaGhiChep,
+                                    NgayTao = DateTime.Now
+                                };
+                                db.ThongBaos.Add(thongBaoHoanDatCoc);
+                            }
+                        }
+                    }
+
                     // Gửi email thông báo cho người bán
                     if (nguoiDungBan != null && !string.IsNullOrEmpty(nguoiDungBan.Email))
                     {
                         try
                         {
-                            System.Diagnostics.Debug.WriteLine($"Gửi email tới người bán: {nguoiDungBan.Email}");
-                            await SendEmailAsync(
-                                nguoiDungBan.Email,
-                                "Thông báo phạt vi phạm",
-                                $"<p>Kính gửi {nguoiDungBan.TenNguoiDung},</p>" +
-                                $"<p>Bạn đã bị phạt <strong>{tongTienPhat.ToString("N0")} VND</strong> (150% giá trị đơn hàng) cho đơn hàng #{donHang.MaDonHang} do vi phạm quy định.</p>" +
-                                $"<p>Cụ thể:</p>" +
-                                $"<ul>" +
-                                $"<li>100% ({tienHoanTraNguoiMua.ToString("N0")} VND) hoàn trả cho người mua</li>" +
-                                $"<li>50% ({phiChoNenTang.ToString("N0")} VND) là phí phạt cho nền tảng</li>" +
-                                $"</ul>" +
-                                $"<p>Chi tiết vi phạm: {ketQuaXuLy}</p>" +
-                                $"<p>Số tiền phạt đã được trừ từ số dư ví của bạn.</p>" +
-                                "<p>Vui lòng tuân thủ quy định khi bán hàng trên hệ thống của chúng tôi.</p>" +
-                                "<p>Trân trọng,<br/>Ban quản trị</p>"
-                            );
-                            System.Diagnostics.Debug.WriteLine("Đã gửi email thành công cho người bán");
+                            string emailContent;
+                            if (isVNPAY)
+                            {
+                                emailContent = $@"
+                                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                                        <h2 style='color: #d9534f;'>Thông báo xử phạt vi phạm</h2>
+                                        <p>Kính gửi {nguoiDungBan.TenNguoiDung},</p>
+                                        <p>Chúng tôi xin thông báo về quyết định xử phạt đối với đơn hàng <strong>#{donHang.MaDonHang}</strong> do vi phạm quy định của nền tảng.</p>
+                    
+                                        <div style='background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                                            <h3 style='margin-top: 0;'>Chi tiết xử phạt:</h3>
+                                            <ul style='list-style-type: none; padding-left: 0;'>
+                                                <li>✓ Tổng số tiền phạt: <strong>{tongTienPhat.ToString("N0")} VND</strong></li>
+                                                <li>✓ Hoàn trả người mua: <strong>{tienHoanTraNguoiMua.ToString("N0")} VND</strong></li>
+                                                <li>✓ Phí xử phạt nền tảng: <strong>{phiChoNenTang.ToString("N0")} VND</strong></li>
+                                            </ul>
+                                        </div>
+                    
+                                        <p><strong>Lý do vi phạm:</strong> {ketQuaXuLy}</p>
+                                        <p>Số tiền phạt đã được trừ trực tiếp từ ví của bạn.</p>
+                    
+                                        <p>Chúng tôi khuyến nghị bạn tuân thủ các quy định và chính sách của nền tảng để tránh các trường hợp tương tự trong tương lai.</p>
+                    
+                                        <p style='margin-top: 30px;'>Trân trọng,<br/><strong>Ban Quản Trị</strong></p>
+                                    </div>";
+                            }
+                            else // COD
+                            {
+                                emailContent = $@"
+                                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                                        <h2 style='color: #d9534f;'>Thông báo xử phạt vi phạm</h2>
+                                        <p>Kính gửi {nguoiDungBan.TenNguoiDung},</p>
+                                        <p>Chúng tôi xin thông báo về quyết định xử phạt đối với đơn hàng <strong>#{donHang.MaDonHang}</strong> do vi phạm quy định của nền tảng.</p>
+                    
+                                        <div style='background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                                            <h3 style='margin-top: 0;'>Chi tiết xử phạt:</h3>
+                                            <ul style='list-style-type: none; padding-left: 0;'>
+                                                <li>✓ Phí xử phạt nền tảng: <strong>{phiChoNenTang.ToString("N0")} VND</strong></li>
+                                            </ul>
+                                            <p style='margin-bottom: 0;'><em>Lưu ý: Do đây là đơn hàng COD và người mua chưa thanh toán, không có khoản hoàn tiền nào được thực hiện.</em></p>
+                                        </div>
+                    
+                                        <p><strong>Lý do vi phạm:</strong> {ketQuaXuLy}</p>
+                                        <p>Số tiền phạt đã được trừ trực tiếp từ ví của bạn.</p>
+                    
+                                        <p>Chúng tôi khuyến nghị bạn tuân thủ các quy định và chính sách của nền tảng để tránh các trường hợp tương tự trong tương lai.</p>
+                    
+                                        <p style='margin-top: 30px;'>Trân trọng,<br/><strong>Ban Quản Trị</strong></p>
+                                    </div>";
+                            }
+
+                            await SendEmailAsync(nguoiDungBan.Email, "Thông báo xử phạt vi phạm", emailContent);
                         }
                         catch (Exception emailEx)
                         {
                             System.Diagnostics.Debug.WriteLine($"Lỗi khi gửi email cho người bán: {emailEx.Message}");
-                            // Không throw exception, tiếp tục quy trình
                         }
                     }
 
@@ -1592,23 +1729,74 @@ namespace WebApplication1.Controllers
                     {
                         try
                         {
-                            System.Diagnostics.Debug.WriteLine($"Gửi email tới người mua: {nguoiDungMua.Email}");
+                            string emailContent;
+                            if (isVNPAY)
+                            {
+                                // Email cho VNPAY - có hoàn tiền
+                                emailContent = $@"
+                                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                                        <h2 style='color: #5cb85c;'>Thông báo xử lý báo cáo thành công</h2>
+                                        <p>Kính gửi {nguoiDungMua.TenNguoiDung},</p>
+                                        <p>Chúng tôi xin thông báo rằng báo cáo của bạn về đơn hàng <strong>#{donHang.MaDonHang}</strong> đã được xử lý.</p>
+                    
+                                        <div style='background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                                            <h3 style='margin-top: 0;'>Kết quả xử lý:</h3>
+                                            <p>✓ Trạng thái: <strong style='color: #5cb85c;'>{trangThai}</strong></p>
+                                            <p>✓ Chi tiết: {ketQuaXuLy}</p>
+                                            <p>✓ Số tiền hoàn trả: <strong>{tienHoanTraNguoiMua.ToString("N0")} VND</strong></p>
+                                        </div>
+                    
+                                        <div style='background-color: #fff3cd; padding: 15px; border-radius: 5px; border: 1px solid #ffeeba;'>
+                                            <h3 style='margin-top: 0; color: #856404;'>Thông tin nhận hoàn tiền:</h3>
+                                            <p>Để nhận khoản hoàn trả, vui lòng cung cấp thông tin tài khoản ngân hàng:</p>
+                                            <ul>
+                                                <li>Tên ngân hàng</li>
+                                                <li>Số tài khoản</li>
+                                                <li>Tên chủ tài khoản</li>
+                                            </ul>
+                                            <p><strong>Vui lòng phản hồi email này với thông tin trên.</strong></p>
+                                            <p>Thời gian xử lý: 3-5 ngày làm việc sau khi nhận được thông tin.</p>
+                                        </div>
+                    
+                                        <p>Cảm ơn bạn đã đóng góp vào việc xây dựng cộng đồng an toàn và uy tín.</p>
+                    
+                                        <p style='margin-top: 30px;'>Trân trọng,<br/><strong>Ban Quản Trị</strong></p>
+                                    </div>";
+                            }
+                            else // COD
+                            {
+                                // Email cho COD - không có hoàn tiền
+                                emailContent = $@"
+                                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                                        <h2 style='color: #5cb85c;'>Thông báo xử lý báo cáo thành công</h2>
+                                        <p>Kính gửi {nguoiDungMua.TenNguoiDung},</p>
+                                        <p>Chúng tôi xin thông báo rằng báo cáo của bạn về đơn hàng <strong>#{donHang.MaDonHang}</strong> đã được xử lý.</p>
+                    
+                                        <div style='background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                                            <h3 style='margin-top: 0;'>Kết quả xử lý:</h3>
+                                            <p>✓ Trạng thái: <strong style='color: #5cb85c;'>{trangThai}</strong></p>
+                                            <p>✓ Chi tiết: {ketQuaXuLy}</p>
+                                        </div>
+                    
+                                        <div style='background-color: #d1ecf1; padding: 15px; border-radius: 5px; border: 1px solid #bee5eb;'>
+                                            <p style='margin: 0;'><strong>Lưu ý:</strong> Do đây là đơn hàng thanh toán khi nhận hàng (COD) và bạn chưa thanh toán, không có khoản hoàn tiền nào được thực hiện. Người bán đã bị xử phạt theo quy định.</p>
+                                        </div>
+                    
+                                        <p>Cảm ơn bạn đã đóng góp vào việc xây dựng cộng đồng an toàn và uy tín.</p>
+                    
+                                        <p style='margin-top: 30px;'>Trân trọng,<br/><strong>Ban Quản Trị</strong></p>
+                                    </div>";
+                            }
+
                             await SendEmailAsync(
                                 nguoiDungMua.Email,
-                                "Thông báo xử lý báo cáo đơn hàng",
-                                $"<p>Kính gửi {nguoiDungMua.TenNguoiDung},</p>" +
-                                $"<p>Báo cáo của bạn về đơn hàng #{donHang.MaDonHang} đã được xử lý với kết quả: <strong>{trangThai}</strong>.</p>" +
-                                $"<p>Chi tiết: {ketQuaXuLy}</p>" +
-                                $"<p>Số tiền <strong>{tienHoanTraNguoiMua.ToString("N0")} VND</strong> (100% giá trị đơn hàng) đã được hoàn trả cho bạn.</p>" +
-                                "<p>Cảm ơn bạn đã báo cáo vi phạm và giúp cộng đồng của chúng tôi an toàn hơn.</p>" +
-                                "<p>Trân trọng,<br/>Ban quản trị</p>"
+                                isVNPAY ? "Thông báo xử lý báo cáo và hướng dẫn hoàn tiền" : "Thông báo xử lý báo cáo đơn hàng",
+                                emailContent
                             );
-                            System.Diagnostics.Debug.WriteLine("Đã gửi email thành công cho người mua");
                         }
                         catch (Exception emailEx)
                         {
                             System.Diagnostics.Debug.WriteLine($"Lỗi khi gửi email cho người mua: {emailEx.Message}");
-                            // Không throw exception, tiếp tục quy trình
                         }
                     }
                 }
@@ -1809,11 +1997,27 @@ namespace WebApplication1.Controllers
                     .Where(e => e.TrangThai == "Đã giải ngân")
                     .ToList();
 
-                // Sau đó thực hiện lọc và tính tổng trong bộ nhớ
-                viewModel.TotalCommission = allEscrows
+                //// Sau đó thực hiện lọc và tính tổng trong bộ nhớ
+                //viewModel.TotalCommission = allEscrows
+                //    .Where(e => e.NgayGiaiNgan >= startDates.Date && e.NgayGiaiNgan <= endDatePlusOnes.Date)
+                //    .Sum(e => e.PhiNenTang);
+                // Tính tổng phí nền tảng từ Escrows đã giải ngân trong khoảng thời gian
+                var escrowCommission = allEscrows
                     .Where(e => e.NgayGiaiNgan >= startDates.Date && e.NgayGiaiNgan <= endDatePlusOnes.Date)
                     .Sum(e => e.PhiNenTang);
 
+                // Lấy phí phạt từ GhiChepVi (các giao dịch phí nền tảng với mô tả bắt đầu bằng "Phí phạt 50%")
+                var penaltyCommission = db.GhiChepVis
+                    .Where(g => g.LoaiGiaoDich == "Phí nền tảng"
+                        && g.TrangThai == "Thành công"
+                        && g.MoTa.StartsWith("Phí phạt 50%")
+                        && g.NgayGiaoDich >= startDates.Date
+                        && g.NgayGiaoDich <= endDatePlusOnes.Date)
+                    .ToList()
+                    .Sum(g => Math.Abs(g.SoTien));
+
+                // Tổng cộng cả hai loại phí
+                viewModel.TotalCommission = escrowCommission + penaltyCommission;
                 // Recent Orders
                 var recentOrders = db.DonHangs
                     .Include(o => o.NguoiDung)
@@ -2162,10 +2366,26 @@ namespace WebApplication1.Controllers
                     .ToList();
 
                 // Sau đó thực hiện lọc và tính tổng trong bộ nhớ
-                decimal totalCommission = allEscrows
+                //decimal totalCommission = allEscrows
+                //    .Where(e => e.NgayGiaiNgan >= startDate.Date && e.NgayGiaiNgan <= endDatePlusOne.Date)
+                //    .Sum(e => e.PhiNenTang);
+                // Tính tổng phí nền tảng từ Escrows đã giải ngân trong khoảng thời gian
+                var escrowCommission = allEscrows
                     .Where(e => e.NgayGiaiNgan >= startDate.Date && e.NgayGiaiNgan <= endDatePlusOne.Date)
                     .Sum(e => e.PhiNenTang);
 
+                // Lấy phí phạt từ GhiChepVi (các giao dịch phí nền tảng với mô tả bắt đầu bằng "Phí phạt 50%")
+                var penaltyCommission = db.GhiChepVis
+                    .Where(g => g.LoaiGiaoDich == "Phí nền tảng"
+                        && g.TrangThai == "Thành công"
+                        && g.MoTa.StartsWith("Phí phạt 50%")
+                        && g.NgayGiaoDich >= startDate.Date
+                        && g.NgayGiaoDich <= endDatePlusOne.Date)
+                    .ToList()
+                    .Sum(g => Math.Abs(g.SoTien));
+
+                // Tổng cộng cả hai loại phí
+                var totalCommission = escrowCommission + penaltyCommission;
                 return Json(new
                 {
                     // Thống kê người dùng

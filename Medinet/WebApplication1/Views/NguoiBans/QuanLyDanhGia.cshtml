@@ -522,8 +522,8 @@
                                     <th width="60">STT</th>
                                     <th>Sản phẩm</th>
                                     <th>Đánh giá</th>
-                                    <th>Người đánh giá</th>
-                                    <th>Ngày đánh giá</th>
+                                    <th width="160">Người mua</th>
+                                    <th >Ngày tạo</th>
                                     <th>Thao tác</th>
                                 </tr>
                             </thead>
@@ -549,8 +549,8 @@
                                                         }
                                                     }
                                                     <img src="@anhHienThi" alt="@item.SanPham?.TenSanPham" class="img-thumbnail mr-2" style="width: 50px; height: 50px; object-fit: cover;">
-                                                    <div>
-                                                        <a href="@Url.Action("ChiTietDonHangNguoiMua", "DonHang", new { id = item.MaDonHang })">
+                                                    <div style="margin-left:12px">
+                                                        <a href="@Url.Action("ChiTietDonHangNguoiMua", "DonHang", new { id = item.MaDonHang })" style=" text-decoration: none; color: inherit;">
                                                             @(item.SanPham?.TenSanPham ?? "Không có tên")
                                                         </a>
                                                     </div>
@@ -579,10 +579,10 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <div>@item.NguoiDung.TenNguoiDung</div>
+                                                <div style="text-align:center">@item.NguoiDung.TenNguoiDung</div>
                                             </td>
                                             <td>
-                                                <div class="review-date">@item.NgayTao.ToString("dd/MM/yyyy")</div>
+                                                <div class="review-date" style="text-align:center">@item.NgayTao.ToString("dd/MM/yyyy")</div>
                                             </td>
                                             <td>
                                                 <button type="button" class="btn btn-sm @(daPhanHoi ? "btn-warning" : "btn-info")"

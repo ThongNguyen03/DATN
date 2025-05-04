@@ -206,13 +206,13 @@
                         <table class="table table-hover" id="orderTable">
                             <thead>
                                 <tr>
-                                    <th width="50">STT</th>
-                                    <th>Mã đơn hàng</th>
-                                    <th>Khách hàng</th>
-                                    <th>Ngày đặt</th>
-                                    <th>Tổng tiền</th>
-                                    <th>Trạng thái</th>
-                                    <th>Thao tác</th>
+                                    <th width="50" style="text-align:center">STT</th>
+                                    <th style="text-align:center">Mã đơn hàng</th>
+                                    <th style="text-align:center">Khách hàng</th>
+                                    <th style="text-align:center">Ngày đặt</th>
+                                    <th style="text-align:center">Tổng tiền</th>
+                                    <th style="text-align:center">Trạng thái</th>
+                                    <th style="text-align:center">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -222,12 +222,12 @@
                                     foreach (var item in Model)
                                     {
                                         <tr data-status="@item.TrangThaiDonHang" data-date="@item.NgayTao.ToString("yyyy-MM-dd")" data-price="@item.TongSoTien" data-name="@(item.NguoiDung != null ? item.NguoiDung.TenNguoiDung.ToLower() : "")">
-                                            <td>@stt</td>
-                                            <td>#@item.MaDonHang</td>
-                                            <td>@(item.NguoiDung != null ? item.NguoiDung.TenNguoiDung : "Không có thông tin")</td>
-                                            <td>@item.NgayTao.ToString("dd/MM/yyyy HH:mm")</td>
-                                            <td>@String.Format("{0:N0} VNĐ", item.TongSoTien)</td>
-                                            <td>
+                                            <td style="text-align:center">@stt</td>
+                                            <td style="text-align:center">#@item.MaDonHang</td>
+                                            <td style="text-align:center">@(item.NguoiDung != null ? item.NguoiDung.TenNguoiDung : "Không có thông tin")</td>
+                                            <td style="text-align:center">@item.NgayTao.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td style="text-align:center">@String.Format("{0:N0} VNĐ", item.TongSoTien)</td>
+                                            <td style="text-align:center">
                                                 @if (item.TrangThaiDonHang == "Đang chờ xử lý")
                                                 {
                                                     <span class="badge badge-warning">Đang chờ xử lý</span>
@@ -253,7 +253,7 @@
                                                     <span class="badge badge-secondary">@item.TrangThaiDonHang</span>
                                                 }
                                             </td>
-                                            <td>
+                                            <td style="text-align:center">
                                                 <!-- Cập nhật các nút hành động dựa trên trạng thái -->
                                                 <div class="btn-group">
                                                     <a href="@Url.Action("ChiTietDonHangNguoiMua", "DonHang", new { id = item.MaDonHang })" class="btn btn-sm btn-outline-info" title="Xem chi tiết" data-toggle="tooltip">

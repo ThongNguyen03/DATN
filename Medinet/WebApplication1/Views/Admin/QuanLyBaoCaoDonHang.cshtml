@@ -270,6 +270,20 @@
         .action-button:hover {
             background-color: #0b5ed7;
         }
+    .pagination .page-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 38px; /* Đặt chiều cao cụ thể */
+        min-width: 38px; /* Đặt chiều rộng tối thiểu */
+        text-align: center;
+    }
+
+        /* Đảm bảo icon được center đúng */
+        .pagination .page-link i {
+            margin: 0;
+            line-height: 1;
+        }
 </style>
 
 <div class="page-container">
@@ -329,7 +343,7 @@
                     <li class="sidebar-item">
                         <a href="@Url.Action("Escrow", "GiaoDich")" class="sidebar-link">
                             <i class="bi bi-safe"></i>
-                            <span>Ký quỹ (Escrow)</span>
+                            <span>Ký quỹ </span>
                         </a>
                     </li>
                     <li class="sidebar-item">
@@ -396,14 +410,14 @@
             <table class="content-table">
                 <thead>
                     <tr>
-                        <th>Mã báo cáo</th>
-                        <th>Mã đơn hàng</th>
-                        <th>Người báo cáo</th>
-                        <th>Người bán</th>
-                        <th>Loại báo cáo</th>
-                        <th>Ngày báo cáo</th>
-                        <th>Trạng thái</th>
-                        <th>Hành động</th>
+                        <th style="text-align:center" width="80">Mã BC</th>
+                        <th style="text-align:center" width="130">Mã đơn hàng</th>
+                        <th style="text-align:center" width="140">Người báo cáo</th>
+                        <th style="text-align:center">Người bán</th>
+                        <th style="text-align:center">Loại báo cáo</th>
+                        <th style="text-align:center">Ngày báo cáo</th>
+                        <th style="text-align:center">Trạng thái</th>
+                        <th style="text-align:center" width="120">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -429,14 +443,14 @@
                             }
 
                             <tr>
-                                <td>@item.MaBaoCao</td>
-                                <td>@item.MaDonHang</td>
-                                <td>@(item.NguoiDung?.TenNguoiDung ?? "Không xác định")</td>
-                                <td>@(item.NguoiBan?.TenCuaHang ?? "Không xác định")</td>
-                                <td>@item.LoaiBaoCao</td>
-                                <td>@item.NgayTao.ToString("dd/MM/yyyy HH:mm")</td>
-                                <td><span class="badge @statusClass">@item.TrangThai</span></td>
-                                <td>
+                                <td style="text-align:center">@item.MaBaoCao</td>
+                                <td style="text-align:center">@item.MaDonHang</td>
+                                <td style="text-align:center">@(item.NguoiDung?.TenNguoiDung ?? "Không xác định")</td>
+                                <td style="text-align:center">@(item.NguoiBan?.TenCuaHang ?? "Không xác định")</td>
+                                <td style="text-align:center">@item.LoaiBaoCao</td>
+                                <td style="text-align:center">@item.NgayTao.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td style="text-align:center"><span class="badge @statusClass">@item.TrangThai</span></td>
+                                <td style="text-align:center">
                                     <a href="@Url.Action("ChiTietBaoCao", "Admin", new { id = item.MaBaoCao })" class="action-button" title="Xem chi tiết">
                                         <i class="bi bi-eye"></i>
                                     </a>
@@ -447,7 +461,7 @@
                     else
                     {
                         <tr>
-                            <td colspan="8" class="text-center py-4">Không có báo cáo nào</td>
+                            <td colspan="8" class="text-center py-4" style="text-align:center">Không có báo cáo nào</td>
                         </tr>
                     }
                 </tbody>

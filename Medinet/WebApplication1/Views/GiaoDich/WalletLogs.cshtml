@@ -237,12 +237,6 @@
                     <i class="bi bi-chevron-down ms-auto"></i>
                 </a>
                 <ul class="sidebar-submenu" id="transactionSubmenu">
-                    @*<li class="sidebar-item ">
-                    <a href="@Url.Action("Dashboard", "GiaoDich")" class="sidebar-link">
-                        <i class="bi bi-bar-chart"></i>
-                        <span>Tổng quan</span>
-                    </a>
-                </li>*@
                     <li class="sidebar-item">
                         <a href="@Url.Action("Index", "GiaoDich")" class="sidebar-link">
                             <i class="bi bi-credit-card"></i>
@@ -252,7 +246,7 @@
                     <li class="sidebar-item">
                         <a href="@Url.Action("Escrow", "GiaoDich")" class="sidebar-link">
                             <i class="bi bi-safe"></i>
-                            <span>Ký quỹ (Escrow)</span>
+                            <span>Ký quỹ</span>
                         </a>
                     </li>
                     <li class="sidebar-item active">
@@ -401,14 +395,14 @@
                                 <table class="table table-striped table-hover">
                                     <thead>
                                         <tr>
-                                            <th>Mã GC</th>
-                                            <th>Người bán</th>
-                                            <th>Số tiền</th>
-                                            <th>Loại giao dịch</th>
-                                            <th>Mô tả</th>
-                                            <th>Ngày giao dịch</th>
-                                            <th>Trạng thái</th>
-                                            <th>Hành động</th>
+                                            <th width="70" style="text-align:center">Mã GC</th>
+                                            <th style="text-align:center">Người bán</th>
+                                            <th style="text-align:center">Số tiền</th>
+                                            <th width="120" style="text-align:center">Loại giao dịch</th>
+                                            <th style="text-align:center">Mô tả</th>
+                                            <th style="text-align:center">Ngày tạo</th>
+                                            <th style="text-align:center">Trạng thái</th>
+                                            <th width="100" style="text-align:center">Hành động</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -435,8 +429,8 @@
                                             var amountSymbol = item.SoTien > 0 ? "+" : "";
 
                                             <tr>
-                                                <td>@item.MaGhiChep</td>
-                                                <td>
+                                                <td style="text-align:center">@item.MaGhiChep</td>
+                                                <td style="text-align:center">
                                                     @if (item.NguoiBan != null)
                                                     {
                                                         @item.NguoiBan.TenCuaHang
@@ -446,7 +440,7 @@
                                                         <span>ID: @item.MaNguoiBan</span>
                                                     }
                                                 </td>
-                                                <td class="@amountClass">
+                                                <td class="@amountClass" style="text-align:center">
                                                     @if (item.SoTien < 0)
                                                     {
                                                         @String.Format("{0:N0} VNĐ", item.SoTien)
@@ -456,7 +450,7 @@
                                                         @String.Format("+{0:N0} VNĐ", item.SoTien)
                                                     }
                                                 </td>
-                                                <td>@item.LoaiGiaoDich</td>
+                                                <td style="text-align:center">@item.LoaiGiaoDich</td>
                                                 <td>
                                                     @(item.MoTa ?? "Không có mô tả")
                                                     @if (item.MaDonHang.HasValue)
@@ -464,13 +458,13 @@
                                                         <a href="@Url.Action("ChiTietAdmin", "DonHang", new { id = item.MaDonHang })">#@item.MaDonHang</a>
                                                     }
                                                 </td>
-                                                <td>@item.NgayGiaoDich.ToString("dd/MM/yyyy HH:mm")</td>
-                                                <td>
+                                                <td style="text-align:center">@item.NgayGiaoDich.ToString("dd/MM/yyyy HH:mm")</td>
+                                                <td style="text-align:center">
                                                     <span class="badge @statusClass">@item.TrangThai</span>
                                                 </td>
-                                                <td>
-                                                    <a href="@Url.Action("WalletLogDetails", "GiaoDich", new { id = item.MaGhiChep })" class="btn btn-sm btn-secondary">
-                                                        <i class="bi bi-info-circle"></i>
+                                                <td style="text-align:center">
+                                                    <a href="@Url.Action("WalletLogDetails", "GiaoDich", new { id = item.MaGhiChep })" class="btn btn-sm btn-primary">
+                                                        <i class="bi bi-eye"></i>
                                                     </a>
                                                 </td>
                                             </tr>
