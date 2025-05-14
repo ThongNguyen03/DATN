@@ -154,12 +154,12 @@
                             <div class="price-range">
                                 <div class="form-group">
                                     <label>Từ:</label>
-                                    @Html.TextBoxFor(m => m.GiaMin, new { @class = "form-control price-input", type = "number" })
+                                    @Html.TextBoxFor(m => m.GiaMin, new { @class = "form-control price-input", type = "number", min=0})
                                 </div>
                                 <div class="mx-2">-</div>
                                 <div class="form-group">
                                     <label>Đến:</label>
-                                    @Html.TextBoxFor(m => m.GiaMax, new { @class = "form-control price-input", type = "number" })
+                                    @Html.TextBoxFor(m => m.GiaMax, new { @class = "form-control price-input", type = "number", min=0 })
                                 </div>
                             </div>
                         </div>
